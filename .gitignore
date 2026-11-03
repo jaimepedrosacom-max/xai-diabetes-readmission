@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Caché del dataset: se regenera con data.load_raw() (descarga vía ucimlrepo)
+data/raw/
+
+# Entornos virtuales (el del proyecto vive fuera, en C:\venvs\xai-final;
+# esto es solo por si alguien crea uno dentro)
+.venv/
+venv/
+env/
+
+# Enunciado de la asignatura (material del profesor, no se versiona)
+_2026__XAI__Final_Project.pdf

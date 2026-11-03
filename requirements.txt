@@ -1,0 +1,7 @@
+# Dependencias directas del proyecto (solo lo que importa src/), versiones exactas.
+# Instalar con: python -m pip install -r requirements.txt
+numpy==1.26.4
+pandas==2.3.0
+scikit-learn==1.8.0
+lightgbm==4.7.0
+ucimlrepo==0.0.7
