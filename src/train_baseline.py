@@ -27,6 +27,22 @@ def make_logreg(C: float) -> Pipeline:
                      ("clf", LogisticRegression(C=C, max_iter=5000))])
 
 
+def select_logreg(Xtr, ytr, Xva, yva, c_grid=C_GRID):
+    """Entrena una LR por cada C en train y elige la de mejor PR-AUC en val.
+
+    Devuelve (modelo elegido ya entrenado, tabla de la rejilla).
+    """
+    grid, models = [], {}
+    for C in c_grid:
+        models[C] = make_logreg(C).fit(Xtr, ytr)
+        grid.append({"C": C,
+                     "train_pr_auc": average_precision_score(ytr, models[C].predict_proba(Xtr)[:, 1]),
+                     "val_pr_auc": average_precision_score(yva, models[C].predict_proba(Xva)[:, 1])})
+    grid = pd.DataFrame(grid)
+    best_C = grid.loc[grid["val_pr_auc"].idxmax(), "C"]
+    return models[best_C], grid
+
+
 def main():
     train, val, test = P.load_model_data()
     (Xtr, ytr), (Xva, yva), (Xte, yte) = (P.split_xy(s) for s in (train, val, test))
@@ -45,19 +61,11 @@ def main():
           f"P(y=1 | inpatient>0) = {rate_by_group[True]:.4f}")
 
     # --- 2) Regresión logística: selección de C en val ----------------------
-    grid = []
-    for C in C_GRID:
-        model = make_logreg(C).fit(Xtr, ytr)
-        grid.append({"C": C,
-                     "train_pr_auc": average_precision_score(ytr, model.predict_proba(Xtr)[:, 1]),
-                     "val_pr_auc": average_precision_score(yva, model.predict_proba(Xva)[:, 1])})
-    grid = pd.DataFrame(grid)
-    best_C = grid.loc[grid["val_pr_auc"].idxmax(), "C"]
+    logreg, grid = select_logreg(Xtr, ytr, Xva, yva)
     print("\nRejilla de C (entrena en train, evalúa en val):")
     print(grid.round(4).to_string(index=False))
-    print(f"=> C elegido = {best_C}")
+    print(f"=> C elegido = {logreg.named_steps['clf'].C}")
 
-    logreg = make_logreg(best_C).fit(Xtr, ytr)  # mismo modelo de la rejilla, re-ajustado
     n_feats = len(logreg.named_steps["prep"].get_feature_names_out())
     print(f"Nº de columnas tras el ColumnTransformer: {n_feats}")
 

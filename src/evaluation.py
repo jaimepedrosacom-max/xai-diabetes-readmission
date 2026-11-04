@@ -71,13 +71,23 @@ def plot_calibration(model_preds: dict, ys: dict, fname: str, n_bins: int = 10) 
     Bins por cuantiles (cada punto = mismo nº de pacientes): con 11% de
     positivos, los bins uniformes dejarían los de riesgo alto casi vacíos.
     La diagonal es la calibración perfecta. Escalas iguales en los 3 paneles.
+
+    Si un modelo no trae predicciones para un split (p. ej. LightGBM en test,
+    que aún no se ha evaluado), ese panel lo indica con una nota en vez de
+    dibujar nada.
     """
     splits = list(ys)
     fig, axes = plt.subplots(1, len(splits), figsize=(4.2 * len(splits), 4.2),
                              sharex=True, sharey=True)
     hi = 0
     for ax, s in zip(axes, splits):
+        missing = [name for name, preds in model_preds.items() if s not in preds]
+        if missing:
+            ax.text(0.98, 0.04, f"{', '.join(missing)}: sin evaluar en {s}",
+                    transform=ax.transAxes, ha="right", va="bottom", color=MUTED, fontsize=8.5)
         for name, preds in model_preds.items():
+            if s not in preds:
+                continue
             frac_pos, mean_pred = calibration_curve(ys[s], preds[s], n_bins=n_bins,
                                                     strategy="quantile")
             hi = max(hi, frac_pos.max(), mean_pred.max())
