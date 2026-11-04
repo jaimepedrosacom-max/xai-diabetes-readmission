@@ -43,6 +43,21 @@ def select_logreg(Xtr, ytr, Xva, yva, c_grid=C_GRID):
     return models[best_C], grid
 
 
+def trivial_baselines(Xs: dict, ytr):
+    """Predicciones de las baselines triviales; sus parámetros salen solo de train.
+
+    Xs: {"train": X, "val": X, ...}. Devuelve (preds, prevalencia, tasa por grupo).
+    """
+    prev = ytr.mean()
+    rate_by_group = pd.Series(ytr).groupby(Xs["train"]["number_inpatient"].to_numpy() > 0).mean()
+    preds = {
+        "Prevalencia": {s: [prev] * len(X) for s, X in Xs.items()},
+        "Regla inpatient>0": {s: (X["number_inpatient"] > 0).map(rate_by_group).to_numpy()
+                              for s, X in Xs.items()},
+    }
+    return preds, prev, rate_by_group
+
+
 def main():
     train, val, test = P.load_model_data()
     (Xtr, ytr), (Xva, yva), (Xte, yte) = (P.split_xy(s) for s in (train, val, test))
@@ -50,13 +65,7 @@ def main():
     Xs = {"train": Xtr, "val": Xva, "test": Xte}
 
     # --- 1) Baselines triviales (los parámetros salen solo de train) --------
-    prev = ytr.mean()
-    rate_by_group = pd.Series(ytr).groupby(Xtr["number_inpatient"].to_numpy() > 0).mean()
-    trivial = {
-        "Prevalencia": {s: [prev] * len(X) for s, X in Xs.items()},
-        "Regla inpatient>0": {s: (X["number_inpatient"] > 0).map(rate_by_group).to_numpy()
-                              for s, X in Xs.items()},
-    }
+    trivial, prev, rate_by_group = trivial_baselines(Xs, ytr)
     print(f"Prevalencia train = {prev:.4f} | P(y=1 | inpatient=0) = {rate_by_group[False]:.4f}, "
           f"P(y=1 | inpatient>0) = {rate_by_group[True]:.4f}")
 
