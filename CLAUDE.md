@@ -38,14 +38,10 @@ counterfactuals, matplotlib/seaborn para gráficas.
 ### Estado
 - Hecho: datos, baseline, modelo principal y evaluación final en test
   (commits `e4a0354`, `d9a017c`, `ff22295`, `16f017b`).
-- Fase 3 (XAI): hechas 3a (`src/xai_shap.py`, global), 3b (`src/xai_sanity.py`,
-  sanity checks + auditoría del destino) y 3c (`src/xai_counterfactuals.py`,
-  contrafactuales). PENDIENTE dentro de la Fase 3: las explicaciones locales SHAP
-  de los 11 casos de `reports/xai_local_cases.csv`. Ese CSV es solo la selección
-  (`src/xai_cases.py`), y los casos se consumen hasta ahora en `fold_stability`
-  (estabilidad del top-3 local entre folds, que es el sanity check SOBRE las
-  explicaciones locales, no la explicación) y en la Fase 3c. No hay waterfall ni
-  tabla de contribuciones por caso en `reports/`.
+- Fase 3 (XAI) COMPLETA: 3a (`src/xai_shap.py`, global), 3b (`src/xai_sanity.py`,
+  sanity checks + auditoría del destino), 3c (`src/xai_counterfactuals.py`,
+  contrafactuales) y 3d (`src/xai_local.py`, explicaciones locales de los 11
+  casos).
 - Pendiente: Fase 4 (acción), informe y `README.md`.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
@@ -91,6 +87,13 @@ counterfactuals, matplotlib/seaborn para gráficas.
   antes/después se mide en val y CV, y cualquier nueva consulta a test se declara
   en el informe.
 - El k del seguimiento (5/10/20%) queda abierto: lo decide el gestor.
+- AVISO (viene de la Fase 3d): el grupo donde el modelo discrepa de la regla simple
+  `number_inpatient > 0` —top 10% de val con `number_inpatient == 0`, n=440— tiene un
+  69,3% de destinos 22/5, los que la Fase 3b señala como contaminados. Buena parte de
+  la ventaja sobre esa regla (0,227 frente a 0,142 de PR-AUC en test, en
+  `reports/metrics_final.csv`) se apoya en ese grupo. No está medido cuánta parte de
+  la ventaja es artefacto, y no se afirma que lo sea toda. Ver la Fase 3d y su
+  predicción prerregistrada para la Fase 4.
 
 ### Fase 3c — Contrafactuales (`src/xai_counterfactuals.py`)
 - Dos métodos en paralelo: DiCE (Mothilal et al., 2020, `method="random"`) y
@@ -176,6 +179,139 @@ counterfactuals, matplotlib/seaborn para gráficas.
 - `reports/xai_counterfactuals_DEMO_ENGANOSO.csv` es el ejemplo de cómo un
   contrafactual puede engañar (mismo paciente con y sin congelar el destino 22).
   No es análisis ni recomendación y no entra en ningún resumen.
+
+### Fase 3d — Explicaciones locales SHAP de los 11 casos (`src/xai_local.py`)
+- Los casos NO se eligen aquí: vienen de `src/xai_cases.py` con regla fija y semilla,
+  sin mirar las explicaciones finales. Los 3 `perfil_alto_*` son centroides de k-means
+  sobre SHAP del top 10%, así que son representativos de su grupo por construcción.
+- Escala: se reporta LOG-ODDS, donde SHAP es exactamente aditivo. NO se traduce cada
+  contribución a puntos de probabilidad (la logística no es aditiva). Comprobada la
+  aditividad caso a caso: `base + suma = log-odds`, error < 1e-6 en los 11.
+- `interpretable` se LEE de `xai_sanity_noise_probes.csv` con la regla de la Fase 3b
+  (`gana_a_sonda == 10`), sin lista escrita a mano. Salen 13 variables de 44.
+  AVISO: las sondas son una prueba GLOBAL; aplicarlas al nivel local es una extensión
+  prudente, NO una validación de la explicación local.
+- `destino_contaminado` marca los casos con destino 22 o 5: su contribución del destino
+  se reporta pero no se lee como riesgo (fuga de la etiqueta, Fase 3b).
+- La estabilidad del top-3 local entre folds y el `n_grupo`/`tasa_real_%` de cada caso
+  salen de `xai_sanity_local_stability.csv`, que ahora escribe `xai_sanity.py` (antes
+  solo se imprimían). Al añadirlo se relanzó ese script y sus 6 CSV previos salieron
+  idénticos byte a byte.
+- En 6 de los 11 casos el grupo se define POR el resultado, así que su `tasa_real_%` es
+  100% o 0% por construcción: se marca como trivial para no leerla como riesgo.
+
+#### Resultados de la Fase 3d
+- Concentración: `number_inpatient` está en el top-3 local de 11/11 casos y
+  `discharge_disposition_id` en 9/11. Los que no siguen el patrón global son
+  `perfil_alto_1` y `perfil_alto_3`, cuyos puestos 2 y 3 interpretables son
+  `number_emergency` (global #9) y `diag_2_group` (global #13); como son centroides,
+  describen un grupo del top 10%, no un paciente excéntrico.
+- `perfil_alto_1` y `perfil_alto_3` son casi el mismo perfil, medido: sus vectores SHAP
+  correlacionan 0,987 y sus centroides son el par MÁS CERCANO de los tres (distancia
+  0,650, frente a 1,108 y 1,630). La diferencia está concentrada en la INTENSIDAD de
+  `number_inpatient` (+1,279 con valor 5 frente a +0,703 con valor 4, que son 0,575 de
+  los 0,591 de distancia entre los dos pacientes) y en el signo de `diag_2_group`
+  (+0,062 Endocrine frente a -0,055 Genitourinary). Consecuencia: con k=3, dos de los
+  tres perfiles cuentan la misma historia a distinta escala, y solo `perfil_alto_2`
+  (el del destino contaminado) es cualitativamente distinto. Para el informe conviene
+  presentarlos como dos intensidades de un mismo perfil, no como dos perfiles. Dicho
+  de otro modo: la parte de "perfiles de riesgo" de la selección aporta 2 perfiles y
+  no 3. `k=3` se fijó a priori en `xai_cases.py`, así que NO hay selección a
+  posteriori; simplemente sobreparticionó.
+- En los 3 casos con destino 22/5 el destino es la contribución #1, entre 7,0 y 9,4
+  veces la #2 real de cada caso EN VALOR ABSOLUTO: `perfil_alto_2` +0,954 frente a
+  `payer_code` +0,101 (9,4x); `modelo_alto_sin_ingresos_reingresa` +0,936 frente a
+  `number_inpatient` -0,134 (7,0x); `modelo_alto_sin_ingresos_no_reingresa` +1,127
+  frente a `number_inpatient` -0,146 (7,7x). Ojo: en los dos casos "alto sin ingresos"
+  la #2 tiene SIGNO CONTRARIO al destino (empuja hacia abajo), así que el cociente
+  compara magnitudes, no contribuciones que se sumen. No se lee como riesgo.
+- Dos casos tienen una variable NO interpretable en el top-3, y se dice explícitamente:
+  `riesgo_mediano` con `num_medications` (local #3, global #15, -0,118) y
+  `modelo_bajo_con_ingresos_no_reingresa` con `metformin` (local #3, global #16, -0,082).
+- Pares contrastivos: la diferencia es de escala y concentración, no de qué variable
+  aparece. En "alto sin ingresos" domina una sola contribución (destino, +0,936/+1,127)
+  y `number_inpatient=0` empuja hacia abajo; en "bajo con ingresos" `number_inpatient=1`
+  (+0,148/+0,165) queda casi cancelado por `destino=Casa` (-0,141/-0,173). Suma de
+  |SHAP| del top-3: 1,16 y 1,37 frente a 0,49 y 0,42.
+- LIMITACIÓN IMPORTANTE del par "alto sin ingresos", medida: su grupo de selección es
+  el top 10% de val con `number_inpatient == 0` (n=440), y el **69,3% de ese grupo
+  (305 de 440) tiene destino 22 o 5**, frente al 10,6% del resto del top 10%
+  (164 de 1.547), el 23,6% del top 10% completo (469 de 1.987) y el 3,2% de todo val
+  (632 de 19.868). Es decir: el grupo que debía enseñar "el modelo ve riesgo donde la
+  regla `number_inpatient` no lo ve" está compuesto en dos tercios por los códigos que
+  la auditoría señala como contaminados, y en los dos casos concretos esa variable es
+  la contribución #1. Los dos casos NO son casualidad de la muestra: son típicos de su
+  grupo. Conclusión para el informe: en ese grupo, la ventaja del modelo sobre la regla
+  simple se apoya en buena parte en la variable contaminada, así que no sirve como
+  demostración de que el modelo capte riesgo clínico que la regla no ve.
+- ESTO TOCA LA FASE 2, no solo la figura. Ese grupo de 440 es exactamente donde el
+  modelo discrepa de la regla simple `number_inpatient > 0`: son los que el modelo
+  marca y la regla no. Buena parte de la ventaja del modelo sobre esa regla
+  (PR-AUC en test 0,227 frente a 0,142, `reports/metrics_final.csv`) se apoya en
+  pacientes de un grupo donde el 69,3% tiene destino 22/5, es decir, el destino que la
+  Fase 3b señala como contaminado por la definición de la etiqueta. NO está medido qué
+  fracción de la ventaja es artefacto, y no se afirma que lo sea toda: lo que está
+  medido es la composición del grupo. Ver la predicción prerregistrada para la Fase 4,
+  más abajo.
+- Dentro de cada par, SHAP explica la PREDICCIÓN, no el RESULTADO: el modelo da
+  probabilidades parecidas a los dos miembros del par (0,2617 y 0,2303; 0,0826 y
+  0,0937), así que la explicación no puede distinguir quién reingresó. No es un fallo
+  de SHAP, es lo que SHAP hace.
+- Atribución frente a sensibilidad (criterio prerregistrado, cruce con el diagnóstico
+  (b) de la Fase 3c): 0 "atribuye sin mover", 5 "mueve sin atribuir", 3 "coincide",
+  3 "ni atribuye ni mueve". **Los 5 "mueve sin atribuir" son variables NO
+  interpretables** (insulin x3, pioglitazone, glyburide), con rangos locales 6 a 16.
+  Matiz de magnitud: 4 de los 5 tienen |delta| entre 0,003 y 0,005, que es
+  despreciable; solo `pioglitazone` en `perfil_alto_2` mueve de forma apreciable
+  (0,029) y lo hace HACIA ARRIBA. De las 11 filas de lever con sensibilidad medida,
+  solo 3 son interpretables y las 3 son `discharge_disposition_id`.
+- De ahí se sigue, pero conviene citarlo bien: "la única palanca accionable que pasa
+  las sondas es el destino al alta" NO se deduce de esas 11 filas, sino del espacio de
+  acciones de la Fase 3c (solo fármacos ya prescritos y destino) combinado con la regla
+  GLOBAL de las sondas de ruido de la Fase 3b (ningún fármaco llega a 10/10; `insulin`
+  se queda en 8/10). Las 11 filas lo ilustran en estos 6 casos, no lo demuestran.
+- `delta_incluye_change` es True en 3 de las 11 filas con delta medido: parte del
+  "efecto del fármaco" es en realidad el recálculo de la derivada `change`.
+- ENTRADA PARA EL ANÁLISIS DE EQUIDAD DE LA FASE 4: `payer_code` (rango global #4, y
+  supera las sondas 10/10) aparece en el top-3 interpretable de 2 de los 11 casos:
+  `perfil_alto_2` (valor `Missing`, +0,101) y `modelo_alto_sin_ingresos_no_reingresa`
+  (valor `MD`, -0,093). Se mantuvo a propósito en el modelo para analizarla como
+  posible proxy de equidad; aquí aparece con peso local real, así que la Fase 4 debe
+  examinarla.
+- Estabilidad del top-3 local entre folds: `modelo_bajo_con_ingresos_reingresa` es el
+  único con mínimo 1,00 (idéntico en los 5 folds), pero es el de grupo más pequeño
+  (n=62), así que estable no es generalizable. Los otros diez tienen mínimo 0,67.
+- HONESTIDAD DE PROCESO: la clasificación del cruce se corrigió DESPUÉS de ver la
+  primera salida. El código implementaba 3 de las 4 categorías, y las variables con
+  delta medido igual a 0 fuera del top-5 caían en la misma etiqueta que las que no son
+  lever (sin medida, NaN). Se añadió "ni atribuye ni mueve" y se renombró la otra a
+  "sin sensibilidad medida (no es lever)". Las DOS definiciones prerregistradas de
+  discrepancia no se tocaron: sus condiciones son idénticas antes y después. El
+  docstring de la función ya describía las cuatro categorías, pero el fichero no estaba
+  versionado y no hay prueba independiente de que ese texto sea anterior a la primera
+  ejecución, así que se registra como cambio posterior a ver la salida.
+
+#### Predicción prerregistrada para la Fase 4 (fijada ANTES de corregir el target)
+- Hipótesis: al corregir el target, la ventaja del modelo sobre la regla
+  `number_inpatient > 0` debe caer MÁS en el grupo `number_inpatient == 0` del top 10%
+  que en el resto del top 10%.
+- Métrica exacta con la que se comprobará, toda en val (test está gastado):
+  1. Se toma el top 10% de val del modelo, antes y después de la corrección (cada uno
+     con su propio corte, recalculado sobre sus propias puntuaciones).
+  2. Se parte ese top 10% en dos subgrupos: A = `number_inpatient == 0` (los que la
+     regla NO marca) y B = `number_inpatient >= 1` (los que la regla SÍ marca).
+  3. En cada subgrupo se mide la PRECISIÓN: % de reingresos <30 d reales entre los
+     marcados. Se usa precisión y no PR-AUC porque dentro de cada subgrupo la regla es
+     constante y su PR-AUC sería degenerado.
+  4. Se calcula la caída: delta_A = precision_A(antes) - precision_A(después), y
+     delta_B igual.
+- Criterio: la predicción se considera CONFIRMADA si delta_A > delta_B, y REFUTADA si
+  delta_A <= delta_B. Se reporta el resultado salga como salga.
+- Se informará además de n en cada subgrupo antes y después, porque la composición del
+  top 10% puede moverse y una caída de precisión con un n muy distinto no es
+  comparable sin decirlo.
+- Las cifras "antes" se calculan al empezar la Fase 4, con los artefactos actuales y
+  ANTES de aplicar la corrección. No se han medido todavía.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de

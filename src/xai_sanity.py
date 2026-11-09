@@ -330,6 +330,11 @@ def main():
     pt.assign(media_abs_shap=mean_abs.reindex(pt.index)).to_csv(out / "xai_sanity_noise_probes.csv")
     sens.to_csv(out / "xai_sanity_sensitivity.csv", index=False)
     topk.to_csv(out / "xai_sanity_topk_composition.csv", index=False)
+    # Estabilidad local y tamaño/tasa del grupo de cada caso: ya se calculan e imprimen
+    # arriba, y la Fase 3d (xai_local.py) los necesita. Se guardan para no reentrenar
+    # los 5 folds solo por leer estas dos columnas.
+    (st["cases"].merge(group_info, left_on="caso", right_index=True)
+     .to_csv(out / "xai_sanity_local_stability.csv", index=False))
 
     print("\n" + "=" * 80, "\nVEREDICTO SEGÚN CRITERIOS FIJADOS")
     print(f"  Aleatorización de etiquetas: {'PASA' if lr_ok else 'FALLA'}")

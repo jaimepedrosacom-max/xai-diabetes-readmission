@@ -1,0 +1,39 @@
+caso,encounter_id,variable,valor,shap_logodds,abs_shap,rank_local,en_top_k,max_abs_delta,delta_min,delta_max,valor_max_delta,delta_incluye_change,interpretable,destino_contaminado,clasificacion
+falsa_alarma_mayor_riesgo,140533200,number_inpatient,12,2.154876680053627,2.154876680053627,1,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+falsa_alarma_mayor_riesgo,140533200,discharge_disposition_id,Casa,-0.09848987820580754,0.09848987820580754,2,True,0.0312149038670267,0.0002181021925073,0.0312149038670267,3,False,True,False,coincide
+falsa_alarma_mayor_riesgo,140533200,diag_1_group,Diabetes,0.09609241768562739,0.09609241768562739,3,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+falsa_alarma_mayor_riesgo,140533200,number_emergency,2,0.08645410020381482,0.08645410020381482,4,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+falsa_alarma_mayor_riesgo,140533200,num_lab_procedures,37,0.07449435766724095,0.07449435766724095,5,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,discharge_disposition_id,Centro rehabilitación,1.1272751185100782,1.1272751185100782,1,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,number_inpatient,0,-0.14632492541828893,0.14632492541828893,2,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,payer_code,MD,-0.09255721030580409,0.09255721030580409,3,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,time_in_hospital,1,-0.07084928215198263,0.07084928215198263,4,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,medical_specialty,Missing,0.06839597820201807,0.06839597820201807,5,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_no_reingresa,206978460,insulin,Down,0.03619935518855953,0.03619935518855953,9,False,0.0,0.0,0.0,Steady,True,False,True,ni atribuye ni mueve
+modelo_alto_sin_ingresos_reingresa,34148802,discharge_disposition_id,Otra institución hospitalaria,0.9364415435297209,0.9364415435297209,1,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_reingresa,34148802,number_inpatient,0,-0.1338605054808063,0.1338605054808063,2,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_reingresa,34148802,medical_specialty,Missing,0.09142270250623592,0.09142270250623592,3,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_reingresa,34148802,payer_code,Missing,0.08222852029747452,0.08222852029747452,4,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_reingresa,34148802,diag_1_group,Circulatory,0.07387772173264805,0.07387772173264805,5,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+modelo_alto_sin_ingresos_reingresa,34148802,glyburide,Steady,0.013784078828403308,0.013784078828403308,15,False,0.0039575459604749,-0.0039575459604749,-0.0039575459604749,Up,True,False,True,mueve sin atribuir
+perfil_alto_1,265508166,number_inpatient,5,1.2786516689259142,1.2786516689259142,1,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_1,265508166,number_emergency,1,0.06905990849378807,0.06905990849378807,2,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_1,265508166,diag_2_group,Endocrine,0.061587113078665275,0.061587113078665275,3,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_1,265508166,discharge_disposition_id,Casa con atención domiciliaria,0.0272929826659108,0.0272929826659108,4,True,0.002168688018086,-0.002168688018086,-0.0006820151920702,1,False,True,False,coincide
+perfil_alto_1,265508166,number_diagnoses,9,0.02280748950560407,0.02280748950560407,5,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_1,265508166,metformin,Steady,-0.018457055935943715,0.018457055935943715,7,False,0.0,0.0,0.0,Up,False,False,False,ni atribuye ni mueve
+perfil_alto_1,265508166,insulin,Steady,0.006181049147562324,0.006181049147562324,14,False,0.0037851021194101,0.0006256971836148,0.0037851021194101,Up,False,False,False,mueve sin atribuir
+perfil_alto_2,34910250,discharge_disposition_id,Otra institución hospitalaria,0.9537506475279554,0.9537506475279554,1,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+perfil_alto_2,34910250,payer_code,Missing,0.10094202422850383,0.10094202422850383,2,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+perfil_alto_2,34910250,number_inpatient,0,-0.10034804401451035,0.10034804401451035,3,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+perfil_alto_2,34910250,medical_specialty,Missing,0.07556939552835172,0.07556939552835172,4,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+perfil_alto_2,34910250,num_lab_procedures,52,0.04545691157824721,0.04545691157824721,5,True,,,,,,True,True,sin sensibilidad medida (no es lever)
+perfil_alto_2,34910250,insulin,Steady,0.027208400539295418,0.027208400539295418,9,False,0.0050182327206595,0.0050182327206595,0.0050182327206595,Up,False,False,True,mueve sin atribuir
+perfil_alto_2,34910250,metformin,Steady,-0.01608410104676082,0.01608410104676082,14,False,0.0,0.0,0.0,Up,False,False,True,ni atribuye ni mueve
+perfil_alto_2,34910250,pioglitazone,Steady,0.010841133927939837,0.010841133927939837,16,False,0.0286551172169228,0.0,0.0286551172169228,Up,False,False,True,mueve sin atribuir
+perfil_alto_3,260452620,number_inpatient,4,0.7034766014046442,0.7034766014046442,1,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_3,260452620,number_emergency,1,0.06915731045366554,0.06915731045366554,2,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_3,260452620,diag_2_group,Genitourinary,-0.055011325803852665,0.055011325803852665,3,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_3,260452620,diag_1_group,Circulatory,0.04511060773179827,0.04511060773179827,4,True,,,,,,True,False,sin sensibilidad medida (no es lever)
+perfil_alto_3,260452620,discharge_disposition_id,Casa con atención domiciliaria,0.030741729469810963,0.030741729469810963,5,True,0.0030296946041416,-0.0010382759385022,0.0030296946041416,3,False,True,False,coincide
+perfil_alto_3,260452620,insulin,Down,0.02192877591256183,0.02192877591256183,6,False,0.0028959855105568,-0.0028959855105568,0.0,Steady,True,False,False,mueve sin atribuir
