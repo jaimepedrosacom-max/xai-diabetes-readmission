@@ -1,0 +1,19 @@
+caso,encounter_id,prob,destino,top_k,umbral,marcado,variables_accionables,n_candidatos,enum_validos,dice_devueltos,dice_distintos,dice_rechazados_mas_de_2,dice_validos,prob_min_alcanzable,cambio_mas_cercano
+perfil_alto_1,265508166,0.325729375699032,6,5%,0.23469247122760237,True,"discharge_disposition_id, metformin, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.3235606876809459,discharge_disposition_id: 6 → 1
+perfil_alto_1,265508166,0.325729375699032,6,10%,0.19544781681574364,True,"discharge_disposition_id, metformin, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.3235606876809459,discharge_disposition_id: 6 → 1
+perfil_alto_1,265508166,0.325729375699032,6,20%,0.15547340491616515,True,"discharge_disposition_id, metformin, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.3235606876809459,discharge_disposition_id: 6 → 1
+perfil_alto_2,34910250,0.2532542827610667,5,5%,0.23469247122760237,True,"metformin, pioglitazone, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.25325428276106676,metformin: Steady → Up
+perfil_alto_2,34910250,0.2532542827610667,5,10%,0.19544781681574364,True,"metformin, pioglitazone, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.25325428276106676,metformin: Steady → Up
+perfil_alto_2,34910250,0.2532542827610667,5,20%,0.15547340491616515,True,"metformin, pioglitazone, insulin",18.0,0.0,0.0,0.0,0.0,0.0,0.25325428276106676,metformin: Steady → Up
+perfil_alto_3,260452620,0.2160386988362622,6,5%,0.23469247122760237,False,,,,,,,,,
+perfil_alto_3,260452620,0.2160386988362622,6,10%,0.19544781681574364,True,"discharge_disposition_id, insulin",8.0,0.0,0.0,0.0,0.0,0.0,0.21206449749919892,discharge_disposition_id: 6 → 1; insulin: Down → Steady
+perfil_alto_3,260452620,0.2160386988362622,6,20%,0.15547340491616515,True,"discharge_disposition_id, insulin",8.0,0.0,0.0,0.0,0.0,0.0,0.21206449749919892,discharge_disposition_id: 6 → 1; insulin: Down → Steady
+modelo_alto_sin_ingresos_reingresa,34148802,0.2616623899063013,5,5%,0.23469247122760237,True,glyburide,2.0,0.0,0.0,0.0,0.0,0.0,0.2577048439458264,glyburide: Steady → Up
+modelo_alto_sin_ingresos_reingresa,34148802,0.2616623899063013,5,10%,0.19544781681574364,True,glyburide,2.0,0.0,0.0,0.0,0.0,0.0,0.2577048439458264,glyburide: Steady → Up
+modelo_alto_sin_ingresos_reingresa,34148802,0.2616623899063013,5,20%,0.15547340491616515,True,glyburide,2.0,0.0,0.0,0.0,0.0,0.0,0.2577048439458264,glyburide: Steady → Up
+modelo_alto_sin_ingresos_no_reingresa,206978460,0.2303333275705821,22,5%,0.23469247122760237,False,,,,,,,,,
+modelo_alto_sin_ingresos_no_reingresa,206978460,0.2303333275705821,22,10%,0.19544781681574364,True,insulin,2.0,0.0,0.0,0.0,0.0,0.0,0.2303333275705821,insulin: Down → Steady
+modelo_alto_sin_ingresos_no_reingresa,206978460,0.2303333275705821,22,20%,0.15547340491616515,True,insulin,2.0,0.0,0.0,0.0,0.0,0.0,0.2303333275705821,insulin: Down → Steady
+falsa_alarma_mayor_riesgo,140533200,0.5170342803170171,1,5%,0.23469247122760237,True,discharge_disposition_id,2.0,0.0,0.0,0.0,0.0,0.0,0.5172523825095245,discharge_disposition_id: 1 → 6
+falsa_alarma_mayor_riesgo,140533200,0.5170342803170171,1,10%,0.19544781681574364,True,discharge_disposition_id,2.0,0.0,0.0,0.0,0.0,0.0,0.5172523825095245,discharge_disposition_id: 1 → 6
+falsa_alarma_mayor_riesgo,140533200,0.5170342803170171,1,20%,0.15547340491616515,True,discharge_disposition_id,2.0,0.0,0.0,0.0,0.0,0.0,0.5172523825095245,discharge_disposition_id: 1 → 6

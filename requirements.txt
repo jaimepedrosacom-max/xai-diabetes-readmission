@@ -8,3 +8,9 @@ ucimlrepo==0.0.7
 matplotlib==3.10.3
 scipy==1.17.1
 shap==0.49.1
+# El arreglo de reproducibilidad de DiCE (src/xai_counterfactuals.py, run_dice) depende
+# de cómo está escrito dice_random.py en esta versión: random_seed no se propaga a
+# np.random.choice ni a cfs_df.sample, y por eso fijamos el estado global de numpy
+# antes de cada llamada. Si se sube de versión, hay que volver a comprobarlo.
+dice-ml==0.12
+raiutils==0.4.2  # UserConfigValidationException, que importa src/xai_counterfactuals.py

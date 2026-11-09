@@ -1,0 +1,56 @@
+top_k,grupo,palanca,n
+10%,22/5 (destino congelado),insulin→Steady,2
+10%,22/5 (destino congelado),insulin→Up,1
+10%,otros destinos,discharge_disposition_id→1,356
+10%,otros destinos,discharge_disposition_id→6,33
+10%,otros destinos,discharge_disposition_id→3,20
+10%,otros destinos,insulin→Steady,15
+10%,otros destinos,discharge_disposition_id→1; insulin→Steady,3
+10%,otros destinos,insulin→Up,3
+10%,otros destinos,glyburide→Up,3
+10%,otros destinos,glipizide→Steady,3
+10%,otros destinos,discharge_disposition_id→3; insulin→Steady,3
+10%,otros destinos,discharge_disposition_id→1; glyburide→Up,1
+10%,otros destinos,glipizide→Down,1
+10%,otros destinos,metformin→Up,1
+10%,otros destinos,repaglinide→Up; insulin→Steady,1
+10%,otros destinos,pioglitazone→Up,1
+10%,otros destinos,discharge_disposition_id→3; insulin→Up,1
+10%,otros destinos,discharge_disposition_id→1; metformin→Up,1
+10%,otros destinos,discharge_disposition_id→3; glyburide→Up,1
+10%,otros destinos,glipizide→Up,1
+20%,22/5 (destino congelado),glipizide→Up,1
+20%,otros destinos,discharge_disposition_id→1,673
+20%,otros destinos,discharge_disposition_id→6,62
+20%,otros destinos,discharge_disposition_id→3,53
+20%,otros destinos,insulin→Steady,11
+20%,otros destinos,discharge_disposition_id→1; insulin→Steady,5
+20%,otros destinos,insulin→Up,4
+20%,otros destinos,metformin→Up; insulin→Steady,2
+20%,otros destinos,glipizide→Up,2
+20%,otros destinos,discharge_disposition_id→6; insulin→Steady,2
+20%,otros destinos,discharge_disposition_id→6; glyburide→Up,1
+20%,otros destinos,pioglitazone→Up,1
+20%,otros destinos,glipizide→Down,1
+20%,otros destinos,repaglinide→Up,1
+20%,otros destinos,repaglinide→Up; insulin→Steady,1
+20%,otros destinos,rosiglitazone→Up; insulin→Steady,1
+20%,otros destinos,discharge_disposition_id→3; insulin→Steady,1
+20%,otros destinos,glimepiride→Steady,1
+20%,otros destinos,discharge_disposition_id→6; insulin→Up,1
+5%,22/5 (destino congelado),insulin→Steady,6
+5%,22/5 (destino congelado),glyburide→Up,2
+5%,22/5 (destino congelado),insulin→Up,1
+5%,22/5 (destino congelado),metformin→Up,1
+5%,22/5 (destino congelado),glimepiride→Up,1
+5%,otros destinos,discharge_disposition_id→1,122
+5%,otros destinos,discharge_disposition_id→6,20
+5%,otros destinos,discharge_disposition_id→3,15
+5%,otros destinos,insulin→Steady,7
+5%,otros destinos,rosiglitazone→Up,1
+5%,otros destinos,metformin→Up,1
+5%,otros destinos,discharge_disposition_id→1; insulin→Steady,1
+5%,otros destinos,repaglinide→Up,1
+5%,otros destinos,glipizide→Up,1
+5%,otros destinos,discharge_disposition_id→3; insulin→Steady,1
+5%,otros destinos,discharge_disposition_id→6; insulin→Steady,1

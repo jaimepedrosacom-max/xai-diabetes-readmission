@@ -1,0 +1,12 @@
+caso,encounter_id,prob,reingresa,elegible,motivo
+perfil_alto_1,265508166,0.325729375699032,0,True,prob >= umbral top 10% (0.1954)
+perfil_alto_2,34910250,0.2532542827610667,0,True,prob >= umbral top 10% (0.1954)
+perfil_alto_3,260452620,0.2160386988362622,0,True,prob >= umbral top 10% (0.1954)
+riesgo_mediano,355466984,0.0971371984917023,1,False,"prob < umbral top 10% (0.1954): el modelo no lo marca, no hay nada que bajar"
+riesgo_bajo,439628024,0.055366165772984,0,False,"prob < umbral top 10% (0.1954): el modelo no lo marca, no hay nada que bajar"
+modelo_alto_sin_ingresos_reingresa,34148802,0.2616623899063013,1,True,prob >= umbral top 10% (0.1954)
+modelo_alto_sin_ingresos_no_reingresa,206978460,0.2303333275705821,0,True,prob >= umbral top 10% (0.1954)
+modelo_bajo_con_ingresos_reingresa,166275936,0.0825619910686626,1,False,"prob < umbral top 10% (0.1954): el modelo no lo marca, no hay nada que bajar"
+modelo_bajo_con_ingresos_no_reingresa,136452990,0.0936858821470758,0,False,"prob < umbral top 10% (0.1954): el modelo no lo marca, no hay nada que bajar"
+falsa_alarma_mayor_riesgo,140533200,0.5170342803170171,0,True,prob >= umbral top 10% (0.1954)
+reingreso_menor_riesgo,88338264,0.0337538200074529,1,False,"prob < umbral top 10% (0.1954): el modelo no lo marca, no hay nada que bajar"

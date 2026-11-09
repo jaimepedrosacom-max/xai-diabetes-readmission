@@ -33,13 +33,19 @@ seguimiento post-alta.
 Python, pandas, scikit-learn, lightgbm, shap, dice-ml (o alibi) para
 counterfactuals, matplotlib/seaborn para gráficas.
 
-## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-04)
+## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-09)
 
 ### Estado
 - Hecho: datos, baseline, modelo principal y evaluación final en test
   (commits `e4a0354`, `d9a017c`, `ff22295`, `16f017b`).
-- En curso: Fase 3 (XAI), con plan aprobado. Orden: `src/xai_shap.py`, luego
-  `src/xai_sanity.py`, luego `src/xai_counterfactuals.py`.
+- Fase 3 (XAI): hechas 3a (`src/xai_shap.py`, global), 3b (`src/xai_sanity.py`,
+  sanity checks + auditoría del destino) y 3c (`src/xai_counterfactuals.py`,
+  contrafactuales). PENDIENTE dentro de la Fase 3: las explicaciones locales SHAP
+  de los 11 casos de `reports/xai_local_cases.csv`. Ese CSV es solo la selección
+  (`src/xai_cases.py`), y los casos se consumen hasta ahora en `fold_stability`
+  (estabilidad del top-3 local entre folds, que es el sanity check SOBRE las
+  explicaciones locales, no la explicación) y en la Fase 3c. No hay waterfall ni
+  tabla de contribuciones por caso en `reports/`.
 - Pendiente: Fase 4 (acción), informe y `README.md`.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
@@ -85,6 +91,91 @@ counterfactuals, matplotlib/seaborn para gráficas.
   antes/después se mide en val y CV, y cualquier nueva consulta a test se declara
   en el informe.
 - El k del seguimiento (5/10/20%) queda abierto: lo decide el gestor.
+
+### Fase 3c — Contrafactuales (`src/xai_counterfactuals.py`)
+- Dos métodos en paralelo: DiCE (Mothilal et al., 2020, `method="random"`) y
+  enumeración exhaustiva de hasta 2 cambios. Las cifras del hallazgo y de cobertura
+  salen de la enumeración, que es determinista; DiCE muestrea y no prueba
+  inexistencia, así que solo se usa para auditarla y como el método que pedía el
+  plan (ver más abajo qué depende de DiCE y qué no).
+- Espacio de acciones (NO se toca para forzar resultados): hasta 2 cambios; solo
+  fármacos que el paciente ya toma, entre Steady/Up/Down; destino al alta solo
+  hacia 1, 6 o 3, y CONGELADO si el destino es 22 o 5 (la auditoría de
+  `audit_discharge_leakage.py` indica que parte de su efecto viene de cómo se
+  define la etiqueta). `A1Cresult` y `max_glu_serum` congeladas: se puede pedir la
+  prueba, no elegir el resultado. `change` y `diabetesMed` son derivadas.
+- `change` solo se puede recalcular en un sentido: Up/Down implica Ch, pero hay
+  11.425 filas de train con Ch sin ningún Up/Down. Cuando un candidato elimina
+  todos los Up/Down del original, `change` es ambiguo y se puntúa el PEOR caso.
+- Reproducibilidad de DiCE: `random_seed` por sí solo NO basta, y se vio en los
+  resultados (dos llamadas sobre el mismo paciente devolvían conjuntos distintos
+  de propuestas, incluso dentro del mismo proceso y con `PYTHONHASHSEED=0`, así
+  que no era la aleatorización del hash de cadenas). Causa localizada en el código
+  de dice_ml 0.12, `explainer_interfaces/dice_random.py`: `random_seed` solo se
+  propaga a `get_samples`, mientras que otros dos pasos usan el estado GLOBAL de
+  numpy sin semilla — `np.random.choice` para elegir qué variables varía cada
+  muestra (línea 114) y `cfs_df.sample(total_CFs)` para quedarse con `total_CFs`
+  candidatos (línea 135; pandas sin `random_state` también usa `np.random`
+  global). Arreglado fijando `np.random.seed(D.SEED)` y `random.seed(D.SEED)`
+  justo antes de cada llamada, sin cambiar el método (sigue siendo
+  `method="random"`). Comprobado: dos llamadas en el mismo proceso y dos procesos
+  distintos dan lo mismo, y dos ejecuciones completas del script dan los 12 CSV
+  idénticos byte a byte, incluido `xai_counterfactuals_DEMO_ENGANOSO.csv`.
+- Qué depende de DiCE y qué no: el hallazgo de los 6 casos y todas las cifras de
+  cobertura salen de la enumeración exhaustiva, que es determinista. El control
+  positivo (d) y la auditoría agregada SÍ dependen de DiCE, y tras fijar las
+  semillas son reproducibles. Sus números no cambiaron al arreglarlo (3/3 y 29/30,
+  con el mismo encuentro fallido), así que los criterios prerregistrados no se
+  reevaluaron.
+
+#### Resultado: 0 contrafactuales para los 6 casos elegibles — es un hallazgo, no un bug
+- De los 11 casos de la Fase 3a, 6 son elegibles (prob >= umbral del top 10% =
+  0,1954 en val). Los otros 5 no los marca el modelo: no hay nada que bajar.
+- Veredicto por los criterios prerregistrados antes de ver la salida: HALLAZGO
+  REAL. Diagnósticos en `reports/xai_counterfactuals_diag_*.csv`:
+  (a) el Scorer reproduce `sk_model.predict_proba` con diferencia 0,0 (tol 1e-9),
+  y umbral y puntuación están ambos en PROBABILIDAD, no en log-odds;
+  (b) 14 de 22 cambios de un solo lever mueven la puntuación, con dtypes y
+  `categories` intactos en 22/22 (ningún valor nuevo se vuelve NaN ni categoría
+  desconocida, que LightGBM leería como missing en silencio);
+  (c) el mínimo alcanzable queda por encima del umbral en todos los casos
+  marcados: en el top 10%, entre 0,017 y 0,322 por encima del corte (hasta 0,362
+  contando todos los umbrales en que cada caso está marcado);
+  (d) control positivo: DiCE encuentra contrafactual en 3/3 casos donde la
+  enumeración prueba que existe, y en 29/30 de la auditoría agregada (cifras
+  reproducibles tras fijar las semillas globales). El fallo es un caso con un
+  único contrafactual válido: probablemente muestreo aleatorio, no verificado.
+- Cobertura en val, por enumeración (ojo al denominador de cada cifra):
+  top 10% completo, 451 de 1.987 marcados tienen contrafactual (22,70%); dentro
+  del grupo "otros destinos", 448 de 1.518 (29,51%); dentro del grupo 22/5 con el
+  destino congelado, 3 de 469 (0,64%). Sin tocar el destino (solo fármacos):
+  59 de 1.987 en el top 10% completo (2,97%), 56 de 1.518 en "otros destinos"
+  (3,69%).
+- Dónde está la accionabilidad: de los 448 pacientes con contrafactual del grupo
+  "otros destinos" en el top 10%, en 419 el MEJOR contrafactual (menos cambios y,
+  a igualdad, menor puntuación) toca `discharge_disposition_id`, y en 356 de ellos
+  es concretamente destino → 1. Solo en 29 de los 448 el mejor contrafactual no
+  toca el destino. Los cambios de medicación mueven la puntuación <0,03 en los 6
+  casos analizados (diagnóstico (b)); no se ha medido ese rango en la población.
+- Por qué los 6 casos dan 0: 3 tienen el destino congelado (códigos 5, 5, 22), 1
+  ya está en destino 1, y los 2 de destino 6 solo ganan 0,002 moviéndose a 1.
+  `falsa_alarma_mayor_riesgo` (140533200) es el caso límite esperado: su mínimo
+  alcanzable (0,5173) está POR ENCIMA de su puntuación original (0,5170).
+- Matiz para el informe: los 6 casos se eligieron en la Fase 3a por interés
+  explicativo, no por accionabilidad, así que están sesgados hacia probabilidades
+  altas. El límite es real, pero en estos 6 es peor que en la población.
+- Lectura para el gestor: el modelo sirve para PRIORIZAR a quién seguir, no para
+  decidir QUÉ hacer. La accionabilidad se concentra en `discharge_disposition_id`,
+  pero el destino al alta refleja en buena parte la gravedad del paciente
+  (confusión), no una decisión libre: un contrafactual del tipo "mandarlo a casa"
+  baja la puntuación sin ninguna evidencia de que baje el riesgo. Esto es distinto
+  del problema de fuga de los códigos 22 y 5, que están congelados y no generan
+  contrafactuales; los contrafactuales de destino salen de 3, 6, 15, etc. hacia 1,
+  y en `audit_discharge_leakage.csv` el código 3 tiene un `pct_V57_o_prog` (16,5)
+  parecido al del código 1 (17,3).
+- `reports/xai_counterfactuals_DEMO_ENGANOSO.csv` es el ejemplo de cómo un
+  contrafactual puede engañar (mismo paciente con y sin congelar el destino 22).
+  No es análisis ni recomendación y no entra en ningún resumen.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
