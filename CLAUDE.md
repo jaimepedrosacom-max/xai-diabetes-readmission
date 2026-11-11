@@ -53,7 +53,11 @@ counterfactuals, matplotlib/seaborn para gráficas.
 - Fase 4: puntos 1-5 HECHOS (cifras "antes", corrección del target, predicción
   prerregistrada, equidad, ablación de `payer_code` y la consulta ÚNICA a test, que fue
   lo último por su propia condición). **Test ya consultado por segunda y última vez.**
-  Pendiente solo el punto 6: informe + `README.md`.
+  Punto 6 EN CURSO: `README.md` hecho (instalación, orden de ejecución, guardarraíles,
+  aviso de las dos consultas a test y citas) y `reports/memoria_cifras.md` hecho (todas
+  las cifras localizadas con su CSV, columna y denominador, para redactar). **El informe
+  lo redacta Jaime**, no se genera aquí. Enunciado: máximo 8 páginas (5-6 recomendadas),
+  con Introduction / Data and Methods / Results / Actions and Insights / Discussion.
 - Entregable final: modelo corregido SIN `payer_code`, guardarraíl 123 árboles /
   PR-AUC val 0,1868; en test, con la etiqueta corregida, lift 1,9194.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
