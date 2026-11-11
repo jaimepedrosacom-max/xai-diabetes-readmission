@@ -972,6 +972,82 @@ colateral, y es lo que responde más directamente a la pregunta ética de la asi
 - Comparabilidad: el análisis distributivo es train+val y el resto val, así que sus
   cifras no se comparan directamente entre sí.
 
+### Prerregistro de la ablación de `payer_code` y de la consulta única a test
+Escrito y commiteado ANTES de ejecutar cualquiera de las dos cosas.
+
+#### A. Ablación de `payer_code` (decide qué modelo es el entregable)
+- Montaje: modelo corregido SIN `payer_code`, mismo split CONGELADO, mismos
+  hiperparámetros (`num_leaves=31`, `min_child_samples=20`, `learning_rate=0.03`,
+  SEED=42), early stopping sobre val con la etiqueta corregida, y su PROPIO guardarraíl
+  (nº de árboles y PR-AUC en val), que se anota la primera vez que corra.
+- Qué se mide:
+  - (a) **Lift** en val y en CV agrupada de 5 folds dentro de train, frente al modelo
+    corregido CON `payer_code`. En la CV, `n_estimators` fijo en los dos para que lo
+    único que cambie sea la feature.
+  - (b) **Composición del top 10% por `payer_code`** en el modelo ablacionado: los grupos
+    siguen existiendo en los datos aunque el modelo no vea la variable. Mismos cocientes,
+    misma referencia **MC**, mismos IC bootstrap (2.000 réplicas agrupadas por
+    `patient_nbr`, semilla 42) y mismos mínimos (n >= 100 y >= 20 marcados).
+- **REGLA DE DECISIÓN, fijada antes de medir.** El modelo ablacionado pasa a ser el
+  ENTREGABLE si y solo si se cumplen LAS DOS:
+  1. REDUCE el recuento de **fallos ROBUSTOS**, y
+  2. su lift en CV NO cae más de un **5% relativo** frente al modelo con `payer_code`.
+  Si no se cumplen las dos, el entregable sigue siendo el modelo CON `payer_code` y la
+  recomendación al gestor se documenta SIN cambiar el modelo.
+- **Fallo ROBUSTO** (criterio PRIMARIO del recuento) = estimación puntual fuera de
+  [0,80; 1,25] **Y** IC95 del cociente que excluya el 1. Hoy son **2**: `Missing`
+  [1,754; 2,463] y `SP` [0,239; 0,569]. Por qué se cambia el recuento bruto por este: con
+  el recuento bruto, la ablación podría "reducir fallos" solo porque `HM` [0,973; 1,839]
+  o `BC` [0,410; 1,215] cruzaran el umbral POR RUIDO, ya que sus IC incluyen la paridad.
+- **Recuento BRUTO de fallos por umbral** (el criterio original): se sigue reportando,
+  pero como SECUNDARIO y descriptivo. Hoy son 4.
+- Precisión para que el recuento no sea ambiguo: se compara sobre el CONJUNTO COMÚN de
+  grupos elegibles en los dos modelos, porque la ablación puede cambiar qué grupos llegan
+  a 20 marcados. Se reportan además los dos recuentos completos y qué grupos entran o
+  salen de la elegibilidad.
+- **Tabla completa lado a lado:** se reportan los cocientes de los 10 grupos con sus IC,
+  antes y después de la ablación, porque el RECUENTO NO CAPTURA LA MAGNITUD. Si `SP`
+  pasara de 0,385 a 0,60 seguiría fallando pero habría mejorado de verdad, y eso tiene
+  que verse. El cambio de magnitud se reporta como DESCRIPTIVO, sin veredicto propio.
+- **HIPÓTESIS DE JAIME, escrita antes de medir:** la disparidad PERSISTIRÁ en buena
+  medida, porque el análisis de proxies ya mostró que la información protegida es
+  recuperable del resto del formulario (`race` AUC OVR macro 0,737, las 6 clases sobre
+  0,65). Si se confirma, **ese es el hallazgo: quitar la variable no arregla el problema,
+  solo lo hace invisible y no auditable.** Se reporta salga como salga.
+- Matiz obligatorio para el informe: la disparidad mayor es `Missing` (cociente 2,073),
+  que son **7.933 de las 19.868 filas de val** (39,9%). Eso es AUSENCIA DE DATO
+  ADMINISTRATIVO, no un tipo de seguro, y se discute como categoría DISTINTA de las
+  demás, no como un seguro más.
+
+#### B. Consulta única a test
+- Una sola ejecución, con hiperparámetros, split, corrección y elección de modelo ya
+  cerrados. Nada cambia después de verla; si el número sale mal, se reporta igual.
+- Guardarraíl antes de tocar test: el modelo entregable reproduce su nº de árboles y su
+  PR-AUC en val. NO se reentrena con train+val (igual que en la Fase 2).
+- Qué se mide en test, con la etiqueta CORREGIDA:
+  - ROC-AUC, PR-AUC, **prevalencia y lift** (el titular es el lift), y Brier.
+  - Top-k 5/10/20%: marcados, aciertos, precisión, recall y lift, que es lo que el gestor
+    aplica.
+  - Líneas base en test con la etiqueta corregida: prevalencia y regla
+    `number_inpatient > 0`. Sin referencia, el PR-AUC no se interpreta.
+- **Replicación de los TRES pasos de la brecha A - B en test**, no solo el (3): el paso
+  (3) en val salió compatible con cero, así que replicar solo ese sería replicar la
+  medida más débil. El titular es la inversión entre (1) y (2), y para eso hay que
+  puntuar también el MODELO VIEJO en test. Condiciones:
+  - Es replicación **DESCRIPTIVA**: el criterio prerregistrado se definió y se RESOLVIÓ
+    en val, y NO se redefine con test.
+  - Se reporta tal como salga, incluso si CONTRADICE a val, y se dice si contradice.
+  - No se toma NINGUNA decisión a partir de ella: ni de modelo, ni de features, ni de
+    umbral.
+  - Incluye el bootstrap EMPAREJADO (mismo esquema: 2.000 réplicas por `patient_nbr`,
+    semilla 42) y el `n` de cada subgrupo. Si el `n` de A en test es pequeño, el IC será
+    ancho y se dice.
+- Qué NO se mide en test: SHAP, equidad y la regresión logística. Lo primero y lo segundo
+  viven en val por diseño; lo tercero se excluye para no crear la tentación de un cambio
+  de modelo con test ya visto.
+- Se declara en la memoria: es la SEGUNDA vez que se toca test, para qué, y que NO es
+  comparable con el 0,227 de la Fase 2 porque el target cambió.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del
