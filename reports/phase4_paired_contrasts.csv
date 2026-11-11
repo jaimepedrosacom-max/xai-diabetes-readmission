@@ -1,0 +1,4 @@
+contraste,observado,IC95_bajo,IC95_alto,nulo,excluye_nulo,replicas_usadas,replicas_descartadas
+brecha(2) - brecha(1) [puntos],-10.502291825821242,-13.939369233144111,-7.1310876387735,0.0,True,2000,0
+cociente(2) / cociente(1),0.6505900266463646,0.5581417483395675,0.7472075571033506,1.0,True,2000,0
+delta_A - delta_B [puntos],8.056042205438029,2.7840283908170917,13.749233071287183,0.0,True,2000,0

@@ -1,0 +1,4 @@
+split,n,siguientes_en_un_split,siguientes_en_OTRO_split
+train,59605,17542,0
+val,19868,5867,0
+test,19867,5908,0

@@ -35,15 +35,18 @@ ER_SOURCE = 7       # admission_source_id: "Emergency Room"
 REFERENCE = "1"     # alta a casa
 
 
-def load_audit_frame():
-    """Encuentros de train y val con los datos de su encuentro siguiente."""
-    train, val, _test = D.grouped_split(D.clean(D.load_raw()))
-    keep = set(train[D.GROUP_COL]) | set(val[D.GROUP_COL])
+def add_next_flags(raw: pd.DataFrame) -> pd.DataFrame:
+    """Añade los datos del encuentro SIGUIENTE de cada paciente y las banderas.
 
-    # Se parte del crudo para ver también encuentros excluidos de la limpieza,
-    # pero solo de estos pacientes (el split agrupado deja fuera a los de test).
-    raw = D.load_raw()
-    raw = raw[raw[D.GROUP_COL].isin(keep)].sort_values([D.GROUP_COL, "encounter_id"]).copy()
+    Se extrajo de `load_audit_frame` para que la Fase 4 reetiquete con exactamente
+    esta lógica y no con una copia (ver `src/target_correction.py`). Al extraerla se
+    relanzó este script y sus tres CSV salieron idénticos byte a byte.
+
+    `raw` debe venir del crudo (así se ven también los encuentros que la limpieza
+    excluye, que igual sirven como "siguiente") y se ordena por paciente y
+    encounter_id, el supuesto temporal que valida `validate_order`.
+    """
+    raw = raw.sort_values([D.GROUP_COL, "encounter_id"]).copy()
     by_patient = raw.groupby(D.GROUP_COL)
     for col in ["encounter_id", "admission_type_id", "admission_source_id", "diag_1"]:
         raw[f"next_{col}"] = by_patient[col].shift(-1)
@@ -57,8 +60,18 @@ def load_audit_frame():
     unknown = UNKNOWN_ADMIN_CODES["discharge_disposition_id"]
     raw["destino"] = raw["discharge_disposition_id"].where(
         ~raw["discharge_disposition_id"].isin(unknown), "Unknown").astype(str)
+    return raw.set_index("encounter_id")
 
-    raw = raw.set_index("encounter_id")
+
+def load_audit_frame():
+    """Encuentros de train y val con los datos de su encuentro siguiente."""
+    train, val, _test = D.grouped_split(D.clean(D.load_raw()))
+    keep = set(train[D.GROUP_COL]) | set(val[D.GROUP_COL])
+
+    # Se parte del crudo para ver también encuentros excluidos de la limpieza,
+    # pero solo de estos pacientes (el split agrupado deja fuera a los de test).
+    raw = D.load_raw()
+    raw = add_next_flags(raw[raw[D.GROUP_COL].isin(keep)])
     return raw, raw.loc[train.index], raw.loc[val.index]
 
 

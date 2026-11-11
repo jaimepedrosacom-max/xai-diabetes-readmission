@@ -50,7 +50,9 @@ counterfactuals, matplotlib/seaborn para gráficas.
   (3a); local = SHAP local (3d) y contrafactuales DiCE + enumeración (3c);
   sanity check = aleatorización de etiquetas, barajado guiado, sondas de ruido y
   estabilidad entre folds (3b).
-- Pendiente: Fase 4 (acción), informe y `README.md`.
+- Fase 4 en curso: puntos 1-3 hechos (cifras "antes", corrección del target y predicción
+  prerregistrada; ver "Fase 4 — resultados"). Pendiente: consulta final a test (punto 4),
+  equidad (5) e informe + `README.md` (6).
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
   Versiones fijadas en `requirements.txt`. `dice-ml` está fijado a propósito en
@@ -571,6 +573,42 @@ grande casi por construcción y un CONFIRMADO diría menos de lo que parece.
   `delta = (1) - (3)`), que se mantiene intacto y se reporta igual. Es una cantidad
   ADICIONAL. Si las dos lecturas apuntan en sentidos distintos, se dice explícitamente y
   no se elige la que convenga.
+- La brecha se reporta de DOS formas en los tres pasos: la diferencia en puntos
+  (`precision_A - precision_B`) y el COCIENTE (`precision_A / precision_B`). Motivo:
+  limpiar la etiqueta baja las dos precisiones a la vez, así que la diferencia en puntos
+  puede encogerse sin que la ventaja RELATIVA cambie. En el paso (1) la diferencia es
+  +4,99 puntos y el cociente 1,183 (32,27 / 27,28).
+- Lectura del cociente, fijada AHORA: la ventaja de A se considera apoyada en la etiqueta
+  si el cociente se acerca a 1 o baja por debajo en el paso (2), no solo si se reduce la
+  diferencia en puntos.
+- INTERVALOS DE CONFIANZA de la brecha, en los tres pasos: bootstrap sobre los PACIENTES
+  de val (agrupado por `patient_nbr`, igual que el split; no sobre filas, que trataría
+  como independientes los encuentros del mismo paciente), 2.000 réplicas, semilla
+  `D.SEED`. Se da el IC del 95% (percentiles 2,5 y 97,5) de la diferencia en puntos y
+  del cociente, con el `n` de cada subgrupo al lado. El corte del top 10% se recalcula
+  DENTRO de cada réplica, para que el intervalo refleje el procedimiento completo y no
+  un corte fijado con la muestra entera.
+  Es el mismo estándar que ya se exige en el análisis de equidad: sería incoherente
+  pedir IC bootstrap allí y no aquí, donde está la cifra titular.
+- Lectura de los IC, fijada ANTES de verlos: el cambio de signo de la brecha en el paso
+  (2) se considera ESTABLECIDO si su IC excluye el cero; si lo incluye, se reporta como
+  COMPATIBLE CON CERO y se dice, sin cambiar el veredicto prerregistrado. Lo mismo para
+  el paso (3), donde A baja a 212 marcados y se espera un IC bastante ancho.
+- CONTRASTE EMPAREJADO, que es la prueba del titular. Comparar los IC de los pasos (1) y
+  (2) por separado NO es el contraste adecuado: son los MISMOS pacientes con el MISMO
+  ranking y el MISMO corte, y lo único que cambia es la etiqueta. Por tanto, DENTRO de
+  cada réplica bootstrap (las mismas 2.000, agrupadas por `patient_nbr`, misma semilla)
+  se calcula:
+  - `brecha(2) - brecha(1)` en puntos,
+  - el cociente de cocientes `cociente(2) / cociente(1)`,
+  - `delta_A - delta_B` en puntos,
+  y se da el IC95 de cada uno. Al emparejar se cancela la variación entre pacientes, así
+  que se esperan intervalos bastante más estrechos que los de cada paso por separado.
+- REGLA DE LECTURA, fijada ahora: el cambio de la brecha se considera ESTABLECIDO si el
+  IC de `brecha(2) - brecha(1)` excluye el cero. Esa es la prueba del titular; los IC de
+  cada paso por separado se siguen reportando, pero como DESCRIPTIVOS.
+- El paso (3) NO se empareja con el (1): el ranking cambia y los subgrupos tienen distinto
+  `n`. Se deja como está, compatible con cero y sin usarlo para concluir.
 
 #### Corte del top 10%, en las tres medidas
 - Se usa `probs.quantile(0.9)` sobre las puntuaciones de val, el MISMO criterio que
@@ -581,6 +619,20 @@ grande casi por construcción y un CONFIRMADO diría menos de lo que parece.
   actual ambas coinciden (corte 0,1954, 1.987 marcados de 19.868, A n=440 con 69,3% de
   destinos 22/5, y 564 aciertos = la `precision` del 10% en
   `xai_sanity_topk_composition.csv`).
+
+#### PR-AUC no es comparable entre los dos targets: la cifra titular es el lift
+- El reetiquetado BAJA la prevalencia, y la línea base del PR-AUC es justamente la
+  prevalencia: un PR-AUC más bajo con menos positivos puede ser el mismo rendimiento, o
+  mejor. Comparar los PR-AUC crudos de los dos targets es comparar contra dos líneas
+  base distintas.
+- Prerregistro: se reportan SIEMPRE juntos (a) PR-AUC, (b) la prevalencia del conjunto y
+  (c) el `lift = PR-AUC / prevalencia`. La cifra TITULAR del antes/después es el LIFT, no
+  el PR-AUC crudo. Si el PR-AUC y el lift apuntan en sentidos distintos, se dice y no se
+  elige el que convenga.
+- Esto vale igual para la CV agrupada de 5 folds: por fold se reportan PR-AUC,
+  prevalencia y lift, y la comparación antes/después se hace sobre el lift.
+- Referencia de partida (val, etiqueta vieja): PR-AUC 0,2308 con prevalencia 11,39%,
+  lift 2,026 (`xai_sanity_sensitivity.csv`, fila "todo val").
 
 #### Comprobación de que la corrección hace lo que decimos
 - Prerregistro: se espera que el SHAP medio (|SHAP|) de `discharge_disposition_id` BAJE
@@ -623,6 +675,108 @@ Fijado antes de mirar ningún resultado por grupo. Todo en val.
 - **Redacción obligatoria del resultado de proxies:** que `race`/`gender` sean
   predecibles desde el resto de variables NO demuestra que el modelo las use; demuestra
   que QUITARLAS NO SERÍA SUFICIENTE. No se escribirá "el modelo usa race indirectamente".
+
+### Fase 4 — resultados de la corrección del target (`src/target_correction.py`, `src/phase4_correction.py`)
+
+#### El titular: la brecha A - B se INVIERTE con el mismo modelo y el mismo ranking
+Brecha = `precision_A - precision_B` en el top 10% de val (A = `number_inpatient == 0`,
+B = `>= 1`), con IC95 por bootstrap de PACIENTES (2.000 réplicas, semilla 42, 0
+descartadas). Fuente: `reports/phase4_prediction_gaps.csv`.
+
+| paso | brecha | IC95 | cociente | IC95 | n_A | n_B |
+|---|---|---|---|---|---|---|
+| (1) viejo/vieja | +4,99 | [+0,07; +9,99] | 1,183 | [1,002; 1,389] | 440 | 1.547 |
+| (2) viejo/nueva | -5,51 | [-9,80; -1,04] | 0,770 | [0,613; 0,954] | 440 | 1.547 |
+| (3) nuevo/nueva | -3,06 | [-9,31; +2,44] | 0,866 | [0,609; 1,109] | 212 | 1.775 |
+
+- El paso (2) usa EL MISMO modelo, el MISMO ranking y el MISMO corte que el (1): lo único
+  que cambia es la etiqueta contra la que se puntúa. La ventaja de A sobre B se invierte.
+  Esta es la evidencia SUSTANTIVA del trabajo: donde el modelo discrepaba de la regla
+  simple, su ventaja estaba sostenida por etiquetas contaminadas.
+- **La prueba del titular es el CONTRASTE EMPAREJADO**, no los IC de cada paso por
+  separado (que son los mismos pacientes y el mismo ranking, así que comparar sus IC
+  ignora el emparejamiento). Calculado dentro de cada réplica
+  (`reports/phase4_paired_contrasts.csv`):
+
+| contraste | observado | IC95 | nulo | excluye el nulo |
+|---|---|---|---|---|
+| brecha(2) - brecha(1) | -10,50 puntos | [-13,94; -7,13] | 0 | sí |
+| cociente(2) / cociente(1) | 0,651 | [0,558; 0,747] | 1 | sí |
+| delta_A - delta_B | +8,06 puntos | [+2,78; +13,75] | 0 | sí |
+
+  Al emparejar, el intervalo de la brecha pasa de ~10 puntos de ancho en cada paso por
+  separado a ~6,8 en la diferencia, porque se cancela la variación entre pacientes. Por
+  la regla prerregistrada, el cambio de la brecha queda ESTABLECIDO. El tercer contraste
+  también excluye el cero, así que el veredicto prerregistrado no depende del ruido de
+  muestreo, aunque siga impulsado por `delta_etiqueta`.
+- El paso (3) tiene IC que INCLUYE el cero ([-9,31; +2,44]) y cociente que incluye el 1:
+  se reporta como compatible con cero y no se usa para concluir. A baja a 212 marcados,
+  así que el intervalo es ancho por construcción. NO se empareja con el (1), porque su
+  ranking y sus `n` son otros.
+- MATIZ QUE HAY QUE DECIR NOSOTROS, no esperar a que lo pregunten: el IC del paso (1) es
+  [+0,07; +9,99], o sea que ROZA EL CERO. La ventaja original de A sobre B ya era
+  marginal de por sí. Así que la frase correcta NO es "una ventaja sólida resultó ser un
+  artefacto", sino "una ventaja ya débil se INVIERTE al limpiar la etiqueta". Encaja con
+  lo que ya sabíamos de la Fase 2: la ventaja sobre la regla simple depende de k.
+
+#### El veredicto formal, y por qué NO es el titular
+- Criterio prerregistrado: `delta_A` 12,46 > `delta_B` 4,41 -> **CONFIRMADA**
+  (`reports/phase4_prediction_deltas.csv`).
+- Pero la descomposición dice de dónde viene: en A, `delta_etiqueta` = 13,86 y
+  `delta_modelo` = -1,40 (en B, 3,36 y 1,04). Es decir, el veredicto lo impulsa
+  CASI ENTERO `delta_etiqueta`, que es la identidad aritmética ya anotada en el
+  prerregistro (aciertos reetiquetados / n del subgrupo) y no un contraste. Suma
+  comprobada con `assert`: `delta_etiqueta + delta_modelo = delta_total`.
+- Por eso el titular es el cambio de signo de la brecha y no el "CONFIRMADA".
+
+#### Los dos hallazgos van JUNTOS y en este orden (no presentar uno sin el otro)
+1. **La contaminación NO estaba inflando el rendimiento global.** En CV agrupada de 5
+   folds dentro de train, con `n_estimators` fijo a 122 en ambas para que lo único que
+   cambie sea la etiqueta: lift medio 1,9914 ± 0,0200 con la etiqueta vieja frente a
+   1,9878 ± 0,0575 con la nueva, y el lift con etiqueta nueva GANA en 2 de los 5 folds.
+   El modelo predice el target limpio casi igual de bien
+   (`reports/phase4_cv_lift.csv`).
+2. **Lo que la contaminación fabricaba era la ventaja CONCRETA en el grupo donde el
+   modelo discrepa de la regla simple**, que es el punto 1 de esta sección.
+
+Nota de comparabilidad: PR-AUC crudo no se compara entre targets (su línea base es la
+prevalencia). En val, (1) PR-AUC 0,2308 con prevalencia 11,39% y lift 2,026; (2) 0,1861
+con 9,78% y lift 1,903; (3) 0,1893 con 9,78% y lift 1,936 (`phase4_val_metrics.csv`).
+
+#### Confirmaciones mecánicas de que la corrección hizo lo que decimos
+- **El modelo nuevo deja de marcar a esa población:** A cae de 440 a 212 marcados y su
+  porcentaje de destinos 22/5 pasa del 69,32% al 34,43% (`phase4_prediction_steps.csv`).
+- **El SHAP medio del destino bajó, pero solo un 8%** (0,2043 -> 0,1871, val;
+  `phase4_shap_discharge.csv`). Se esperaba que bajara y bajó. El matiz prerregistrado:
+  una caída pequeña es COHERENTE con que el reetiquetado solo alcanza los casos con
+  encuentro posterior visible, y en los códigos 22 y 5 queda fuera el 36,0% y el 37,8%
+  de sus positivos.
+- **El reetiquetado alcanzó el 43,67% de los positivos del código 22** (193 de 442;
+  `phase4_relabel_by_destination.csv`), que es exactamente la distinción fijada antes de
+  medir: 68,2% es la tasa sobre los VISIBLES y 43,67% la tasa sobre el TOTAL de sus
+  positivos. Código 5: 34,33% (69 de 201). Código 1: 12,56% (563 de 4.481).
+
+#### Mecánica del reetiquetado
+- Filas que pasan de 1 a 0, con denominador (`phase4_target_correction.csv`):
+  train 971 de 6.788 positivos (14,30%), val 320 de 2.263 (14,14%), test 307 de 2.263
+  (13,57%). Prevalencia: 11,39% -> 9,76% en train, 11,39% -> 9,78% en val.
+- Train+val suman **1.291 filas**, que reproducen `audit_discharge_shares.csv` fila a
+  fila (código 1: 563 = 43,61% del total cambiado; 22: 193 = 14,95%; 3: 182 = 14,10%).
+- De test SOLO se aplicó la regla y se reporta el conteo. Ninguna métrica de test se
+  calculó (`phase4_correction.py` no puntúa test).
+- **El encuentro siguiente nunca cae en otro split**: 0 casos en train, val y test, con
+  `assert` que falla si no (`phase4_split_check.csv`). Era lo esperado por el split
+  agrupado por `patient_nbr`, pero está medido, no supuesto.
+
+#### Guardarraíl del modelo corregido
+- Modelo nuevo: **183 árboles, PR-AUC en val 0,1893** (mismos hiperparámetros,
+  `num_leaves=31`, `min_child_samples=20`, `learning_rate=0.03`, early stopping sobre val
+  con la etiqueta nueva). Este es el guardarraíl que debe reproducirse de aquí en
+  adelante para el modelo corregido.
+- El guardarraíl viejo de `evaluate_test.py` (122 árboles, PR-AUC val 0,2308) NO SE TOCA:
+  es el registro de lo que se hizo en la Fase 2 y sigue valiendo para el modelo original.
+  `phase4_correction.py` comprueba los DOS: el viejo antes de medir el paso (1) y el
+  nuevo al entrenar.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
