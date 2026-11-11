@@ -28,12 +28,14 @@ seguimiento post-alta.
   "magia" sin explicar.
 - Si usas un snippet o enfoque de un tutorial/paper conocido, dímelo para citarlo
   en el README (es requisito de integridad académica de la asignatura).
+- Cada cifra que reportes debe venir con su fuente (CSV y columna) y con su
+  denominador explícito. No estimes a ojo ni redondees "de memoria".
 
 ## Stack
 Python, pandas, scikit-learn, lightgbm, shap, dice-ml (o alibi) para
 counterfactuals, matplotlib/seaborn para gráficas.
 
-## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-09)
+## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-11)
 
 ### Estado
 - Hecho: datos, baseline, modelo principal y evaluación final en test
@@ -42,10 +44,18 @@ counterfactuals, matplotlib/seaborn para gráficas.
   sanity checks + auditoría del destino), 3c (`src/xai_counterfactuals.py`,
   contrafactuales) y 3d (`src/xai_local.py`, explicaciones locales de los 11
   casos).
+- Commits de la Fase 3: `a86efe7` y `8055256` (3a), `351c415` (3b), `4f2be45`
+  (3c), `b8a6270` (3d).
+- Cobertura del requisito de "3 técnicas XAI complementarias": global = SHAP
+  (3a); local = SHAP local (3d) y contrafactuales DiCE + enumeración (3c);
+  sanity check = aleatorización de etiquetas, barajado guiado, sondas de ruido y
+  estabilidad entre folds (3b).
 - Pendiente: Fase 4 (acción), informe y `README.md`.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
-  Versiones fijadas en `requirements.txt`.
+  Versiones fijadas en `requirements.txt`. `dice-ml` está fijado a propósito en
+  0.12: el arreglo de reproducibilidad de la Fase 3c depende de detalles
+  internos de esa versión.
 
 ### Limpieza (`src/data.py`, `src/features.py`, `src/preprocessing.py`)
 - Filas eliminadas: `gender` inválido y altas por fallecimiento/hospicio
@@ -95,6 +105,124 @@ counterfactuals, matplotlib/seaborn para gráficas.
   la ventaja es artefacto, y no se afirma que lo sea toda. Ver la Fase 3d y su
   predicción prerregistrada para la Fase 4.
 
+### Fase 3a — SHAP global (`src/xai_shap.py`)
+- TreeSHAP (Lundberg et al., 2020), `feature_perturbation="tree_path_dependent"`,
+  sobre val y con el booster truncado a los 122 árboles de la mejor iteración.
+  Una barra por variable original (44): LightGBM divide directamente por la
+  categórica, así que no hay dummies.
+- Por qué val y no test: de estas explicaciones salen decisiones (Fase 4), y test
+  no debe influir en ninguna.
+- Doble validación: aditividad (`valor base + suma de contribuciones = log-odds`,
+  error < 1e-6) y coincidencia con `pred_contrib` nativo de LightGBM.
+- Top drivers consistentes entre SHAP, permutación y contribución en LR:
+  `number_inpatient` (#1) y `discharge_disposition_id` (#2), con caídas de PR-AUC
+  al permutar de 0,070 y 0,057 — muy por encima del tercer puesto (0,007). A
+  partir de ahí el orden entre métodos NO es fiable: el ruido de permutación es
+  del mismo orden que la señal.
+- Los tres métodos miden cosas distintas y no deben coincidir del todo: SHAP mide
+  cuánto USA el modelo la variable; la permutación, cuánto RENDIMIENTO se pierde
+  al romperla; la LR, lo mismo que SHAP pero en el modelo lineal.
+- `payer_code` sale #4 en SHAP. Se mantuvo a propósito en el modelo (ver Limpieza)
+  para analizarla como posible proxy de equidad → Fase 4.
+- Limitación a discutir en la reflexión crítica: `tree_path_dependent` estima los
+  efectos siguiendo las ramas, así que reparte crédito según las correlaciones con
+  las que se entrenó el modelo.
+- Salidas: `reports/xai_global_comparison.csv`, `reports/xai_shap_levels.csv`, y
+  las figuras `shap_global_bar.png`, `shap_beeswarm_numeric.png`,
+  `shap_levels_categorical.png`.
+
+### Fase 3b — Sanity checks y auditoría del destino (`src/xai_sanity.py`, `src/audit_discharge_leakage.py`)
+Aquí está el HALLAZGO CENTRAL del proyecto. Los criterios de los sanity checks
+están más abajo, en su propia sección; esto son los resultados.
+
+#### Dos problemas distintos en el target `readmitted_30d`
+1. **Fuga concentrada en destinos al alta concretos.** Código 22 (rehabilitación):
+   de los `<30` con siguiente encuentro visible, el 57,2% tiene diagnóstico V57
+   (cuidados/rehabilitación) y el 68,2% tiene V57 o es un ingreso programado —
+   probable continuación de cuidados registrada como "reingreso", no un reingreso
+   no planificado. Descontando esos casos, la ventaja de riesgo del código 22 baja
+   de ~3,0x a ~1,9x frente a casa (tasa 15,6% frente a 8,1% del código 1). El
+   código 5 (otra institución) confirma el patrón a medias: 55,2% de V57 o
+   programado, pero el componente V57 puro no es estable entre train y val. Los
+   códigos 28 (psiquiátrico) y 15 (swing bed) tienen SHAP igual de alto SIN este
+   patrón: sin explicar, posible riesgo real, muestra muy pequeña (n_val 29 y 12).
+2. **Problema más profundo y general: el target cuenta cualquier reingreso, no
+   solo los no planificados.** De 6.503 positivos con siguiente encuentro visible,
+   el 19,9% tiene V57 o ingreso programado. El componente V57 se concentra en
+   pocos destinos (46% en el código 22), pero el componente "programado" está
+   REPARTIDO: el 43,6% de esos casos viene de altas a CASA. Esto no se arregla
+   tratando `discharge_disposition_id`: es una limitación de construcción del
+   target que afecta a todo el dataset y se declara en el informe como limitación
+   independiente del hallazgo del código 22.
+
+#### OJO al verificar estas cifras: no todas están en un CSV
+- Las cifras globales del punto 2 (6.503 visibles, 19,9% con V57 o programado, 46%
+  del componente V57 en el código 22, 43,6% del total en altas a casa) y la réplica
+  train/val del código 5 NO están en ningún CSV: salen del bloque "Alcance global"
+  y de la réplica por split que `audit_discharge_leakage.py` solo IMPRIME por
+  consola (líneas 122-144). Verificadas recalculándolas: n_visibles 6.503,
+  pct_V57_o_prog 19,85%, código 22 = 46,02% del V57, código 1 = 43,61% del total;
+  código 5 con pct_V57 40,0% en train frente a 14,3% en val, mientras el 22 se
+  mantiene en 57,2% / 57,3%.
+- Sumando el CSV por destino salen 6.497 visibles y 19,8%, no 6.503 y 19,9%. Es un
+  SUBCONJUNTO, no una discrepancia: `audit_discharge_leakage.csv` aplica `MIN_N = 30`
+  y deja fuera 53 filas de destinos pequeños, mientras el bloque global usa todo
+  train+val (79.473 filas).
+
+#### Lo que esto enseña sobre los sanity checks (material para la reflexión crítica)
+- Los sanity checks PASAN todos los criterios prerregistrados y NO detectan este
+  problema. Dos lecciones, que son de las partes más defendibles del trabajo:
+  - **"Estabilidad no es validez":** el código 22 es estable entre folds
+    precisamente porque todos los folds comparten la misma etiqueta contaminada.
+  - **"La aleatorización de etiquetas no distingue señal real de artefacto de
+    etiqueta":** ambas colapsan igual al romper la etiqueta.
+- Aviso activo (no fallo): la correlación del ranking global bajo etiquetas
+  aleatorias es 0,856 (umbral de aviso ≥ 0,7). Indica que el orden medio de la
+  tabla refleja en parte facilidad estructural de split, no solo señal. El top-1
+  (`number_inpatient`) SÍ es sensible a la señal real: cae del puesto 1 al 10-20
+  bajo aleatorización.
+- **Solo 13 de 44 variables superan las sondas de ruido en las 10 semillas.** Las
+  demás NO se interpretan, según la regla fijada antes de ver resultados. Esa
+  lista es la que lee la Fase 3d para su columna `interpretable`, desde
+  `reports/xai_sanity_noise_probes.csv` (`gana_a_sonda == 10`).
+- Consecuencias que hay que declarar y no esquivar:
+  - `A1Cresult` NO supera las sondas, así que **no se puede concluir nada sobre la
+    hipótesis central del paper de referencia** (Strack et al., 2014).
+  - `race` y `gender` tampoco, así que no se hacen afirmaciones directas sobre su
+    peso. Eso NO descarta proxies vía otras variables, que se analizan en Fase 4.
+  - Ningún fármaco llega a 10/10 (`insulin` se queda en 8/10). Esto es lo que
+    sostiene, junto con el espacio de acciones de la 3c, la conclusión de que la
+    única palanca accionable que el modelo usa de forma distinguible del ruido es
+    el destino al alta.
+
+#### Impacto cuantificado en las métricas del gestor
+- Quitando los códigos 22 y 5 (632 filas, el 3,2% de val): PR-AUC en val baja de
+  0,2308 a 0,2074 y ROC-AUC de 0,6772 a 0,6662; la tasa de positivos pasa del
+  11,39% al 10,84%; el SHAP medio de `discharge_disposition_id` baja de 0,204 a
+  0,180 y su caída al barajar de 0,057 a 0,031.
+- Lectura: el modelo conserva señal real más allá de este problema, pero una parte
+  medible de su rendimiento viene de ahí.
+
+#### Decisión pendiente para la Fase 4 (opciones ya planteadas, sin decidir)
+- **Reetiquetar a 0** los `<30` cuyo siguiente encuentro es V57 o programado.
+  Preferencia de Jaime: mantiene la población, y deja incertidumbre residual en el
+  ~28% de los positivos que no tiene encuentro posterior visible (2.548 de 9.051 en
+  train+val; 28,6% en val), que se reporta como límite.
+- **Excluir esas altas:** más simple, pero deja sin predicción a una población real.
+- **Solo quitar la feature:** RECHAZADO, no arregla la etiqueta contaminada.
+- Cualquier corrección cambia el problema: el 0,227 de test deja de ser comparable
+  y toda nueva consulta a test se declara explícitamente.
+
+#### Otras salidas de esta fase
+- `src/xai_cases.py` fija los 11 casos locales con regla y semilla, sin mirar las
+  explicaciones finales, y `xai_sanity.py` los escribe en
+  `reports/xai_local_cases.csv`. De ahí los consumen la Fase 3c y la 3d.
+- `reports/xai_sanity_local_stability.csv` guarda la estabilidad del top-3 local
+  entre folds y el `n_grupo`/`tasa_real_%` de cada caso.
+- `reports/audit_discharge_leakage.csv` tiene la auditoría por destino
+  (train+val): `pct_lt30`, `pct_V57`, `pct_programado`, `pct_V57_o_prog`,
+  `tasa_sin_V57_o_prog`, `shap_medio_val`.
+
 ### Fase 3c — Contrafactuales (`src/xai_counterfactuals.py`)
 - Dos métodos en paralelo: DiCE (Mothilal et al., 2020, `method="random"`) y
   enumeración exhaustiva de hasta 2 cambios. Las cifras del hallazgo y de cobertura
@@ -132,8 +260,9 @@ counterfactuals, matplotlib/seaborn para gráficas.
   reevaluaron.
 
 #### Resultado: 0 contrafactuales para los 6 casos elegibles — es un hallazgo, no un bug
-- De los 11 casos de la Fase 3a, 6 son elegibles (prob >= umbral del top 10% =
-  0,1954 en val). Los otros 5 no los marca el modelo: no hay nada que bajar.
+- De los 11 casos locales (fijados en la Fase 3b con `src/xai_cases.py`), 6 son
+  elegibles (prob >= umbral del top 10% = 0,1954 en val). Los otros 5 no los marca
+  el modelo: no hay nada que bajar.
 - Veredicto por los criterios prerregistrados antes de ver la salida: HALLAZGO
   REAL. Diagnósticos en `reports/xai_counterfactuals_diag_*.csv`:
   (a) el Scorer reproduce `sk_model.predict_proba` con diferencia 0,0 (tol 1e-9),
@@ -164,7 +293,7 @@ counterfactuals, matplotlib/seaborn para gráficas.
   ya está en destino 1, y los 2 de destino 6 solo ganan 0,002 moviéndose a 1.
   `falsa_alarma_mayor_riesgo` (140533200) es el caso límite esperado: su mínimo
   alcanzable (0,5173) está POR ENCIMA de su puntuación original (0,5170).
-- Matiz para el informe: los 6 casos se eligieron en la Fase 3a por interés
+- Matiz para el informe: los 6 casos se eligieron en la Fase 3b por interés
   explicativo, no por accionabilidad, así que están sesgados hacia probabilidades
   altas. El límite es real, pero en estos 6 es peor que en la población.
 - Lectura para el gestor: el modelo sirve para PRIORIZAR a quién seguir, no para
@@ -312,6 +441,16 @@ counterfactuals, matplotlib/seaborn para gráficas.
   comparable sin decirlo.
 - Las cifras "antes" se calculan al empezar la Fase 4, con los artefactos actuales y
   ANTES de aplicar la corrección. No se han medido todavía.
+
+### Fase 4 — pendiente. Entra aquí:
+1. Medir las cifras "antes" de la predicción prerregistrada, antes de tocar nada.
+2. Decidir y aplicar la corrección del target (opciones en la Fase 3b).
+3. Medir la predicción y reportar el resultado salga como salga.
+4. Análisis de equidad: `payer_code` (ver la entrada de la Fase 3d) y los posibles
+   proxies de `race`/`gender` vía otras variables, que las sondas no permiten
+   descartar.
+5. Informe (con la reflexión crítica) y `README.md` con instrucciones de
+   reproducción. Dar acceso al repo privado a quien corrija.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
