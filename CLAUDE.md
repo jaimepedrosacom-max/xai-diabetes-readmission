@@ -648,10 +648,27 @@ Fijado antes de mirar ningún resultado por grupo. Todo en val.
 - **Tamaño mínimo para INTERPRETAR:** n ≥ 100 en val y ≥ 20 marcados en el top 10%. Los
   grupos por debajo se REPORTAN con su n y se marcan como no interpretables; no se
   comentan ni entran en conclusiones.
-- **Grupo de referencia:** el más numeroso de cada variable en val.
+- **Grupo de referencia:** el más numeroso de cada variable en val, con UNA excepción
+  decidida antes de medir:
+  - `race` -> Caucasian (14.872) y `gender` -> Female (10.663): son las mayores y no hay
+    nada que decidir.
+  - `payer_code` -> **MC** (Medicare, 6.201), NO `Missing` (7.933), que es la mayor. Un
+    cociente relativo a "seguro desconocido" no es interpretable: no es un grupo de
+    pacientes con una característica común, sino la ausencia de un dato. MC es la mayor
+    categoría con seguro CONOCIDO. `Missing` sigue recibiendo su propio veredicto como
+    grupo no-referencia, porque no medir el seguro tampoco es aleatorio.
 - **Composición del top-k (5/10/20%):** métrica = tasa de marcado del grupo
   (marcados_grupo / n_grupo) y su ratio frente al grupo de referencia. Umbral: hay
   disparidad si el ratio sale de [0,80, 1,25] (regla de los cuatro quintos, EEOC 1978).
+  - El cociente va acompañado de su **IC95 bootstrap** con el mismo esquema que el resto
+    del trabajo (2.000 réplicas agrupadas por `patient_nbr`, semilla `D.SEED`). El
+    VEREDICTO NO CAMBIA: sigue siendo la regla de los cuatro quintos sobre la estimación
+    puntual. El IC se reporta al lado para que un cociente de 0,75 sobre n = 150 no se
+    lea igual que sobre n = 3.000.
+  - Esta familia NO lleva corrección por comparaciones múltiples, porque su veredicto es
+    por UMBRAL y no por significación; el IC es descriptivo.
+  - Motivo de añadirlo: sería incoherente exigir IC emparejado en el titular del punto 3
+    y no tener ninguna medida de incertidumbre en el análisis PRIMARIO de equidad.
 - **Error por grupo al mismo k:** métrica = FNR (positivos reales NO marcados /
   positivos reales del grupo), que es a quien se le niega el seguimiento. Umbral: hay
   disparidad si |FNR_grupo − FNR_ref| ≥ 5 puntos porcentuales Y el IC bootstrap al 95%
@@ -675,6 +692,81 @@ Fijado antes de mirar ningún resultado por grupo. Todo en val.
 - **Redacción obligatoria del resultado de proxies:** que `race`/`gender` sean
   predecibles desde el resto de variables NO demuestra que el modelo las use; demuestra
   que QUITARLAS NO SERÍA SUFICIENTE. No se escribirá "el modelo usa race indirectamente".
+
+#### Prerregistro del punto 5, segunda parte: alcance, múltiples comparaciones y efecto distributivo
+Fijado ANTES de calcular cualquier cifra de equidad. Lo único que se consultó para
+escribir esto son los TAMAÑOS de grupo en val (denominadores, no resultados): `race` 6
+categorías (Caucasian 14.872, AfricanAmerican 3.751, Hispanic 421, Missing 400, Other
+288, Asian 136), `gender` 2 (Female 10.663, Male 9.205) y `payer_code` 10 (Missing
+7.933, MC 6.201, HM 1.167, SP 1.075, BC 945, MD 661, Other 547, CP 497, UN 475, CM 367).
+Las 18 categorías pasan el mínimo de n ≥ 100.
+
+- **Modelo:** el análisis PRIMARIO es el MODELO CORREGIDO, que es el entregable. El
+  modelo viejo entra solo como COLUMNA DESCRIPTIVA de comparación, SIN veredictos propios
+  de disparidad, para no duplicar los contrastes con veredicto. Si la comparación sugiere
+  algo, se dice como observación exploratoria.
+- **Etiqueta de verdad:** la CORREGIDA, en los tres análisis. Todo en VAL (el análisis
+  distributivo del reetiquetado es la excepción: train+val, ver más abajo). Test NO se
+  toca en este punto.
+- **k primario = top 10%**, el mismo que se usa en toda la Fase 3 y 4. El 5% y el 20% se
+  reportan como SENSIBILIDAD, descriptivos y sin veredicto.
+- **Atributo primario de cada análisis** (los demás son secundarios):
+  - Composición del top-k -> `payer_code`. Por qué: es el único de los tres que supera
+    las sondas de ruido 10/10 y aparece en el top-3 local de 2 de los 11 casos, así que
+    es donde hay señal que el modelo use de forma distinguible del ruido.
+  - Error por grupo (FNR) -> `race`. Por qué: es el atributo con carga ética directa, y
+    el FNR es a quién se le niega el seguimiento.
+  - Detectabilidad de proxies -> `race` (`gender` secundario), por el mismo motivo.
+  - Efecto distributivo del reetiquetado -> `race`.
+- **Secundarios:** si un atributo secundario sale "significativo", se reporta como
+  EXPLORATORIO y NO se presenta como hallazgo. No se cambia el atributo primario después
+  de ver los resultados.
+- **Número de contrastes CON VEREDICTO, contados ahora: 20.**
+  - 9 de composición (`payer_code`, 10 grupos menos la referencia), por regla de umbral
+    sobre la estimación puntual (cuatro quintos), no por significación.
+  - 5 de FNR (`race`, 6 grupos menos la referencia), basados en IC.
+  - 1 de proxies (`race`, AUC OVR macro frente al umbral 0,65), por umbral.
+  - 5 de efecto distributivo (`race`, 6 grupos menos la referencia), basados en IC.
+  - Si un grupo no llega al mínimo (n ≥ 100 y ≥ 20 marcados en el k primario), su
+    contraste NO se hace: se reporta sin interpretar y el recuento final se declara.
+- **Corrección por comparaciones múltiples:** se aplica **HOLM** con α = 0,05 DENTRO de
+  cada familia basada en IC (la de FNR, m = 5, y la del efecto distributivo, m = 5), con
+  p-valores bootstrap de dos colas (proporción de réplicas al otro lado del nulo,
+  duplicada, con suelo 1/n_rep). Elegido Holm y no Benjamini-Hochberg porque cada
+  contraste se enunciaría como una afirmación sobre un grupo protegido concreto: interesa
+  controlar la probabilidad de equivocarse en ALGUNA (FWER), no la proporción de falsos
+  descubrimientos en un cribado. Las dos familias por umbral (composición y proxies) no
+  llevan corrección porque no son pruebas de significación; se dice explícitamente.
+- **La `m` de cada familia de Holm es el número de grupos que PASAN el mínimo de ≥ 20
+  marcados**, determinado por esta regla fijada de antemano y NO ajustado tras ver los
+  p-valores. La `m` PLANIFICADA es 5 por familia (6 grupos de `race` menos la
+  referencia); puede BAJAR si algún grupo no alcanza el mínimo. El valor FINAL de `m` se
+  reporta junto a los resultados, con el recuento de contrastes efectivamente realizados
+  y la lista de grupos excluidos con su `n` de marcados.
+- El filtro de ≥ 20 marcados se evalúa EN EL MOMENTO DE MEDIR, no antes: `marcados_grupo`
+  es el NUMERADOR de la tasa de selección, así que consultarlo para fijar el alcance
+  habría sido ver el resultado primario del análisis de composición antes de cerrar su
+  prerregistro. Por eso se deja como regla y el script declara qué grupos cayeron.
+
+#### Efecto distributivo de la PROPIA corrección (análisis nuevo, el más relevante en ética)
+- Pregunta: ¿el reetiquetado quitó positivos de forma DESIGUAL entre grupos? Métrica =
+  tasa de reetiquetado del grupo = (filas cambiadas de 1 a 0) / (positivos del grupo), en
+  **train+val**, con `n` y denominador explícitos, para `race`, `gender` y `payer_code`.
+- Mínimo para interpretar: n ≥ 100 filas y ≥ 20 POSITIVOS en train+val (el análogo del
+  mínimo de marcados, porque el denominador aquí son los positivos). Los que no lleguen
+  se reportan sin interpretar.
+- Criterio de desigualdad: igual que el de FNR. Diferencia de la tasa de reetiquetado
+  frente al grupo de referencia (el mayor) ≥ 5 puntos porcentuales Y el IC bootstrap al
+  95% de la diferencia excluye 0, con bootstrap agrupado por `patient_nbr`, 2.000
+  réplicas, semilla 42, y Holm dentro de la familia.
+- **Lectura fijada AHORA:** si el reetiquetado es desigual entre grupos, entonces
+  CUALQUIER comparación de equidad antes/después queda CONFUNDIDA por ese cambio de
+  denominador, y hay que decirlo en vez de presentar el antes/después como si midiera un
+  cambio del modelo. Y en ese caso la corrección metodológica tiene consecuencias
+  distributivas, que van al informe como HALLAZGO PROPIO, no como nota al pie.
+- **Nota de comparabilidad para el informe:** este análisis es train+val y todos los
+  demás del punto 5 son solo val, así que sus cifras NO se comparan directamente entre
+  sí. Se dice al presentarlas.
 
 ### Fase 4 — resultados de la corrección del target (`src/target_correction.py`, `src/phase4_correction.py`)
 
