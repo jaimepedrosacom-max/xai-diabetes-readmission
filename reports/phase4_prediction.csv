@@ -1,0 +1,3 @@
+momento,subgrupo,n_marcados,aciertos,precision,pct_destino_22_o_5,precision_%
+antes,A (number_inpatient == 0),440,142,0.32272727272727275,69.31818181818183,32.27272727272727
+antes,B (number_inpatient >= 1),1547,422,0.2727860374919198,10.601163542340013,27.278603749191983
