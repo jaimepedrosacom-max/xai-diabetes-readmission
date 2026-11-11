@@ -1048,6 +1048,113 @@ Escrito y commiteado ANTES de ejecutar cualquiera de las dos cosas.
 - Se declara en la memoria: es la SEGUNDA vez que se toca test, para qué, y que NO es
   comparable con el 0,227 de la Fase 2 porque el target cambió.
 
+### Fase 4 — Resultados de la ablación de `payer_code` (`src/phase4_ablation.py`)
+Prerregistro commiteado ANTES de ejecutar (`8872ae6`). Todo en val y en CV dentro de
+train. Test NO se tocó.
+
+#### Veredicto de la regla: el entregable pasa a ser el modelo SIN `payer_code`
+`reports/phase4_ablation_decision.csv`: las DOS condiciones se cumplen.
+- Cond. 1 — reduce el recuento de fallos ROBUSTOS: **2 -> 1** sobre el conjunto COMÚN
+  de 7 grupos elegibles. El que desaparece es `Missing`; el que queda es `SP`.
+- Cond. 2 — el lift en CV no cae más de un 5% relativo: cae un **2,31%**
+  (1,9878 -> 1,9419).
+- **Guardarraíl del nuevo entregable: 123 árboles, PR-AUC en val 0,1868**
+  (`phase4_ablation_val.csv`). El guardarraíl del modelo CON `payer_code` (183 árboles,
+  PR-AUC val 0,1893) NO se toca: queda como registro de lo que se hizo, igual que el de
+  122 árboles de la Fase 2.
+
+#### Rendimiento: la pérdida es pequeña pero CONSISTENTE
+Val con la etiqueta corregida, prevalencia 9,78% (`phase4_ablation_val.csv`); CV de 5
+folds con `n_estimators` fijo en los dos para que lo único que cambie sea la feature
+(`phase4_ablation_cv.csv`):
+
+| | val PR-AUC | val lift | CV lift medio | CV PR-AUC medio |
+|---|---|---|---|---|
+| con `payer_code` | 0,1893 | 1,936 | 1,9878 ± 0,0575 | 0,1940 |
+| sin `payer_code` | 0,1868 | 1,910 | 1,9419 ± 0,0651 | 0,1895 |
+
+- El modelo CON `payer_code` gana en **5 de 5 folds** (lift por fold: 2,075/2,054;
+  2,006/1,930; 1,925/1,884; 1,982/1,922; 1,952/1,919). La caída es pequeña en magnitud,
+  pero no es ruido de un fold: es sistemática.
+
+#### HALLAZGO: la hipótesis prerregistrada se REFUTA en el caso dominante y acierta en el otro extremo
+La predicción escrita antes de medir era que la disparidad PERSISTIRÍA en buena medida,
+porque `race` es recuperable del resto del formulario (AUC OVR macro 0,737). **Esa
+predicción queda REFUTADA en el grupo que dominaba el problema:** `Missing` se desploma
+de **2,073** [1,754; 2,463] a **0,962** [0,829; 1,105] y deja de ser un fallo, ni
+robusto ni bruto. La mayor disparidad del sistema **ERA la variable, no un proxy**.
+No se suaviza: predije lo contrario y salió lo contrario.
+
+Pero la hipótesis acierta en el otro extremo, y la distinción es más interesante que
+cualquiera de las dos predicciones por separado:
+- **La disparidad por DATO AUSENTE era la variable.** `Missing` (7.933 de 19.868 filas de
+  val, 39,9%) es ausencia de dato administrativo, no un tipo de seguro, y desaparece al
+  quitar la columna: el modelo estaba leyendo literalmente "no consta el seguro" como
+  señal de riesgo.
+- **La disparidad de los pacientes SIN SEGURO no lo era.** `SP` (self-pay) sigue siendo
+  fallo robusto tras la ablación (0,385 -> **0,444**, IC [0,302; 0,597]), y `CP` y `UN`
+  también lo son en el modelo ablacionado (0,555 [0,334; 0,849] y 0,542 [0,339; 0,782]).
+  Esa parte SÍ es recuperable del resto del formulario, así que para esos grupos se
+  cumple lo que decía la hipótesis: quitar la variable no arregla el problema.
+
+#### Los dos recuentos apuntan en sentidos distintos, y por qué (hay que decirlo)
+- Sobre el conjunto COMÚN de 7 grupos elegibles: fallos robustos **2 -> 1**. Es el
+  criterio prerregistrado y es el que decide.
+- Sobre los 9 grupos no-referencia: **2 -> 3**. **Esto NO es un empeoramiento.** `CP` y
+  `UN` pasan de 18 y 17 marcados a 30 y 28, cruzan el mínimo de >= 20 y reciben veredicto
+  POR PRIMERA VEZ; y sus cocientes **MEJORARON** (0,500 -> 0,555 y 0,494 -> 0,542). El
+  aumento del recuento es un artefacto del umbral de elegibilidad, no de que ningún grupo
+  haya ido a peor.
+- El recuento bruto por umbral (secundario, descriptivo) se queda en **4 -> 4**: sale
+  `Missing`, entra `CP`, y `HM` deja de fallar mientras `UN` entra.
+- Conclusión: ninguno de los recuentos responde la pregunta por sí solo, porque los tres
+  se mueven por razones mecánicas distintas (conjunto común, umbral de elegibilidad,
+  umbral de los cuatro quintos). **Lo que la responde es la tabla de magnitudes.**
+
+#### Tabla de magnitudes (`phase4_ablation_composition.csv`), descriptiva y sin veredicto propio
+Cociente de tasa de marcado frente a MC en el top 10% de val, con IC95 bootstrap
+(2.000 réplicas agrupadas por `patient_nbr`, semilla 42):
+
+| grupo | n_grupo | cociente CON (IC95) | cociente SIN (IC95) | cambio |
+|---|---|---|---|---|
+| `Missing` | 7.933 | **2,073** [1,754; 2,463] | 0,962 [0,829; 1,105] | **-1,111** |
+| HM | 1.167 | 1,349 [0,973; 1,839] | 0,968 [0,699; 1,241] | -0,381 |
+| MD | 661 | 1,087 [0,667; 1,606] | 1,098 [0,781; 1,470] | +0,012 |
+| MC (ref) | 6.201 | 1,000 | 1,000 | 0 |
+| Other | 547 | 0,985 [0,529; 1,508] | 0,941 [0,563; 1,380] | -0,044 |
+| CM | 367 | 0,903 [0,398; 1,572] | 0,876 [0,473; 1,323] | -0,027 |
+| BC | 945 | 0,775 [0,410; 1,215] | 0,758 [0,495; 1,062] | -0,016 |
+| UN | 475 | 0,494 [0,273; 0,792] | **0,542** [0,339; 0,782] | +0,047 |
+| CP | 497 | 0,500 [0,268; 0,821] | **0,555** [0,334; 0,849] | +0,054 |
+| SP | 1.075 | **0,385** [0,239; 0,569] | **0,444** [0,302; 0,597] | +0,059 |
+
+Lectura exacta, en tres movimientos distintos. **NO se dice "todos mejoraron", porque no
+es cierto:**
+1. Los dos grupos por ENCIMA de la paridad bajan A la paridad: `Missing` 2,073 -> 0,962 y
+   `HM` 1,349 -> 0,968.
+2. Los tres más INFRASELECCIONADOS suben, pero siguen fallando: `SP` 0,385 -> 0,444,
+   `CP` 0,500 -> 0,555 y `UN` 0,494 -> 0,542.
+3. Cuatro grupos intermedios se mueven EN CONTRA (se alejan de la paridad), con cambios
+   de entre 0,012 y 0,044: `MD` +0,012 (ya estaba por encima), `BC` -0,016, `CM` -0,027 y
+   `Other` -0,044. Los cuatro cambios caben dentro de sus propios IC, así que no se leen
+   como efecto, pero se reportan.
+
+#### Recomendación al gestor (la "acción" del enunciado), formulada como el intercambio medido que es
+No es "el modelo es más justo sin la variable" ni "quitarla no cuesta nada". Es un
+intercambio con las dos mitades medidas:
+- **Lo que cuesta:** el lift baja de 1,9878 a 1,9419 en CV (2,31% relativo) y de 1,936 a
+  1,910 en val, y el modelo con la variable gana en 5 de 5 folds. Pérdida pequeña, pero
+  consistente y no ruido.
+- **Lo que compra:** elimina la mayor disparidad del sistema, `Missing` 2,073 -> 0,962,
+  que afecta al 39,9% de las filas de val y que era la variable y no un proxy.
+- **Lo que NO compra:** la infraselección de los pacientes sin seguro (`SP`, `CP`, `UN`)
+  sigue ahí, porque es recuperable del resto del formulario. Quitar la columna no la
+  arregla; si acaso la deja menos auditable, porque ya no hay una variable a la que
+  mirar.
+- **La decisión de aceptar ese intercambio es del gestor, no del modelo.** Lo que aporta
+  este trabajo son los dos números y su incertidumbre, no la elección. Lo mismo que con
+  el k del seguimiento.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

@@ -1,0 +1,2 @@
+grupos_comunes_elegibles,fallos_robustos_con,fallos_robustos_sin,fallos_brutos_con,fallos_brutos_sin,entran_en_elegibilidad,salen_de_elegibilidad,lift_cv_con,lift_cv_sin,caida_relativa_%,cond1_reduce_fallos_robustos,cond2_lift_dentro_de_tolerancia,ENTREGABLE
+7,2,1,4,4,"CP, UN",ninguno,1.9878301422715672,1.9419027286663835,2.310429479286432,True,True,sin payer_code
