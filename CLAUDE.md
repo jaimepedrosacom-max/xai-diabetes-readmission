@@ -491,17 +491,138 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
 1. Medir las cifras "antes" de la predicción prerregistrada, antes de tocar nada.
 2. Decidir y aplicar la corrección del target (opciones en la Fase 3b).
 3. Medir la predicción y reportar el resultado salga como salga.
-4. Decidir si se vuelve a consultar test con el modelo corregido. Las dos salidas son
-   aceptables, pero hay que elegir y dejarlo escrito: si se consulta, se declara en la
-   memoria (cuántas veces se ha tocado test y para qué, y que el 0,227 original ya no
-   es comparable porque el target cambió); si no se consulta, el antes/después se
-   queda en val y CV y se explica por qué, es decir, que una segunda consulta a test
-   tras haber usado sus métricas para decidir deja de ser una estimación limpia.
+4. Consultar test UNA sola vez con el modelo corregido, en las condiciones fijadas
+   más abajo (decisión ya tomada: ver "Decisiones y prerregistros de la Fase 4").
 5. Análisis de equidad: `payer_code` (ver la entrada de la Fase 3d) y los posibles
    proxies de `race`/`gender` vía otras variables, que las sondas no permiten
    descartar.
 6. Informe (con la reflexión crítica) y `README.md` con instrucciones de
    reproducción. Dar acceso al repo privado a quien corrija.
+
+### Decisiones y prerregistros de la Fase 4 (fijados ANTES de medir nada)
+
+#### Split congelado
+- El split se calcula con el target ORIGINAL y el reetiquetado se aplica DESPUÉS, sobre
+  filas ya asignadas. Motivo: `D.grouped_split` usa `StratifiedGroupKFold`, que
+  estratifica por `y`; reetiquetar antes cambiaría los folds y val dejaría de ser el
+  mismo conjunto de filas, con lo que `precision_A(antes)` y `precision_A(después)` no
+  serían comparables y la predicción prerregistrada perdería sentido.
+- LIMITACIÓN que se declara en la memoria y NO se corrige: ese split queda estratificado
+  sobre la etiqueta contaminada, así que el modelo corregido se entrena en una partición
+  optimizada para la etiqueta vieja. Corregirlo rompería la comparabilidad antes/después,
+  que es justo lo que la Fase 4 mide.
+
+#### Uso de test
+- Decisión de Jaime: SÍ se consulta test, UNA sola vez, como ÚLTIMA cosa que se hace,
+  con hiperparámetros, split y corrección ya cerrados. Razones: el enunciado pide
+  métricas de test, el modelo corregido es el entregable, y quedarse sin estimación en
+  datos no vistos es un hueco más visible que el riesgo de inflación — riesgo pequeño
+  porque NINGUNA decisión sobre el modelo corregido sale de test.
+- Nada cambia después de verla. Si el número sale mal, se reporta igual.
+- Se declara en la memoria: es la SEGUNDA vez que se toca test, para qué, y que NO es
+  comparable con el 0,227 porque el target cambió. La cifra nueva responde a otra
+  pregunta: cómo predice el TARGET CORREGIDO en datos no vistos.
+- Hasta esa consulta final, de test SOLO se aplica la regla de reetiquetado. No se
+  calcula ninguna estadística de test ni entra en ninguna decisión; lo único que se
+  reporta antes es el CONTEO de filas cambiadas por split, que es descripción del
+  dataset. Queda explícito en el código.
+
+#### Descomposición de la predicción prerregistrada: etiqueta frente a modelo
+El criterio original (CONFIRMADA si `delta_A > delta_B`, con `delta = precision(antes) -
+precision(después)`) NO se toca. Lo que se añade, antes de medir nada del "después", es
+la descomposición que hace falta para interpretarlo, porque la precisión del "después"
+se mide contra la etiqueta NUEVA y eso mezcla dos efectos: un acierto puede dejar de
+contar porque su etiqueta pasó a 0, sin que el modelo haya cambiado. Como el subgrupo A
+es un 69,3% de códigos 22/5, justo donde se concentra el reetiquetado, `delta_A` saldría
+grande casi por construcción y un CONFIRMADO diría menos de lo que parece.
+- Se miden TRES puntos, no dos (el (2) no requiere entrenar nada):
+  1. **modelo viejo / etiqueta vieja** — ya medido: A 32,27% (440), B 27,28% (1.547).
+  2. **modelo viejo / etiqueta nueva** — mismo ranking y mismo corte; solo cambia la
+     verdad contra la que se puntúa. Aísla el efecto PURO de la etiqueta.
+  3. **modelo nuevo / etiqueta nueva** — efecto de la etiqueta MÁS el reentrenamiento.
+- Definiciones, por subgrupo: `delta_etiqueta = (1) - (2)` y `delta_modelo = (2) - (3)`.
+  Por construcción `delta_etiqueta + delta_modelo = (1) - (3) = delta`, el del criterio
+  original, así que la descomposición es exacta y se puede comprobar sumando.
+- En el paso (2) el corte se recalcula sobre las puntuaciones del modelo viejo, que son
+  las mismas, así que el `n` de cada subgrupo NO cambia entre (1) y (2): solo cambian
+  los aciertos. Se confirma al medir.
+- La descomposición se reporta SIEMPRE junto al veredicto, nunca el veredicto solo.
+- Lecturas fijadas AHORA, no al ver los números:
+  - Si `delta_etiqueta_A > delta_etiqueta_B` pero `delta_modelo_A ≈ delta_modelo_B`, la
+    lectura es que la ventaja en A era ETIQUETA y no señal.
+  - Si la diferencia aparece en `delta_modelo`, el reentrenamiento también cambió el
+    ORDEN, no solo la verdad contra la que se mide.
+
+#### La BRECHA A - B, que es lo que de verdad contrasta la hipótesis
+- `delta_etiqueta` es una IDENTIDAD ARITMÉTICA, no un contraste: equivale a (aciertos
+  reetiquetados del subgrupo) / (n del subgrupo). Es descriptivo. Y como A es un 69,3%
+  de códigos 22/5, que A pierda más es casi tautológico. Que nadie lo lea como
+  evidencia por sí solo.
+- La pregunta original era si la ventaja del modelo en A se sostenía sobre etiquetas
+  contaminadas, y eso se responde mirando si A sigue por delante de B con la etiqueta
+  limpia. Por eso se reporta, en los TRES pasos:
+  `brecha(paso) = precision_A(paso) - precision_B(paso)`.
+  En el paso (1) ya vale **+4,99 puntos** (32,27 - 27,28).
+- Lectura, fijada AHORA:
+  - Si la brecha se acerca a cero o se INVIERTE en el paso (2), la ventaja de A sobre B
+    se apoyaba en la etiqueta contaminada.
+  - Si se MANTIENE en el paso (2), no se apoyaba, pase lo que pase con los deltas.
+- Esto NO sustituye al criterio prerregistrado (`delta_A > delta_B` con
+  `delta = (1) - (3)`), que se mantiene intacto y se reporta igual. Es una cantidad
+  ADICIONAL. Si las dos lecturas apuntan en sentidos distintos, se dice explícitamente y
+  no se elige la que convenga.
+
+#### Corte del top 10%, en las tres medidas
+- Se usa `probs.quantile(0.9)` sobre las puntuaciones de val, el MISMO criterio que
+  `xai_cases.select_cases` en la Fase 3b, y el "después" usa esa misma función. NO se
+  usa `evaluation.top_k_table`, que marca exactamente `ceil(k*n)` filas con desempate
+  aleatorio y podría dar un conjunto ligeramente distinto.
+- Motivo: así las cifras reconcilian con los artefactos ya publicados. Con el modelo
+  actual ambas coinciden (corte 0,1954, 1.987 marcados de 19.868, A n=440 con 69,3% de
+  destinos 22/5, y 564 aciertos = la `precision` del 10% en
+  `xai_sanity_topk_composition.csv`).
+
+#### Comprobación de que la corrección hace lo que decimos
+- Prerregistro: se espera que el SHAP medio (|SHAP|) de `discharge_disposition_id` BAJE
+  con el target corregido, porque la etiqueta contaminada es lo que lo sostenía (val,
+  0,204 antes; `xai_global_comparison.csv`). Se reporta lo que salga, incluida una
+  subida, que sería evidencia contra nuestra lectura del hallazgo.
+
+#### Prerregistro del análisis de equidad (punto 5)
+Fijado antes de mirar ningún resultado por grupo. Todo en val.
+- **Grupos:** `race`, `gender`, `payer_code`. `race = Missing` SE TRATA COMO GRUPO
+  PROPIO, no se excluye: coherente con la decisión de limpieza (missing como
+  categoría), y no registrar la raza no es un fallo aleatorio.
+- **Tamaño mínimo para INTERPRETAR:** n ≥ 100 en val y ≥ 20 marcados en el top 10%. Los
+  grupos por debajo se REPORTAN con su n y se marcan como no interpretables; no se
+  comentan ni entran en conclusiones.
+- **Grupo de referencia:** el más numeroso de cada variable en val.
+- **Composición del top-k (5/10/20%):** métrica = tasa de marcado del grupo
+  (marcados_grupo / n_grupo) y su ratio frente al grupo de referencia. Umbral: hay
+  disparidad si el ratio sale de [0,80, 1,25] (regla de los cuatro quintos, EEOC 1978).
+- **Error por grupo al mismo k:** métrica = FNR (positivos reales NO marcados /
+  positivos reales del grupo), que es a quien se le niega el seguimiento. Umbral: hay
+  disparidad si |FNR_grupo − FNR_ref| ≥ 5 puntos porcentuales Y el IC bootstrap al 95%
+  (1.000 remuestreos, semilla 42) de esa diferencia excluye 0.
+- **Detectabilidad de proxies:** métrica = ROC-AUC al predecir el atributo protegido
+  desde el RESTO de features. Umbral: recuperable si ≥ 0,65; no recuperable si < 0,55;
+  entre ambos, zona gris que se reporta sin concluir. Especificación completa, fijada
+  ahora para que no se elija después la variante que más convenga:
+  - Modelo: LightGBM con la misma configuración del modelo principal
+    (`num_leaves=31`, `min_child_samples=20`, `learning_rate=0.03`, `SEED=42`), ajustado
+    en train con early stopping sobre val, igual que el modelo principal.
+  - Features: todas las de `P.FEATURES` menos el atributo que se predice. Los demás
+    atributos protegidos SE QUEDAN: la pregunta es si el atributo es recuperable del
+    resto del formulario, no si lo es de un subconjunto elegido por nosotros.
+  - `gender` es binaria: ROC-AUC directa en val.
+  - `race` es multiclase: ROC-AUC **one-vs-rest macro** en val
+    (`roc_auc_score(..., multi_class="ovr", average="macro")`), y además el AUC por
+    clase, porque la macro da el mismo peso a una clase grande y a una pequeña. Se
+    interpretan solo las clases que cumplen el mínimo de tamaño (n ≥ 100); las demás se
+    reportan sin interpretar, y se dice qué clases quedaron fuera de la macro.
+- **Redacción obligatoria del resultado de proxies:** que `race`/`gender` sean
+  predecibles desde el resto de variables NO demuestra que el modelo las use; demuestra
+  que QUITARLAS NO SERÍA SUFICIENTE. No se escribirá "el modelo usa race indirectamente".
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
