@@ -50,9 +50,12 @@ counterfactuals, matplotlib/seaborn para gráficas.
   (3a); local = SHAP local (3d) y contrafactuales DiCE + enumeración (3c);
   sanity check = aleatorización de etiquetas, barajado guiado, sondas de ruido y
   estabilidad entre folds (3b).
-- Fase 4 en curso: puntos 1-3 y 5 hechos (cifras "antes", corrección del target,
-  predicción prerregistrada y equidad). Pendiente: consulta final a test (punto 4, que va
-  al final por su propia condición) e informe + `README.md` (6).
+- Fase 4: puntos 1-5 HECHOS (cifras "antes", corrección del target, predicción
+  prerregistrada, equidad, ablación de `payer_code` y la consulta ÚNICA a test, que fue
+  lo último por su propia condición). **Test ya consultado por segunda y última vez.**
+  Pendiente solo el punto 6: informe + `README.md`.
+- Entregable final: modelo corregido SIN `payer_code`, guardarraíl 123 árboles /
+  PR-AUC val 0,1868; en test, con la etiqueta corregida, lift 1,9194.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
   Versiones fijadas en `requirements.txt`. `dice-ml` está fijado a propósito en
@@ -1154,6 +1157,120 @@ intercambio con las dos mitades medidas:
 - **La decisión de aceptar ese intercambio es del gestor, no del modelo.** Lo que aporta
   este trabajo son los dos números y su incertidumbre, no la elección. Lo mismo que con
   el k del seguimiento.
+
+### Fase 4, punto 4 — CONSULTA ÚNICA A TEST (`src/phase4_test_final.py`)
+Prerregistro commiteado ANTES de ejecutar (`8872ae6`, ampliado en `2f2b80c`). Una sola
+ejecución, con hiperparámetros, split, corrección y elección de modelo ya cerrados.
+**Nada ha cambiado después de verla.** Es la SEGUNDA vez que se toca test: la primera fue
+la Fase 2c con el target ORIGINAL, y **estas cifras NO son comparables con el PR-AUC
+0,227 de entonces**, porque el target cambió y responden a otra pregunta (cómo predice el
+TARGET CORREGIDO en datos no vistos).
+
+Guardarraíles comprobados antes de puntuar test, con `assert`: viejo 122 árboles /
+PR-AUC val 0,2308; corregido CON `payer_code` 183 / 0,1893; **entregable (sin
+`payer_code`) 123 / 0,1868**.
+
+#### 1. LA DISCREPANCIA CON VAL, que va en primer plano: el paso (1) NO replica
+El prerregistro obliga a declarar si la replicación contradice a val. Contradice.
+
+| paso (1) viejo/vieja | brecha A - B | IC95 | cociente |
+|---|---|---|---|
+| val (`phase4_prediction_gaps.csv`) | **+4,99** | [+0,07; +9,99] | 1,183 |
+| test (`phase4_test_gaps.csv`) | **-2,40** | [-7,45; +2,41] | 0,915 |
+
+**En test el grupo A nunca estuvo por delante de B.** El IC de test incluye el cero y la
+estimación puntual tiene el signo contrario al de val. Consecuencia para el relato, que
+se reescribe aquí y no se deja como nota al pie:
+- La afirmación correcta **NO** es "una ventaja resultó ser un artefacto".
+- Es: **la supuesta ventaja de A sobre B era MARGINAL en val y AUSENTE en test, así que
+  no sobrevive ni a la limpieza de la etiqueta ni a datos nuevos.**
+- Encaja con el matiz que ya estaba anotado antes de ver test: el IC del paso (1) en val
+  ROZABA el cero ([+0,07; +9,99]), o sea que la ventaja ya era débil de por sí. Test lo
+  confirma por la vía más dura: en datos nuevos no está.
+
+#### 2. LO QUE SÍ REPLICA: el titular prerregistrado, en signo y significación
+Contraste EMPAREJADO, mismas 2.000 réplicas por `patient_nbr`, semilla 42, 0 descartadas
+(`phase4_test_paired_contrasts.csv`):
+
+| contraste | val | test | IC95 en test | excluye el nulo |
+|---|---|---|---|---|
+| brecha(2) - brecha(1) | -10,50 puntos | **-4,63 puntos** | [-7,57; -1,65] | **sí** |
+| cociente(2) / cociente(1) | 0,651 | **0,777** | [0,667; 0,887] | **sí** |
+
+- Lo que replica es **el SIGNO y la SIGNIFICACIÓN, no el TAMAÑO**: la magnitud en test es
+  **menos de la mitad** que en val (-4,63 frente a -10,50). Se dice así y no se presenta
+  como una replicación limpia.
+- Los dos contrastes salen idénticos con (3a) y con (3b), porque solo intervienen el
+  modelo viejo y las dos etiquetas. Está anotado en el código para que no parezca un
+  duplicado por descuido.
+- En test, limpiar la etiqueta baja la precisión de A de 25,995% a 17,330% y la de B de
+  28,397% a 24,359% (`phase4_test_steps.csv`): el mismo ranking y el mismo corte (0,1942),
+  solo cambia la verdad contra la que se puntúa.
+
+#### 3. EL CRITERIO PRERREGISTRADO NO REPLICA CON SIGNIFICACIÓN (no se esconde detrás del emparejado)
+`delta_A - delta_B` (`phase4_test_paired_contrasts.csv` y `phase4_test_deltas.csv`):
+
+| | val | test (3a) corregido CON | test (3b) entregable SIN |
+|---|---|---|---|
+| `delta_A - delta_B` | **+8,06** [+2,78; +13,75] | **+0,64** [-4,55; +5,64] | **+3,45** [-2,90; +9,28] |
+
+- En val excluía el cero; en test **los dos IC lo INCLUYEN**. La cantidad del criterio
+  prerregistrado no replica con significación en datos nuevos.
+- El veredicto formal sigue apuntando en la misma dirección (`delta_A > delta_B` en los
+  dos casos: 6,47 > 5,83 y 9,23 > 5,78), pero sin significación, así que no se usa para
+  concluir nada.
+- Esto NO se presenta tapado por el contraste emparejado del punto 2. Son dos cantidades
+  distintas: la del punto 2 replica, la del criterio no.
+
+#### 4. EL MECANISMO SÍ REPLICA
+`phase4_test_steps.csv`, columna `pct_destino_22_o_5` del subgrupo A del top 10%:
+- **63,93% con el modelo viejo -> 32,38% con (3a) y 35,40% con (3b)**, el mismo
+  movimiento que en val (69,32% -> 34,43%).
+- Y **`n_A` cae de 427 a 210 (3a) y a 161 (3b)**: el modelo corregido, y más aún el
+  entregable, DEJA DE MARCAR a esa población. En val `n_A` caía de 440 a 212.
+- Es la confirmación mecánica de que la corrección hizo lo que decimos, y replica en
+  datos no vistos.
+
+#### 5. Los dos resultados favorables, que tampoco se entierran
+- **El entregable GENERALIZA bien, sin señal de sobreajuste:** lift **1,9100 en val**
+  (`phase4_ablation_val.csv`) frente a **1,9194 en test** (`phase4_test_global.csv`), con
+  prevalencias 9,7795% y 9,8455%. Test queda incluso ligeramente por encima de val.
+  Globales en test: ROC-AUC 0,6655, PR-AUC 0,1890, Brier 0,0855.
+- **Gana a la regla `number_inpatient > 0` en test en los TRES k**, y el margen es mayor
+  cuanto más estrecho es el seguimiento (`phase4_test_topk.csv`):
+
+| k | entregable: precisión / lift | regla: precisión / lift |
+|---|---|---|
+| 5% (994 marcados) | 26,86% / **2,728** | 14,08% / 1,431 |
+| 10% (1.987) | 22,14% / **2,249** | 14,80% / 1,503 |
+| 20% (3.974) | 18,32% / **1,861** | 15,27% / 1,551 |
+
+  Es coherente con la dependencia de k que ya estaba medida en la Fase 2: donde el modelo
+  aporta es en priorizar a pocos, y la ventaja se estrecha al ampliar el seguimiento.
+  Líneas base en test con la etiqueta corregida: prevalencia 9,8455% (lift 1 por
+  construcción) y la regla con PR-AUC 0,1246 / lift 1,2660.
+
+#### 6. Observación SECUNDARIA, con su cautela: el ROC-AUC se mantiene y el PR-AUC baja por prevalencia
+- ROC-AUC en test: **0,667** (modelo original, etiqueta vieja, `metrics_final.csv`) ->
+  **0,6655** (entregable, etiqueta corregida). Prácticamente igual.
+- PR-AUC en test: **0,227 -> 0,1890**, con la prevalencia bajando del 11,39% al 9,8455%.
+- **La comparación NO es estricta:** son dos tareas distintas (dos targets), dos modelos
+  distintos y dos conjuntos de etiquetas distintos. No se presenta como un antes/después.
+- Dicho eso, apunta en la MISMA dirección que la CV de la corrección: **la contaminación
+  no sostenía el rendimiento global**. Lo que sostenía era la ventaja concreta en el grupo
+  donde el modelo discrepaba de la regla simple, y eso es lo que los puntos 1 a 4
+  documentan.
+
+#### Qué NO se midió en test, deliberadamente (está escrito en el script)
+- Las globales, el top-k y las líneas base son SOLO del entregable. Las predicciones del
+  corregido CON `payer_code` se calculan porque el paso (3a) las necesita, pero sus
+  globales NO: tenerlas invitaría a replantear qué modelo se entrega, y eso está decidido
+  en val. Igual con el modelo viejo, que solo entra en los pasos (1) y (2).
+- SHAP y equidad viven en val por diseño. La regresión logística se excluye para no crear
+  la tentación de un cambio de modelo con test ya visto.
+- Por qué DOS pasos (3): (3a) es el modelo que se usó en val, así que es la replicación
+  estricta; (3b) es el entregable. De ninguno sale ninguna decisión, y el titular tampoco
+  depende de esa elección, porque la inversión de (1) a (2) solo usa el modelo viejo.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de

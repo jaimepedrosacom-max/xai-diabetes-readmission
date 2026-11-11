@@ -1,0 +1,7 @@
+modelo_nuevo,contraste,observado,IC95_bajo,IC95_alto,nulo,excluye_nulo,replicas_usadas,replicas_descartadas
+(3a) corregido CON payer_code,brecha(2) - brecha(1) [puntos],-4.626643847955322,-7.57368849053753,-1.654516647906371,0.0,True,2000,0
+(3a) corregido CON payer_code,cociente(2) / cociente(1),0.7771929824561404,0.6670026503865084,0.8868696405936732,1.0,True,2000,0
+(3a) corregido CON payer_code,delta_A - delta_B [puntos],0.6401934166770786,-4.550701088981895,5.63763486226934,0.0,False,2000,0
+(3b) entregable sin payer_code,brecha(2) - brecha(1) [puntos],-4.626643847955322,-7.57368849053753,-1.654516647906371,0.0,True,2000,0
+(3b) entregable sin payer_code,cociente(2) / cociente(1),0.7771929824561404,0.6670026503865084,0.8868696405936732,1.0,True,2000,0
+(3b) entregable sin payer_code,delta_A - delta_B [puntos],3.4454376284920087,-2.8966994493256237,9.280773911417114,0.0,False,2000,0
