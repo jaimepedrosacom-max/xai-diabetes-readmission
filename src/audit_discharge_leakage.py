@@ -137,6 +137,18 @@ def main():
     print(f"  Prevalencia descontándolos: sin V57 {g['tasa_sin_V57']:.2f}% | "
           f"sin V57 o programado {g['tasa_sin_V57_o_prog']:.2f}%")
 
+    # Se persiste el mismo dict `g` que acaba de imprimirse, sin recalcular nada. Hace
+    # falta porque audit_discharge_leakage.csv aplica MIN_N y NO cubre estas cifras:
+    # sumando ese CSV salen 6.497 visibles y 19,8%, no los 6.503 y 19,9% de aquí.
+    # pct_sin_visible es el complementario de n_visibles/n_lt30, el límite que se declara
+    # en el informe: de esos "<30" no sabemos qué fueron porque no hay encuentro detrás.
+    global_row = {k: g[k] for k in ["n", "pct_lt30", "n_lt30", "n_visibles"]}
+    global_row["pct_sin_visible"] = 100 * (1 - g["n_visibles"] / g["n_lt30"])
+    global_row.update({k: g[k] for k in ["pct_V57", "pct_programado", "pct_V57_o_prog",
+                                         "tasa_sin_V57", "tasa_sin_V57_o_prog"]})
+    pd.DataFrame([global_row], index=["train+val"]).to_csv(
+        D.PROJECT_ROOT / "reports" / "audit_discharge_global.csv", index_label="grupo")
+
     pos = both[(both["readmitted"] == "<30") & both["has_next"]]
     planned = pos[pos["next_planned"]]
     share = planned["destino"].value_counts(normalize=True).mul(100).round(1).head(6)
@@ -144,6 +156,22 @@ def main():
     print(share.to_string())
     print("\n¿Y los positivos con siguiente V57? (% por destino)")
     print(pos[pos["next_v57"]]["destino"].value_counts(normalize=True).mul(100).round(1).head(6).to_string())
+
+    # Mismo reparto que los dos bloques de arriba, pero completo: la consola imprime
+    # head(6) y redondeado a un decimal. Aquí van TODOS los destinos (sin MIN_N, que es
+    # filtro de la tabla por destino, no de este reparto), para que los porcentajes
+    # sumen 100. Se guardan también los conteos para que el denominador de cada
+    # porcentaje sea explícito: suma de n_V57_o_prog y suma de n_V57.
+    v57 = pos[pos["next_v57"]]["destino"].value_counts()
+    prog = planned["destino"].value_counts()
+    shares = pd.DataFrame({
+        "n_V57_o_prog": prog,
+        "pct_V57_o_prog": prog / prog.sum() * 100,
+        "n_V57": v57,
+        "pct_V57": v57 / v57.sum() * 100,
+    }).fillna(0).astype({"n_V57_o_prog": int, "n_V57": int}).sort_values("n_V57_o_prog", ascending=False)
+    shares.to_csv(D.PROJECT_ROOT / "reports" / "audit_discharge_shares.csv",
+                  index_label="destino")
 
 
 if __name__ == "__main__":

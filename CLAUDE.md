@@ -155,19 +155,30 @@ están más abajo, en su propia sección; esto son los resultados.
    target que afecta a todo el dataset y se declara en el informe como limitación
    independiente del hallazgo del código 22.
 
-#### OJO al verificar estas cifras: no todas están en un CSV
-- Las cifras globales del punto 2 (6.503 visibles, 19,9% con V57 o programado, 46%
-  del componente V57 en el código 22, 43,6% del total en altas a casa) y la réplica
-  train/val del código 5 NO están en ningún CSV: salen del bloque "Alcance global"
-  y de la réplica por split que `audit_discharge_leakage.py` solo IMPRIME por
-  consola (líneas 122-144). Verificadas recalculándolas: n_visibles 6.503,
-  pct_V57_o_prog 19,85%, código 22 = 46,02% del V57, código 1 = 43,61% del total;
-  código 5 con pct_V57 40,0% en train frente a 14,3% en val, mientras el 22 se
-  mantiene en 57,2% / 57,3%.
-- Sumando el CSV por destino salen 6.497 visibles y 19,8%, no 6.503 y 19,9%. Es un
-  SUBCONJUNTO, no una discrepancia: `audit_discharge_leakage.csv` aplica `MIN_N = 30`
-  y deja fuera 53 filas de destinos pequeños, mientras el bloque global usa todo
-  train+val (79.473 filas).
+#### OJO al verificar estas cifras: cada una tiene su propio CSV y su denominador
+- Las cifras globales del punto 2 están en `reports/audit_discharge_global.csv`
+  (una fila, `grupo = train+val`): `n` 79.473, `n_lt30` 9.051, `n_visibles` 6.503,
+  `pct_sin_visible` 28,15, `pct_V57` 5,41, `pct_programado` 18,18,
+  `pct_V57_o_prog` 19,85, `tasa_sin_V57` 10,95, `tasa_sin_V57_o_prog` 9,76.
+- El reparto por destino de esos positivos está en
+  `reports/audit_discharge_shares.csv` (`n_V57_o_prog`, `pct_V57_o_prog`, `n_V57`,
+  `pct_V57`): código 1 = 43,61% del componente V57-o-programado (563 de 1.291) y
+  código 22 = 46,02% del componente V57 puro (162 de 352). Incluye TODOS los
+  destinos, así que cada columna de porcentaje suma 100.
+- **Estos dos CSV no existían hasta el commit que los añadió:** antes las cifras
+  solo se imprimían por consola, y por eso el informe debe citarlas desde el CSV y
+  no desde una salida de terminal. No se cambió ningún cálculo al persistirlas:
+  `audit_discharge_leakage.csv` sale idéntico byte a byte tras relanzar el script.
+- CUIDADO con el denominador: sumando `audit_discharge_leakage.csv` (la tabla por
+  destino) salen 6.497 visibles y 19,8%, no 6.503 y 19,9%. Es un SUBCONJUNTO, no
+  una discrepancia: esa tabla aplica `MIN_N = 30` y deja fuera 53 filas de destinos
+  pequeños, mientras el bloque global usa todo train+val. Se nota en el reparto: el
+  código 9 aparece en `audit_discharge_shares.csv` y no en la tabla por destino.
+- Sigue habiendo una cifra SOLO en consola: la réplica train/val del código 5
+  (`pct_V57` 40,0% en train frente a 14,3% en val, mientras el código 22 se mantiene
+  en 57,2% / 57,3%), que es la base de "el componente V57 puro no es estable entre
+  train y val". Verificada recalculándola, pero si se cita en el informe hay que
+  decir que viene del bloque de réplica por split que el script imprime.
 
 #### Lo que esto enseña sobre los sanity checks (material para la reflexión crítica)
 - Los sanity checks PASAN todos los criterios prerregistrados y NO detectan este
