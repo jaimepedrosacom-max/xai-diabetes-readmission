@@ -1,0 +1,19 @@
+analisis,atributo,primario,grupo,es_referencia,n_grupo,denominador,tasa_%,dif_vs_ref_puntos,dif_IC95_bajo,dif_IC95_alto,p_bootstrap,holm_rechaza,elegible,m_familia,rol,veredicto_disparidad
+reetiquetado train+val,payer_code,False,BC,False,3667,332,23.49397590361446,8.226295797864294,2.9850424141216974,13.129800391569466,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,CM,False,1488,148,12.162162162162163,-3.1055179435880014,-8.529512107370628,2.502205868801673,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,CP,False,1971,171,20.46783625730994,5.200156151559776,-1.578024888011779,12.678979450955202,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,HM,False,4969,535,4.859813084112149,-10.407867021638015,-12.680420822734579,-8.01089112184895,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,MC,True,25129,3026,15.267680105750165,0.0,0.0,0.0,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,MD,False,2775,325,19.692307692307693,4.424627586557528,-0.18433114072982842,9.147522414277752,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,Missing,False,31445,3703,11.288144747502026,-3.979535358248139,-5.770374377629202,-2.1563342695347605,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,Other,False,2121,230,14.347826086956522,-0.9198540187936421,-6.58091631248343,5.821728425556563,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,SP,False,3976,410,28.292682926829265,13.025002821079102,8.258085311330413,17.871806104788988,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,payer_code,False,UN,False,1932,171,23.976608187134502,8.708928081384338,1.9987411178667733,15.634951840157708,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,race,True,AfricanAmerican,False,15014,1742,12.112514351320321,-2.7153244765185045,-4.54033214062771,-0.9461086034451784,0.002,True,True,5,primario,no
+reetiquetado train+val,race,True,Asian,False,514,54,16.666666666666664,1.838827838827839,-6.927522874813233,10.373914955474485,0.68,False,True,5,primario,no
+reetiquetado train+val,race,True,Caucasian,True,59394,6825,14.827838827838827,0.0,0.0,0.0,,False,True,5,primario,sin veredicto
+reetiquetado train+val,race,True,Hispanic,False,1639,169,10.650887573964498,-4.176951253874329,-8.824979673496989,0.8718479971599734,0.099,False,True,5,primario,no
+reetiquetado train+val,race,True,Missing,False,1769,151,15.894039735099339,1.0662009072605116,-4.682867242834529,7.592747747530954,0.71,False,True,5,primario,no
+reetiquetado train+val,race,True,Other,False,1143,110,15.454545454545453,0.6267066267066274,-8.070291047697578,9.884414688575172,0.943,False,True,5,primario,no
+reetiquetado train+val,gender,False,Female,True,42923,4921,13.635439951229426,0.0,0.0,0.0,,False,True,0,secundario/exploratorio,sin veredicto
+reetiquetado train+val,gender,False,Male,False,36550,4130,15.012106537530268,1.3766665863008427,-0.27663738366676116,3.0409285969720266,,False,True,0,secundario/exploratorio,sin veredicto

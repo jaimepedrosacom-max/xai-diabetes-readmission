@@ -1,0 +1,19 @@
+analisis,atributo,primario,grupo,es_referencia,n_grupo,denominador,tasa_%,dif_vs_ref_puntos,dif_IC95_bajo,dif_IC95_alto,p_bootstrap,holm_rechaza,elegible,m_familia,rol,tasa_modelo_viejo_%,veredicto_disparidad
+FNR top 10%,payer_code,False,BC,False,945,70,84.28571428571429,1.3703537841468827,-9.412003782339655,12.52874362059665,,False,True,0,secundario/exploratorio,77.14285714285715,sin veredicto
+FNR top 10%,payer_code,False,CM,False,367,20,80.0,-2.915360501567399,-28.98533548746713,18.915096690590115,,False,True,0,secundario/exploratorio,80.0,sin veredicto
+FNR top 10%,payer_code,False,CP,False,497,36,91.66666666666666,8.75130616509926,-2.3269280773831205,18.015856921757287,,False,True,0,secundario/exploratorio,88.88888888888889,sin veredicto
+FNR top 10%,payer_code,False,HM,False,1167,129,75.96899224806202,-6.946368253505386,-18.12060849001935,3.6775095465965126,,False,True,0,secundario/exploratorio,84.49612403100775,sin veredicto
+FNR top 10%,payer_code,False,MC,True,6201,638,82.9153605015674,0.0,0.0,0.0,,False,True,0,secundario/exploratorio,80.56426332288402,sin veredicto
+FNR top 10%,payer_code,False,MD,False,661,68,86.76470588235294,3.8493453807855404,-6.226241947030601,12.852417687688575,,False,True,0,secundario/exploratorio,72.05882352941177,sin veredicto
+FNR top 10%,payer_code,False,Missing,False,7933,836,68.42105263157895,-14.494307869988454,-20.264779913246333,-9.11299857232562,,False,True,0,secundario/exploratorio,71.5311004784689,sin veredicto
+FNR top 10%,payer_code,False,Other,False,547,44,81.81818181818183,-1.0971786833855801,-17.88406455609986,14.174206639308482,,False,True,0,secundario/exploratorio,79.54545454545455,sin veredicto
+FNR top 10%,payer_code,False,SP,False,1075,71,94.36619718309859,11.450836681531184,4.619491818287981,17.581403203882445,,False,True,0,secundario/exploratorio,87.32394366197182,sin veredicto
+FNR top 10%,payer_code,False,UN,False,475,31,83.87096774193549,0.9556072403680838,-13.809523690808593,13.516308590648684,,False,True,0,secundario/exploratorio,74.19354838709677,sin veredicto
+FNR top 10%,race,True,AfricanAmerican,False,3751,369,74.25474254742548,-3.3397591707875818,-10.50642516786313,2.94227658241201,0.352,False,True,4,primario,77.50677506775068,no
+FNR top 10%,race,True,Asian,False,136,15,80.0,2.405498281786944,-16.377471876077216,23.457297132861815,,False,False,4,primario,66.66666666666666,sin veredicto
+FNR top 10%,race,True,Caucasian,True,14872,1455,77.59450171821307,0.0,0.0,0.0,,False,True,4,primario,76.3573883161512,sin veredicto
+FNR top 10%,race,True,Hispanic,False,421,46,67.3913043478261,-10.203197370386974,-25.80216514219773,6.598062964740804,0.243,False,True,4,primario,73.91304347826086,no
+FNR top 10%,race,True,Missing,False,400,35,88.57142857142857,10.976926853215508,-1.3187936845773554,20.330586236126532,0.08,False,True,4,primario,94.28571428571428,no
+FNR top 10%,race,True,Other,False,288,23,78.26086956521739,0.6663678470043344,-19.472950785243775,22.488067075621895,0.901,False,True,4,primario,78.26086956521739,no
+FNR top 10%,gender,False,Female,True,10663,1057,75.49668874172185,0.0,0.0,0.0,,False,True,0,secundario/exploratorio,75.59129612109746,sin veredicto
+FNR top 10%,gender,False,Male,False,9205,886,78.66817155756208,3.171482815840221,-1.6773591656495364,7.869684392879144,,False,True,0,secundario/exploratorio,78.21670428893906,sin veredicto

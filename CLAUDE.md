@@ -50,9 +50,9 @@ counterfactuals, matplotlib/seaborn para gráficas.
   (3a); local = SHAP local (3d) y contrafactuales DiCE + enumeración (3c);
   sanity check = aleatorización de etiquetas, barajado guiado, sondas de ruido y
   estabilidad entre folds (3b).
-- Fase 4 en curso: puntos 1-3 hechos (cifras "antes", corrección del target y predicción
-  prerregistrada; ver "Fase 4 — resultados"). Pendiente: consulta final a test (punto 4),
-  equidad (5) e informe + `README.md` (6).
+- Fase 4 en curso: puntos 1-3 y 5 hechos (cifras "antes", corrección del target,
+  predicción prerregistrada y equidad). Pendiente: consulta final a test (punto 4, que va
+  al final por su propia condición) e informe + `README.md` (6).
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
   proyecto la ruta supera el límite de 260 caracteres de Windows).
   Versiones fijadas en `requirements.txt`. `dice-ml` está fijado a propósito en
@@ -869,6 +869,108 @@ con 9,78% y lift 1,903; (3) 0,1893 con 9,78% y lift 1,936 (`phase4_val_metrics.c
   es el registro de lo que se hizo en la Fase 2 y sigue valiendo para el modelo original.
   `phase4_correction.py` comprueba los DOS: el viejo antes de medir el paso (1) y el
   nuevo al entrenar.
+
+### Fase 4, punto 5 — Resultados de equidad (`src/phase4_fairness.py`)
+Prerregistro commiteado ANTES de medir (`995928b`). Guardarraíles comprobados: modelo
+corregido 183 árboles / PR-AUC val 0,1893; modelo viejo 122 / 0,2308. Test no se tocó.
+
+#### HALLAZGO CENTRAL: validez y equidad tiraron en sentidos opuestos
+Lo principal NO son las disparidades del modelo corregido en absoluto, sino el
+DESPLAZAMIENTO de la composición del top 10% entre el modelo viejo y el corregido
+(`reports/phase4_fairness_composition.csv`, cociente de tasa de marcado frente a MC):
+
+| payer_code | cociente modelo viejo | cociente modelo corregido |
+|---|---|---|
+| SP | 0,832 | **0,385** |
+| UN | 0,869 | **0,494** |
+| BC | 0,861 | 0,775 |
+| Missing | 1,452 | **2,073** |
+| HM | 0,805 | **1,349** |
+
+Con el modelo viejo los diez grupos estaban dentro o cerca de [0,80; 1,25] (el más
+extremo era `Missing`, 1,452). Con el corregido, `SP` y `UN` caen por debajo de 0,50 y
+`Missing` sube a 2,073. **La corrección del target, metodológicamente correcta y
+defendida con un contraste emparejado cuyo IC excluye el cero, empeoró de forma
+apreciable quién recibe seguimiento post-alta.** Es un hallazgo del trabajo, no un efecto
+colateral, y es lo que responde más directamente a la pregunta ética de la asignatura.
+
+- **CAUTELA que no se salta:** el modelo viejo se prerregistró como COLUMNA DESCRIPTIVA
+  SIN veredictos, así que no se le asigna ninguno y el desplazamiento se reporta como
+  OBSERVACIÓN DESCRIPTIVA. Un veredicto formal sobre el desplazamiento exigiría su propio
+  prerregistro, que NO se hizo. Decirlo no le quita fuerza al hallazgo: se la da, porque
+  la alternativa sería fijar el criterio después de ver el resultado.
+- **Explicación mecánica (análisis 4b, secundario/exploratorio, sin veredicto ni Holm):**
+  el reetiquetado golpeó muy distinto por seguro. Tasa de reetiquetado en train+val
+  (`phase4_fairness_relabel_distribution.csv`), con el grupo de REFERENCIA incluido
+  porque sin él la explicación está incompleta —los cocientes son relativos a MC, así que
+  un grupo puede subir solo porque MC bajó—: **MC (referencia) 15,27%** (3.026 positivos),
+  SP 28,29% (+13,03, IC [+8,26; +17,87]), UN 23,98% (+8,71), BC 23,49% (+8,23), CP 20,47%,
+  MD 19,69%, `Other` 14,35%, CM 12,16%, `Missing` 11,29% (-3,98) y HM 4,86%
+  (-10,41, IC [-12,68; -8,01]).
+- **Cuantificado, no "encaja casi uno a uno":** la correlación de rangos de Spearman entre
+  la tasa de reetiquetado del grupo y el factor de cambio de su tasa de marcado
+  (tasa_nueva / tasa_vieja, en términos ABSOLUTOS y no en cociente frente a MC, para que
+  el movimiento de MC no contamine el de los demás) es **rho = -0,952** (p = 2,3e-05,
+  n = 10 grupos de `payer_code`; `src/phase4_relabel_vs_selection.py`,
+  `reports/phase4_relabel_vs_selection*.csv`). Factores: SP 0,385, UN 0,472, CP 0,692,
+  MD 0,712, BC 0,747, `Other` 0,796, **MC 0,830**, CM 0,923, `Missing` 1,185, HM 1,390.
+  Es decir: a más positivos reetiquetados, más baja la tasa de marcado, y el orden se
+  sostiene casi perfecto. Spearman y no Pearson porque solo se afirma el ORDEN.
+
+#### Composición del top 10% (primario `payer_code`, referencia MC): 4 veredictos, 2 que se sostienen
+- 7 contrastes realizados de 9 planificados. Excluidos por el mínimo de >= 20 marcados:
+  CP (18) y UN (17). El filtro se evaluó al medir, como fija el prerregistro.
+- 4 fallan la regla de los cuatro quintos: `Missing` 2,073, `SP` 0,385, `BC` 0,775 y
+  `HM` 1,349. **De esos, solo 2 tienen IC que excluya la paridad:** `Missing`
+  [1,754; 2,463] y `SP` [0,239; 0,569]. Los de `BC` [0,410; 1,215] y `HM`
+  [0,973; 1,839] la INCLUYEN.
+- Redacción correcta: veredicto por el criterio prerregistrado en los cuatro, y de esos,
+  dos indistinguibles de la paridad al mirar la incertidumbre. **NO se cuentan cuatro
+  hallazgos.**
+- **Los dos grupos excluidos por el mínimo también están por debajo de 0,80:** CP 0,500
+  y UN 0,494. Se reportan sin interpretar, como manda la regla, pero conviene decirlo
+  nosotros: sin esa frase, excluir grupos pequeños parece un filtro que se quedó con los
+  casos favorables, y es justo lo contrario — dejó fuera DISPARIDAD POTENCIAL, no
+  paridad.
+
+#### FNR por `race` al top 10% (primario, m de Holm = 4): ningún veredicto
+- Referencia Caucasian, FNR 77,59%. Diferencias: `Missing` +10,98 (p 0,080),
+  `Hispanic` -10,20 (p 0,243), `AfricanAmerican` -3,34 (p 0,352), `Other` +0,67
+  (p 0,901). Ninguno cumple la conjunción (>= 5 puntos Y Holm). `Asian` excluido
+  (15 positivos).
+- La conclusión NO es que no haya disparidad de FNR, y se apoya en el intervalo y no en
+  una máxima: con 15 a 46 positivos, los IC de los grupos pequeños admiten diferencias de
+  hasta unos 25 puntos (`Hispanic` [-25,80; +6,60], `Other` [-19,47; +22,49], `Asian`
+  [-16,38; +23,46]). La prueba NO PODÍA detectar disparidades de tamaño relevante en esos
+  grupos, así que no se concluye nada sobre ellos.
+
+#### Efecto distributivo del reetiquetado por `race` (primario, m de Holm = 5)
+- Referencia Caucasian 14,83%. Ningún veredicto de disparidad.
+- **El caso `AfricanAmerican` es el ejemplo didáctico del trabajo:** es DETECTABLE
+  estadísticamente (tasa 12,11%, diferencia -2,72 puntos, IC [-4,54; -0,95] que excluye
+  el cero, p = 0,002, Holm RECHAZA) pero queda POR DEBAJO del umbral de materialidad de
+  5 puntos fijado antes de medir, así que por la conjunción del criterio el veredicto es
+  **no**. Es el ÚNICO de los 16 contrastes realizados donde las dos mitades del criterio
+  discrepan. Para qué sirve prerregistrar un umbral: sin él, 2,72 puntos con p = 0,002 se
+  habría presentado como hallazgo.
+
+#### Detectabilidad de proxies (primario `race`)
+- AUC OVR macro **0,737** (261 árboles), con las 6 clases por encima de 0,65: `Missing`
+  0,813, AfricanAmerican 0,750, Asian 0,735, Caucasian 0,732, Hispanic 0,723, Other
+  0,667 (`phase4_fairness_proxies*.csv`).
+- **Redacción obligatoria, en este orden:** `race` es RECUPERABLE desde el resto del
+  formulario, o sea que QUITARLA DEL MODELO NO SERÍA SUFICIENTE. Esto **NO significa que
+  el modelo la use**.
+- `gender` 0,630: zona gris, y es secundario.
+
+#### Recuento final de contrastes (`phase4_fairness_contrast_count.csv`)
+- Planificados 20, realizados 16: composición 7 de 9, FNR 4 de 5, distributivo 5 de 5,
+  proxies 1 de 1 (el de `race`). `m` final de Holm: 4 en FNR y 5 en distributivo.
+- Las familias secundarias (`race`/`gender` en composición, `payer_code`/`gender` en FNR
+  y distributivo) se calculan SIN p-valores ni Holm y se marcan
+  `rol = secundario/exploratorio`, como fija el prerregistro.
+- Comparabilidad: el análisis distributivo es train+val y el resto val, así que sus
+  cifras no se comparan directamente entre sí.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
