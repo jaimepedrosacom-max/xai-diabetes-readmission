@@ -155,6 +155,29 @@ están más abajo, en su propia sección; esto son los resultados.
    target que afecta a todo el dataset y se declara en el informe como limitación
    independiente del hallazgo del código 22.
 
+#### La visibilidad del siguiente encuentro es PEOR justo en los dos códigos del hallazgo
+Medido en `audit_discharge_leakage.csv` (`1 - n_visibles / n_lt30`, train+val): el
+37,8% de los `<30` del código 5 no tiene encuentro posterior visible (76 de 201) y el
+36,0% del código 22 tampoco (159 de 442), frente al 27,3% de las altas a casa (1.223
+de 4.481) y al 28,15% global (`pct_sin_visible` en `audit_discharge_global.csv`).
+Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
+- (a) **Cota inferior y estimación son dos cosas distintas, y hay que decirlas por
+  separado.** Lo que es COTA INFERIOR es el NÚMERO de positivos contaminados
+  detectados: 193 de los 442 `<30` del código 22 (`n_V57_o_prog` en
+  `audit_discharge_shares.csv`), porque entre los 159 casos sin encuentro visible solo
+  puede haber más, nunca menos. El PORCENTAJE (68,2%) es una ESTIMACIÓN medida solo
+  sobre los 283 visibles, y extrapolarla a los 442 asume que los invisibles se parecen
+  a los visibles. Si los 159 invisibles estuvieran todos limpios, la tasa sobre el
+  total bajaría al 43,7% (193 de 442). La dirección del sesgo es DESCONOCIDA: los
+  invisibles podrían estar más o menos contaminados que los visibles y no tenemos con
+  qué decidirlo. Por eso el porcentaje se reporta SIEMPRE con su denominador (casos
+  visibles), nunca extrapolado al total.
+- (b) **El reetiquetado de la Fase 4 corregirá MENOS precisamente donde más falta
+  hace.** Solo se pueden reetiquetar los casos con encuentro posterior visible, así que
+  el residuo sin corregir será mayor en los códigos 5 y 22 (37,8% y 36,0% de sus
+  positivos) que en el resto. El antes/después hay que leerlo sabiendo que el grupo
+  contaminado queda parcialmente contaminado después de corregir.
+
 #### OJO al verificar estas cifras: cada una tiene su propio CSV y su denominador
 - Las cifras globales del punto 2 están en `reports/audit_discharge_global.csv`
   (una fila, `grupo = train+val`): `n` 79.473, `n_lt30` 9.051, `n_visibles` 6.503,
@@ -452,15 +475,32 @@ están más abajo, en su propia sección; esto son los resultados.
   comparable sin decirlo.
 - Las cifras "antes" se calculan al empezar la Fase 4, con los artefactos actuales y
   ANTES de aplicar la corrección. No se han medido todavía.
+- ASIMETRÍA DE LA PRUEBA, fijada antes de medir nada (viene de la limitación de
+  visibilidad de la Fase 3b): el reetiquetado solo alcanza a los casos con encuentro
+  posterior visible, así que corrige MENOS en los códigos 22 y 5 (36,0% y 37,8% de sus
+  positivos quedan sin ver), y el grupo A es un 69,3% de esos dos códigos. En
+  consecuencia `delta_A` saldrá ATENUADO respecto a lo que daría una corrección ideal.
+  Por tanto los dos resultados posibles NO son simétricos:
+  - REFUTADO (`delta_A <= delta_B`) admite dos lecturas que estos datos no separan: que
+    la hipótesis sea falsa, o que la corrección no haya llegado a la parte contaminada
+    que no vemos. Se reportará como no concluyente entre esas dos, sin elegir una.
+  - CONFIRMADO (`delta_A > delta_B`) no tiene esa ambigüedad: se obtiene a pesar de la
+    atenuación, no gracias a ella.
 
 ### Fase 4 — pendiente. Entra aquí:
 1. Medir las cifras "antes" de la predicción prerregistrada, antes de tocar nada.
 2. Decidir y aplicar la corrección del target (opciones en la Fase 3b).
 3. Medir la predicción y reportar el resultado salga como salga.
-4. Análisis de equidad: `payer_code` (ver la entrada de la Fase 3d) y los posibles
+4. Decidir si se vuelve a consultar test con el modelo corregido. Las dos salidas son
+   aceptables, pero hay que elegir y dejarlo escrito: si se consulta, se declara en la
+   memoria (cuántas veces se ha tocado test y para qué, y que el 0,227 original ya no
+   es comparable porque el target cambió); si no se consulta, el antes/después se
+   queda en val y CV y se explica por qué, es decir, que una segunda consulta a test
+   tras haber usado sus métricas para decidir deja de ser una estimación limpia.
+5. Análisis de equidad: `payer_code` (ver la entrada de la Fase 3d) y los posibles
    proxies de `race`/`gender` vía otras variables, que las sondas no permiten
    descartar.
-5. Informe (con la reflexión crítica) y `README.md` con instrucciones de
+6. Informe (con la reflexión crítica) y `README.md` con instrucciones de
    reproducción. Dar acceso al repo privado a quien corrija.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
