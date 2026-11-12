@@ -244,9 +244,13 @@ Ambos están en [`.gitignore`](.gitignore).
 final-project/
 ├── src/          # todos los scripts y módulos (ver sección 2)
 ├── notebooks/    # analisis.ipynb: la cadena completa, narrada (ver sección 2)
-├── reports/      # CSV de resultados; reports/figures/ las gráficas
+├── reports/      # CSV de resultados; reports/figures/ las gráficas (PNG, y PDF vectorial cuando existe)
+├── report/       # esqueleto LaTeX del informe (main.tex, references.bib); el texto lo redacta el autor
 ├── data/raw/     # caché del dataset (no versionado)
 ├── requirements.txt
 ├── CLAUDE.md     # cuaderno de trabajo: decisiones, prerregistros y justificaciones
 └── README.md     # este fichero
 ```
+
+Las dos figuras de calibración (`reports/figures/calibration_logreg*.png`) no tienen PDF: se generan
+con scripts que predicen sobre test, y no se relanzan para no repetir la consulta.

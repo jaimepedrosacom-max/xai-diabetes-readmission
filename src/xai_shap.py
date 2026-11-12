@@ -176,6 +176,10 @@ def plot_numeric_beeswarm(values: np.ndarray, X: pd.DataFrame):
     num_cols = [c for c in X.columns if c in P.NUM_COLS + P.COUNT_COLS]
     idx = [X.columns.get_loc(c) for c in num_cols]
     cmap = LinearSegmentedColormap.from_list("azul", ["#cde2fb", "#2a78d6", "#0d366b"])
+    # shap dibuja el beeswarm con np.random SIN semilla (shap/plots/_beeswarm.py, líneas 383 y 400:
+    # desempate y jitter vertical de puntos con el mismo valor SHAP). Sin fijarla, el PNG cambia
+    # entre ejecuciones aunque los valores sean idénticos. Se fija justo antes del dibujo.
+    np.random.seed(D.SEED)
     # Se pasa a float: `age` ya es ordinal 0..9.
     shap.summary_plot(values[:, idx], X[num_cols].astype(float), cmap=cmap,
                       show=False, plot_size=(8, 4.6), alpha=0.6,
@@ -239,6 +243,8 @@ def _save(fig, name):
     E.FIG_DIR.mkdir(parents=True, exist_ok=True)
     path = E.FIG_DIR / name
     fig.savefig(path, dpi=150, facecolor=SURFACE, bbox_inches="tight")
+    # PDF vectorial con el mismo nombre, para el informe en LaTeX (mismo contenido, solo cambia el formato).
+    fig.savefig(path.with_suffix(".pdf"), facecolor=SURFACE, bbox_inches="tight")
     plt.close(fig)
     return path
 

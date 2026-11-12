@@ -111,5 +111,6 @@ def plot_calibration(model_preds: dict, ys: dict, fname: str, n_bins: int = 10) 
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     path = FIG_DIR / fname
     fig.savefig(path, dpi=150, facecolor="#fcfcfb")
+    fig.savefig(path.with_suffix(".pdf"), facecolor="#fcfcfb")  # PDF vectorial, mismo nombre
     plt.close(fig)
     return path

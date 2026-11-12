@@ -301,6 +301,18 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
   semillas son reproducibles. Sus números no cambiaron al arreglarlo (3/3 y 29/30,
   con el mismo encuentro fallido), así que los criterios prerregistrados no se
   reevaluaron.
+- Reproducibilidad del beeswarm de SHAP (`src/xai_shap.py`, `plot_numeric_beeswarm`): el
+  método del paquete `shap` dibuja el beeswarm con `np.random` del estado GLOBAL, sin
+  semilla (`shap/plots/_beeswarm.py`, líneas 383 y 400: desempate y jitter vertical de los
+  puntos con el mismo valor). Con los mismos valores SHAP, el PNG cambiaba entre ejecuciones
+  (12.329 píxeles distintos al relanzar, con la misma salida numérica). Se fija
+  `np.random.seed(D.SEED)` justo antes del dibujo; comprobado: dos ejecuciones dan el mismo
+  hash. No cambia ningún valor SHAP ni ningún CSV.
+- Observación sobre el tooling, para la reflexión crítica del informe: dice-ml (DiCE) y shap
+  son dos librerías de XAI que usan aleatoriedad GLOBAL sin semilla en caminos que usamos. En
+  ambas hubo que localizar la fuente leyendo código y fijar la semilla a mano. Una explicación
+  que cambia entre ejecuciones sin cambiar el modelo no se puede auditar, y la reproducibilidad
+  de una explicación es parte de su validez.
 
 #### Resultado: 0 contrafactuales para los 6 casos elegibles — es un hallazgo, no un bug
 - De los 11 casos locales (fijados en la Fase 3b con `src/xai_cases.py`), 6 son

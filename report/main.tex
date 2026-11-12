@@ -1,0 +1,40 @@
+% Esqueleto del informe. El texto lo escribe Jaime; aquí solo hay estructura.
+% Compilar desde report/:  pdflatex main  ->  bibtex main  ->  pdflatex main  (x2)
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}           % las secciones del enunciado están en inglés
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+
+% Las figuras se toman de reports/figures/ (PDF vectoriales cuando existen).
+\graphicspath{{../reports/figures/}}
+
+\title{XAI: reingreso hospitalario a menos de 30 días en pacientes diabéticos}
+\author{Jaime Pedrosa}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+\section{Data and Methods}
+
+\section{Results}
+
+\section{Actions and Insights}
+
+\section{Discussion}
+
+% Temporal: fuerza la inclusión de todas las entradas de references.bib en la lista de
+% referencias mientras el texto está vacío. Se borra cuando haya citas en el texto.
+\nocite{*}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -148,6 +148,7 @@ def figure_A() -> str:
     fig.tight_layout(rect=(0, 0.07, 1, 0.9))
     out = FIG_DIR / "phase4_fig_A_brecha_val_test.png"
     fig.savefig(out, dpi=150, facecolor=SURFACE)
+    fig.savefig(out.with_suffix(".pdf"), facecolor=SURFACE)  # PDF vectorial, mismo nombre
     plt.close(fig)
     return out.name
 
@@ -242,6 +243,7 @@ def figure_B() -> str:
     fig.tight_layout(rect=(0, 0.1, 1, 0.915))
     out = FIG_DIR / "phase4_fig_B_payer_code_val.png"
     fig.savefig(out, dpi=150, facecolor=SURFACE)
+    fig.savefig(out.with_suffix(".pdf"), facecolor=SURFACE)  # PDF vectorial, mismo nombre
     plt.close(fig)
     return out.name
 
