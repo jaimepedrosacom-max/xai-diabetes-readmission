@@ -27,7 +27,10 @@ ruta del proyecto en el equipo de desarrollo supera el límite de 260 caracteres
 Windows, y un venv dentro del proyecto hace fallar la instalación de paquetes con rutas
 largas. En otro sistema puede crearse donde se quiera.
 
-Las versiones de `requirements.txt` son exactas. Dos pines merecen explicación:
+Las versiones de `requirements.txt` son exactas. El fichero termina con un bloque de dependencias
+**solo del notebook** (jupyter, notebook, ipykernel, nbconvert, nbformat); `src/` no las importa.
+
+Dos pines merecen explicación:
 
 - **`dice-ml==0.12` está fijado a propósito.** El arreglo de reproducibilidad de la Fase
   3c depende de cómo está escrito `explainer_interfaces/dice_random.py` en esa versión:
@@ -44,12 +47,14 @@ primera vez y cachea el CSV en `data/raw/`, que no está versionado.
 
 ## 2. Orden de ejecución
 
-Todos los scripts se lanzan desde `src/`, por ejemplo:
+Todos los scripts se lanzan **desde la raíz del proyecto**, por ejemplo:
 
 ```bash
-cd src
-python xai_shap.py
+python src/xai_shap.py
 ```
+
+Las rutas se calculan desde la ubicación del propio fichero, así que no depende del directorio
+desde el que se lance.
 
 El orden importa: varios scripts **leen CSV que escribieron los anteriores** (la columna
 "lee" lo indica). Los módulos sin `main` (`data.py` como librería, `evaluation.py`,
@@ -92,9 +97,30 @@ sueltos; los importan los demás.
 | 15 | `phase4_relabel_vs_selection.py` | Solo lectura: correlación de Spearman entre la tasa de reetiquetado de cada grupo y el cambio de su tasa de marcado. | `phase4_relabel_vs_selection.csv`, `phase4_relabel_vs_selection_rho.csv` | `phase4_fairness_composition.csv`, `phase4_fairness_relabel_distribution.csv` |
 | 16 | `phase4_ablation.py` | Ablación de `payer_code` con regla de decisión prerregistrada. Decide qué modelo es el entregable. | `phase4_ablation_val.csv`, `_cv.csv`, `_composition.csv`, `_decision.csv` | — |
 | 17 | `phase4_test_final.py` | **SEGUNDA y última consulta a test**, con el modelo entregable y la etiqueta corregida. | `phase4_test_global.csv`, `_topk.csv`, `_steps.csv`, `_gaps.csv`, `_paired_contrasts.csv`, `_deltas.csv` | — |
+| 18 | `phase4_figures.py` | Figuras A (brecha A − B en val y test) y B (cocientes de `payer_code` con y sin la variable). Solo lee CSV: no entrena ni puntúa nada. | `figures/phase4_fig_A_brecha_val_test.png`, `figures/phase4_fig_B_payer_code_val.png` | `phase4_prediction_gaps.csv`, `phase4_test_gaps.csv`, `phase4_paired_contrasts.csv`, `phase4_test_paired_contrasts.csv`, `phase4_ablation_composition.csv` |
 
 Los scripts 13 a 17 tardan varios minutos cada uno: entrenan varios modelos y, en los
 pasos con intervalos de confianza, hacen 2.000 réplicas bootstrap agrupadas por paciente.
+
+---
+
+### Notebook: la cadena completa en un solo sitio
+
+`notebooks/analisis.ipynb` recorre la cadena de punta a punta (datos, modelo, explicaciones,
+corrección del target, equidad y lectura de test), con comentarios en cada sección. Importa las
+funciones de `src/` sin reimplementarlas. Recalcula lo rápido (datos, modelo, SHAP global,
+reetiquetado) y **lee de `reports/`** lo lento (bootstrap, CV, DiCE, ablación). **No consulta
+test.** Tarda unos 70 s en el equipo de desarrollo y se guarda ya ejecutado, con sus salidas.
+
+Para abrirlo, desde la raíz del proyecto con el venv activado:
+
+```bash
+jupyter notebook notebooks/analisis.ipynb
+```
+
+Los guardarraíles del notebook **no detienen la ejecución**: si una cifra no coincide con la
+documentada (por ejemplo, por una versión distinta de LightGBM), imprime esperado frente a obtenido
+y deja un aviso visible al final. Los scripts de `src/` sí usan `assert` y fallan.
 
 ---
 
@@ -217,6 +243,7 @@ Ambos están en [`.gitignore`](.gitignore).
 ```
 final-project/
 ├── src/          # todos los scripts y módulos (ver sección 2)
+├── notebooks/    # analisis.ipynb: la cadena completa, narrada (ver sección 2)
 ├── reports/      # CSV de resultados; reports/figures/ las gráficas
 ├── data/raw/     # caché del dataset (no versionado)
 ├── requirements.txt
