@@ -1,13 +1,6 @@
-% Citas identificadas en README.md, sección 5.
-% Cada entrada lleva [VERIFICAR] y, en su comentario, qué campos se escribieron de memoria y
-% cuáles se contrastaron con Crossref (api.crossref.org). Crossref solo da apellidos y no
-% indexa algunas fuentes; esas quedan sin contrastar.
+% Citas identificadas en README.md, sección 5. Las siete entradas están verificadas
+% (ver el mensaje del commit para la fuente de cada corrección).
 
-% [VERIFICAR]
-% De memoria (no confirmados por Crossref): nombres de pila y inicial del medio de todos los
-%   autores; el "article ID 781670" del título de revista (aparece en el DOI, no en Crossref).
-% Crossref confirma: título, revista, volumen 2014, año 2014, DOI, apellidos de los autores,
-%   páginas 1-11 (ver nota: el borrador anterior tenía "781670" como páginas, era un error).
 @article{strack2014,
   author  = {Strack, Beata and DeShazo, Jonathan P. and Gennings, Chris and Olmo, Juan L. and Ventura, Sebastian and Cios, Krzysztof J. and Clore, John N.},
   title   = {Impact of {HbA1c} Measurement on Hospital Readmission Rates: Analysis of 70,000 Clinical Database Patient Records},
@@ -18,21 +11,16 @@
   doi     = {10.1155/2014/781670}
 }
 
-% [VERIFICAR]
-% De memoria, SIN contrastar (Crossref no lo indexa): TODOS los campos (autores, título,
-%   nombre de la conferencia NeurIPS 2017 "Advances in Neural Information Processing Systems 30",
-%   año, páginas 4765--4774). No tiene DOI en el borrador.
 @inproceedings{lundberg2017,
   author    = {Lundberg, Scott M. and Lee, Su-In},
   title     = {A Unified Approach to Interpreting Model Predictions},
-  booktitle = {Advances in Neural Information Processing Systems 30 (NeurIPS 2017)},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {30},
+  publisher = {Curran Associates, Inc.},
   year      = {2017},
   pages     = {4765--4774}
 }
 
-% [VERIFICAR]
-% De memoria (nombres de pila y segunda inicial de los autores). Crossref confirma: título,
-%   revista, volumen 2, número 1, páginas 56-67, año 2020, DOI y apellidos de los diez autores.
 @article{lundberg2020,
   author  = {Lundberg, Scott M. and Erion, Gabriel and Chen, Hugh and DeGrave, Alex and Prutkin, Jordan M. and Nair, Bala and Katz, Ronit and Himmelfarb, Jonathan and Bansal, Nisha and Lee, Su-In},
   title   = {From local explanations to global understanding with explainable {AI} for trees},
@@ -44,34 +32,24 @@
   doi     = {10.1038/s42256-019-0138-9}
 }
 
-% [VERIFICAR]
-% De memoria (nombres de pila y de la conferencia). Crossref confirma: título, páginas 607-617,
-%   año 2020, DOI y apellidos de los tres autores. El nombre de la conferencia en Crossref es
-%   "Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency"; el
-%   borrador usaba la abreviatura FAT*, pendiente de decidir cuál va.
 @inproceedings{mothilal2020,
   author    = {Mothilal, Ramaravind K. and Sharma, Amit and Tan, Chenhao},
   title     = {Explaining Machine Learning Classifiers through Diverse Counterfactual Explanations},
-  booktitle = {Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency (FAT*)},
+  booktitle = {Conference on Fairness, Accountability, and Transparency (FAT* '20), January 27-30, 2020, Barcelona, Spain},
   year      = {2020},
   pages     = {607--617},
   doi       = {10.1145/3351095.3372850}
 }
 
-% [VERIFICAR]
-% De memoria, SIN contrastar (Crossref no lo indexa): TODOS los campos (autores, título,
-%   NeurIPS 2018 "Advances in Neural Information Processing Systems 31", páginas 9505--9515).
 @inproceedings{adebayo2018,
   author    = {Adebayo, Julius and Gilmer, Justin and Muelly, Michael and Goodfellow, Ian and Hardt, Moritz and Kim, Been},
   title     = {Sanity Checks for Saliency Maps},
-  booktitle = {Advances in Neural Information Processing Systems 31 (NeurIPS 2018)},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {31},
   year      = {2018},
   pages     = {9505--9515}
 }
 
-% [VERIFICAR]
-% De memoria, SIN contrastar (Crossref no indexa el artículo de 1979): TODOS los campos
-%   (autor, título, Scandinavian Journal of Statistics, volumen 6, número 2, páginas 65-70, año).
 @article{holm1979,
   author  = {Holm, Sture},
   title   = {A Simple Sequentially Rejective Multiple Test Procedure},
@@ -79,26 +57,26 @@
   year    = {1979},
   volume  = {6},
   number  = {2},
-  pages   = {65--70}
+  pages   = {65--70},
+  issn    = {0303-6898},
+  doi     = {10.2307/4615733}
 }
 
-% [VERIFICAR]
-% De memoria, SIN contrastar: la lista de agencias, 29 CFR Part 1607 y 43 Fed. Reg. 38290
-%   (25 de agosto de 1978). Comprobar en el Federal Register o eCFR.
 @misc{eeoc1978,
-  author       = {{U.S. Equal Employment Opportunity Commission} and {U.S. Civil Service Commission} and {U.S. Department of Labor} and {U.S. Department of Justice}},
+  author       = {{U.S. Equal Employment Opportunity Commission} and {U.S. Civil Service Commission} and {U.S. Department of Justice} and {U.S. Department of Labor}},
   title        = {Uniform Guidelines on Employee Selection Procedures},
   year         = {1978},
-  howpublished = {29 CFR Part 1607; 43 Fed. Reg. 38290 (Aug. 25, 1978)}
+  howpublished = {Federal Register, Vol. 43, No. 166, p. 38290 (25 August 1978); 29 CFR Part 1607},
+  note         = {El texto de la Parte 1607 (29 CFR) arranca en la página 38295 del Federal Register; la nota de origen de la Parte 1607 cita 43 FR 38295, 38312.}
 }
 
-% [VERIFICAR]
-% De memoria, SIN contrastar: la lista de autores (es la del artículo de Strack et al.) y el
-%   año 2014. Comprobar la ficha del repositorio UCI (dataset 296) y la cita que pide.
 @misc{uci296,
-  author       = {Strack, Beata and DeShazo, Jonathan P. and Gennings, Chris and Olmo, Juan L. and Ventura, Sebastian and Cios, Krzysztof J. and Clore, John N.},
+  author       = {Clore, John and Cios, Krzysztof and DeShazo, Jon and Strack, Beata},
   title        = {Diabetes 130-US Hospitals for Years 1999-2008},
   year         = {2014},
-  howpublished = {UCI Machine Learning Repository, dataset 296},
-  url          = {https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008}
+  howpublished = {UCI Machine Learning Repository},
+  doi          = {10.24432/C5230J},
+  url          = {https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008},
+  note         = {Dataset 296. Licencia CC BY 4.0: exige atribución.},
+  license      = {CC BY 4.0}
 }
