@@ -76,6 +76,7 @@ import evaluation as E
 import preprocessing as P
 import xai_counterfactuals as CF
 import xai_shap as XS
+from sklearn.cluster import KMeans
 from xai_sanity import N_PROBE_SEEDS
 
 TOP_N_FIG = 10          # variables en cada waterfall; el resto se agrega en una barra
@@ -412,6 +413,44 @@ def case_reading(case_rows: pd.DataFrame, stability: pd.DataFrame,
 
 
 # ---------------------------------------------------------------------------
+def profile_geometry(booster, values: np.ndarray, L: pd.DataFrame,
+                     contrib: pd.DataFrame, n_perfiles: int = 3) -> pd.DataFrame:
+    """Geometría de los tres perfil_alto_*: lo que el texto del informe cita como cifras.
+
+    Tres bloques, todos sobre vectores SHAP (log-odds, las 44 variables):
+      - distancia_centroides: centroides de k-means sobre SHAP del top 10 % de val, con la misma
+        configuración que xai_cases.select_cases (KMeans, n_clusters=3, n_init=10, random_state=D.SEED).
+      - distancia_casos / correlacion_casos: entre los vectores de los tres ENCUENTROS perfil_alto_*
+        (los miembros más cercanos a cada centroide, no el centroide).
+      - diferencia_variable: para el par perfil_alto_1 - perfil_alto_3, la diferencia de cada
+        variable entre los dos vectores (ordenada por valor absoluto).
+    """
+    probs = booster.predict(L)
+    top10 = probs >= np.quantile(probs, 0.9)
+    km = KMeans(n_clusters=n_perfiles, n_init=10, random_state=D.SEED).fit(values[top10])
+    cent = km.cluster_centers_
+
+    vec = contrib.pivot(index="variable", columns="caso", values="shap_logodds")
+    perfiles = [f"perfil_alto_{i + 1}" for i in range(n_perfiles)]
+    assert vec[perfiles].notna().all().all(), "faltan variables en algún perfil"
+    casos = vec[perfiles]
+
+    rows = []
+    for i, j in [(0, 1), (0, 2), (1, 2)]:
+        rows.append({"medida": "distancia_centroides", "par": f"{i + 1}-{j + 1}",
+                     "variable": "", "valor": float(np.linalg.norm(cent[i] - cent[j]))})
+        a, b = casos[perfiles[i]].to_numpy(), casos[perfiles[j]].to_numpy()
+        rows.append({"medida": "distancia_casos", "par": f"{i + 1}-{j + 1}",
+                     "variable": "", "valor": float(np.linalg.norm(a - b))})
+        rows.append({"medida": "correlacion_casos", "par": f"{i + 1}-{j + 1}",
+                     "variable": "", "valor": float(np.corrcoef(a, b)[0, 1])})
+    d = (casos[perfiles[0]] - casos[perfiles[2]])
+    for var in d.abs().sort_values(ascending=False).index[:6]:
+        rows.append({"medida": "diferencia_variable", "par": "1-3", "variable": var,
+                     "valor": float(d[var])})
+    return pd.DataFrame(rows)
+
+
 def main():
     pd.set_option("display.width", 200, "display.max_colwidth", 46, "display.max_rows", 300)
     model = XS.load_final_model()
@@ -440,6 +479,9 @@ def main():
     contrib.to_csv(REPORT_DIR / "xai_local_contributions.csv", index=False)
     top.to_csv(REPORT_DIR / "xai_local_top_features.csv", index=False)
     cruce.to_csv(REPORT_DIR / "xai_local_attribution_vs_sensitivity.csv", index=False)
+    geo = profile_geometry(booster, values, L, contrib)
+    geo.to_csv(REPORT_DIR / "xai_local_perfiles_geometria.csv", index=False)
+    print(geo.to_string())
 
     figs = [plot_waterfall(contrib[contrib["caso"] == c.caso]) for c in cases.itertuples()]
     figs.append(plot_contrastive_pairs(contrib))

@@ -50,12 +50,14 @@ Data and Methods · Results · Actions and Insights · Discussion.
 
 | cifra | valor | fuente |
 |---|---|---|
-| Encuentros tras la limpieza | 99.340 | `src/data.py` (consola) |
+| Encuentros tras la limpieza | 99.340 | suma de `n` en `phase4_target_correction.csv` (59.605 + 19.868 + 19.867) |
 | Pacientes con más de un encuentro | 23,5% de los pacientes | `src/leakage_experiment.py` (consola) |
 | Filas de test cuyo paciente está en train con split por filas | 41,7% de las filas de test | `src/leakage_experiment.py` (consola) |
 | Efecto medido del split por filas | PR-AUC +0,006 | `src/leakage_experiment.py` (consola) |
 | Tasa de positivos si solo se usara el primer encuentro | 8,98% (frente a 11,39%) | `src/data.py` (consola) |
 | Pacientes recurrentes descartados en ese caso | 17,13% | `src/data.py` (consola) |
+
+*Nota: las cifras marcadas «(consola)» en este documento no tienen CSV. Se reproducen ejecutando el script indicado.*
 
 Reparto del split y prevalencia: `phase4_target_correction.csv`, columnas `n`,
 `positivos_antes`, `prevalencia_antes_%` — train 59.605 / 6.788 / 11,3883%;
@@ -97,8 +99,8 @@ frente a 0,2046 ± 0,0040 (LR); gana en 5 de 5 folds.
 |---|---|---|
 | `number_inpatient` | #1 | 0,070 |
 | `discharge_disposition_id` | #2 | 0,057 |
-| 3.er puesto | #3 | 0,007 |
-| `payer_code` | #4 | — |
+| `diag_1_group` | #3 por SHAP; puesto 6 por permutación | 0,0036 |
+| `payer_code` | #4 por SHAP; tercer puesto por permutación | 0,0074 |
 
 Niveles por categoría: `xai_shap_levels.csv`. Figuras: `figures/shap_global_bar.png`,
 `figures/shap_beeswarm_numeric.png`, `figures/shap_levels_categorical.png`.
@@ -114,7 +116,7 @@ Validaciones: aditividad `base + suma = log-odds` con error < 1e-6, y coincidenc
 |---|---|---|---|
 | Variables que superan las sondas de ruido | **13 de 44** | `xai_sanity_noise_probes.csv`, `gana_a_sonda == 10` | 44 variables |
 | `insulin` en las sondas | 8 de 10 semillas | `xai_sanity_noise_probes.csv`, `gana_a_sonda` | 10 semillas |
-| Correlación del ranking global bajo etiquetas aleatorias | 0,856 (umbral de aviso ≥ 0,7) | `xai_sanity_label_randomization.csv` | 44 variables |
+| Correlación del ranking global bajo etiquetas aleatorias | 0,856 (umbral de aviso ≥ 0,7) | media de `rho_ranking_global` sobre las 10 permutaciones de `xai_sanity_label_randomization.csv` (0,8558) | 10 permutaciones |
 | Puesto de `number_inpatient` bajo aleatorización | baja del 1 al 10-20 | `xai_sanity_label_randomization.csv` | 44 variables |
 | Barajado guiado | supera el percentil 95 de 100 conjuntos aleatorios | `xai_sanity_guided_shuffling.csv` | 100 conjuntos |
 
@@ -153,8 +155,7 @@ columna, que no es el mismo:**
 | `tasa_sin_V57` | 10,95% | sobre las 79.473 filas |
 | `tasa_sin_V57_o_prog` | 9,76% | sobre las 79.473 filas |
 
-Positivos sin encuentro posterior visible: 2.548 de 9.051 (28,15%) en train+val; 28,6%
-en val.
+Positivos sin encuentro posterior visible: 2.548 de 9.051 (28,15%) en train+val.
 
 ### Por destino
 `audit_discharge_leakage.csv` (train+val, con `MIN_N = 30`, deja fuera 53 filas de
@@ -166,13 +167,15 @@ discrepancia con el 6.503 / 19,85% del bloque global).
 | 22 (rehabilitación) | `pct_V57` | 57,2% | `<30` visibles del código 22 (283) |
 | 22 | `pct_V57_o_prog` | 68,2% | 283 visibles |
 | 22 | `n_V57_o_prog` | **193** | de los 442 `<30` del código 22 → 43,67% del total |
-| 22 | tasa de reingreso | 15,6% | filas del código 22 |
+| 22 | tasa bruta (`pct_lt30`) | 27,76% | filas del código 22 (1.592) |
+| 22 | tasa sin V57 ni programados (`tasa_sin_V57_o_prog`) | 15,64% | filas del código 22 (1.592) |
 | 5 (otra institución) | `pct_V57_o_prog` | 55,2% | `<30` visibles del código 5 |
-| 1 (casa) | tasa de reingreso | 8,1% | filas del código 1 |
+| 1 (casa) | tasa bruta (`pct_lt30`) | 9,29% | filas del código 1 (48.241) |
+| 1 (casa) | tasa sin V57 ni programados (`tasa_sin_V57_o_prog`) | 8,12% | filas del código 1 (48.241) |
 | 1 | `pct_V57_o_prog` | 17,3% | `<30` visibles del código 1 |
 | 3 | `pct_V57_o_prog` | 16,5% | `<30` visibles del código 3 |
 
-Ventaja de riesgo del código 22 frente a casa: ~3,0x bruta → ~1,9x descontando los casos
+Ventaja de riesgo del código 22 frente a casa: 2,99x bruta (27,76 / 9,29, `pct_lt30`) → 1,93x descontando los casos
 V57-o-programado.
 
 ### Visibilidad peor justo en los códigos del hallazgo
@@ -204,9 +207,9 @@ Código 5: `pct_V57` 40,0% en train frente a 14,3% en val. Código 22: 57,2% / 5
 
 | cifra | valor | fuente | denominador |
 |---|---|---|---|
-| Casos locales elegibles | 6 de 11 | `xai_counterfactuals_status.csv` | 11 casos |
+| Casos locales elegibles | 6 de 11 | `xai_counterfactuals_diag_elegibilidad.csv`, columna `elegible` | 11 casos |
 | Contrafactuales encontrados en esos 6 | **0** | `xai_counterfactuals_status.csv` | 6 casos |
-| Umbral del top 10% en val | 0,1954 | `src/xai_counterfactuals.py` (consola) | val |
+| Umbral del top 10% en val | 0,1954 | `xai_counterfactuals_status.csv`, columna `umbral` (top_k 10%) | val |
 
 Cobertura por enumeración, `xai_counterfactuals_population.csv`, columnas `n`,
 `pct_con_cf`, `pct_con_cf_sin_destino` — **cada fila tiene su propio denominador**:
@@ -258,10 +261,7 @@ absoluto**:
 | `modelo_alto_sin_ingresos_reingresa` | +0,936 | `number_inpatient` −0,134 | 7,0x |
 | `modelo_alto_sin_ingresos_no_reingresa` | +1,127 | `number_inpatient` −0,146 | 7,7x |
 
-Perfiles: `perfil_alto_1` y `perfil_alto_3` correlacionan 0,987 y son el par más cercano
-(distancia 0,650 frente a 1,108 y 1,630). Intensidad de `number_inpatient`: +1,279 con
-valor 5 frente a +0,703 con valor 4 (0,575 de los 0,591 de distancia entre los dos
-pacientes).
+Perfiles (`xai_local_perfiles_geometria.csv`): los tres `perfil_alto_*` son los encuentros más cercanos a cada centroide de k-means, no el centroide. Entre `perfil_alto_1` y `perfil_alto_3`, la correlación de sus vectores SHAP es 0,987 y la distancia entre centroides es 0,650 (frente a 1,108 para 2-3 y 1,630 para 1-2). La distancia entre los dos encuentros es 0,591, y 0,575 de ella corresponde a `number_inpatient`: +1,279 con valor 5 y +0,703 con valor 4 (`xai_local_contributions.csv`).
 
 Probabilidades dentro de cada par contrastivo: 0,2617 / 0,2303 y 0,0826 / 0,0937.
 Suma de |SHAP| del top-3: 1,16 y 1,37 ("alto sin ingresos") frente a 0,49 y 0,42
@@ -448,7 +448,7 @@ CP 0,692, MD 0,712, BC 0,747, Other 0,796, **MC 0,830**, CM 0,923, `Missing` 1,1
 HM 1,390.
 
 ### Recuento de contrastes
-`phase4_fairness_contrast_count.csv`: planificados 20, realizados 16 — composición 7 de 9
+`phase4_fairness_contrast_count.csv`: planificados 20, realizados 17 (16 en el CSV; el de proxies se calcula aparte) — composición 7 de 9
 (excluidos CP con 18 marcados y UN con 17), FNR 4 de 5 (excluido Asian con 15 positivos),
 distributivo 5 de 5, proxies 1 de 1.
 

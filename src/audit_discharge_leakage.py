@@ -15,7 +15,7 @@ mismo paciente en los casos etiquetados "<30":
 Supuesto: encounter_id ordena los encuentros en el tiempo. No está documentado, así
 que se valida indirectamente (un encuentro "NO" casi nunca debería tener otro detrás).
 
-Son indicios, no prueba: el 28,2% de los "<30" no tiene encuentro posterior visible
+Son indicios, no prueba: el 28,15% de los "<30" no tiene encuentro posterior visible
 (2.548 de 9.051 en train+val), y un ingreso programado puede no tener relación con el
 episodio anterior. Por destino el hueco es peor justo donde está el hallazgo: 37,8% en
 el código 5 y 36,0% en el 22, frente al 27,3% de las altas a casa.

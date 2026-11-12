@@ -35,7 +35,7 @@ seguimiento post-alta.
 Python, pandas, scikit-learn, lightgbm, shap, dice-ml (o alibi) para
 counterfactuals, matplotlib/seaborn para gráficas.
 
-## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-11)
+## Estado del proyecto y decisiones tomadas (actualizado: 2026-11-12)
 
 ### Estado
 - Hecho: datos, baseline, modelo principal y evaluación final en test
@@ -50,14 +50,16 @@ counterfactuals, matplotlib/seaborn para gráficas.
   (3a); local = SHAP local (3d) y contrafactuales DiCE + enumeración (3c);
   sanity check = aleatorización de etiquetas, barajado guiado, sondas de ruido y
   estabilidad entre folds (3b).
-- Fase 4: puntos 1-5 HECHOS (cifras "antes", corrección del target, predicción
-  prerregistrada, equidad, ablación de `payer_code` y la consulta ÚNICA a test, que fue
-  lo último por su propia condición). **Test ya consultado por segunda y última vez.**
-  Punto 6 EN CURSO: `README.md` hecho (instalación, orden de ejecución, guardarraíles,
-  aviso de las dos consultas a test y citas) y `reports/memoria_cifras.md` hecho (todas
-  las cifras localizadas con su CSV, columna y denominador, para redactar). **El informe
-  lo redacta Jaime**, no se genera aquí. Enunciado: máximo 8 páginas (5-6 recomendadas),
-  con Introduction / Data and Methods / Results / Actions and Insights / Discussion.
+- Fase 4 COMPLETA. Código cerrado: corrección del target, predicción prerregistrada, equidad, ablación de
+  `payer_code`, consulta ÚNICA a test (la segunda y última vez que se toca test), README, notebook
+  (`notebooks/analisis.ipynb`) y figuras (`src/phase4_figures.py`).
+- PENDIENTE, fuera del código:
+  - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
+    solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
+  - Dar acceso al repo privado a quien corrija.
+  - La fecha de entrega no aparece en el PDF del enunciado: confirmarla en la plataforma del curso.
+- Enunciado: máximo 8 páginas (5-6 recomendadas), con Introduction / Data and Methods / Results / Actions and
+  Insights / Discussion.
 - Entregable final: modelo corregido SIN `payer_code`, guardarraíl 123 árboles /
   PR-AUC val 0,1868; en test, con la etiqueta corregida, lift 1,9194.
 - Entorno: venv fuera del proyecto, en `C:\venvs\xai-final` (dentro del
@@ -125,7 +127,7 @@ counterfactuals, matplotlib/seaborn para gráficas.
   error < 1e-6) y coincidencia con `pred_contrib` nativo de LightGBM.
 - Top drivers consistentes entre SHAP, permutación y contribución en LR:
   `number_inpatient` (#1) y `discharge_disposition_id` (#2), con caídas de PR-AUC
-  al permutar de 0,070 y 0,057 — muy por encima del tercer puesto (0,007). A
+  al permutar de 0,070 y 0,057 — muy por encima del tercer puesto por permutación (`payer_code`, 0,0074; el tercero por SHAP, `diag_1_group`, tiene 0,0036). A
   partir de ahí el orden entre métodos NO es fiable: el ruido de permutación es
   del mismo orden que la señal.
 - Los tres métodos miden cosas distintas y no deben coincidir del todo: SHAP mide
@@ -150,7 +152,7 @@ están más abajo, en su propia sección; esto son los resultados.
    (cuidados/rehabilitación) y el 68,2% tiene V57 o es un ingreso programado —
    probable continuación de cuidados registrada como "reingreso", no un reingreso
    no planificado. Descontando esos casos, la ventaja de riesgo del código 22 baja
-   de ~3,0x a ~1,9x frente a casa (tasa 15,6% frente a 8,1% del código 1). El
+   de 2,99x a 1,93x frente a casa: tasa bruta 27,76 % frente a 9,29 % (`pct_lt30`); sin V57 ni programados, 15,64 % frente a 8,12 % (`tasa_sin_V57_o_prog`). El
    código 5 (otra institución) confirma el patrón a medias: 55,2% de V57 o
    programado, pero el componente V57 puro no es estable entre train y val. Los
    códigos 28 (psiquiátrico) y 15 (swing bed) tienen SHAP igual de alto SIN este
@@ -220,7 +222,7 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
   - **"La aleatorización de etiquetas no distingue señal real de artefacto de
     etiqueta":** ambas colapsan igual al romper la etiqueta.
 - Aviso activo (no fallo): la correlación del ranking global bajo etiquetas
-  aleatorias es 0,856 (umbral de aviso ≥ 0,7). Indica que el orden medio de la
+  aleatorias es 0,856 (umbral de aviso ≥ 0,7; media de `rho_ranking_global` sobre las 10 permutaciones de `xai_sanity_label_randomization.csv`, 0,8558). Indica que el orden medio de la
   tabla refleja en parte facilidad estructural de split, no solo señal. El top-1
   (`number_inpatient`) SÍ es sensible a la señal real: cae del puesto 1 al 10-20
   bajo aleatorización.
@@ -249,8 +251,8 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
 #### Decisión pendiente para la Fase 4 (opciones ya planteadas, sin decidir)
 - **Reetiquetar a 0** los `<30` cuyo siguiente encuentro es V57 o programado.
   Preferencia de Jaime: mantiene la población, y deja incertidumbre residual en el
-  ~28% de los positivos que no tiene encuentro posterior visible (2.548 de 9.051 en
-  train+val; 28,6% en val), que se reporta como límite.
+  28,15% de los positivos que no tiene encuentro posterior visible (2.548 de 9.051 en
+  train+val), que se reporta como límite.
 - **Excluir esas altas:** más simple, pero deja sin predicción a una población real.
 - **Solo quitar la feature:** RECHAZADO, no arregla la etiqueta contaminada.
 - Cualquier corrección cambia el problema: el 0,227 de test deja de ser comparable
@@ -279,7 +281,7 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
   define la etiqueta). `A1Cresult` y `max_glu_serum` congeladas: se puede pedir la
   prueba, no elegir el resultado. `change` y `diabetesMed` son derivadas.
 - `change` solo se puede recalcular en un sentido: Up/Down implica Ch, pero hay
-  11.425 filas de train con Ch sin ningún Up/Down. Cuando un candidato elimina
+  11.425 filas de train con Ch sin ningún Up/Down (`check_derived_rules` en `src/xai_counterfactuals.py`, impreso por `main()`). Cuando un candidato elimina
   todos los Up/Down del original, `change` es ambiguo y se puntúa el PEOR caso.
 - Reproducibilidad de DiCE: `random_seed` por sí solo NO basta, y se vio en los
   resultados (dos llamadas sobre el mismo paciente devolvían conjuntos distintos
@@ -333,7 +335,7 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
   reproducibles tras fijar las semillas globales). El fallo es un caso con un
   único contrafactual válido: probablemente muestreo aleatorio, no verificado.
 - Cobertura en val, por enumeración (ojo al denominador de cada cifra):
-  top 10% completo, 451 de 1.987 marcados tienen contrafactual (22,70%); dentro
+  top 10% completo, 451 de 1.987 marcados tienen contrafactual (22,70%; 448 + 3, de `xai_counterfactuals_population.csv`); dentro
   del grupo "otros destinos", 448 de 1.518 (29,51%); dentro del grupo 22/5 con el
   destino congelado, 3 de 469 (0,64%). Sin tocar el destino (solo fármacos):
   59 de 1.987 en el top 10% completo (2,97%), 56 de 1.518 en "otros destinos"
@@ -391,10 +393,10 @@ Dos consecuencias, fijadas ANTES de implementar la corrección de la Fase 4:
   `number_emergency` (global #9) y `diag_2_group` (global #13); como son centroides,
   describen un grupo del top 10%, no un paciente excéntrico.
 - `perfil_alto_1` y `perfil_alto_3` son casi el mismo perfil, medido: sus vectores SHAP
-  correlacionan 0,987 y sus centroides son el par MÁS CERCANO de los tres (distancia
+  correlacionan 0,987 (`xai_local_perfiles_geometria.csv`) y sus centroides son el par MÁS CERCANO de los tres (distancia
   0,650, frente a 1,108 y 1,630). La diferencia está concentrada en la INTENSIDAD de
   `number_inpatient` (+1,279 con valor 5 frente a +0,703 con valor 4, que son 0,575 de
-  los 0,591 de distancia entre los dos pacientes) y en el signo de `diag_2_group`
+  los 0,591 de distancia entre los dos encuentros, vectores SHAP, en `xai_local_perfiles_geometria.csv`) y en el signo de `diag_2_group`
   (+0,062 Endocrine frente a -0,055 Genitourinary). Consecuencia: con k=3, dos de los
   tres perfiles cuentan la misma historia a distinta escala, y solo `perfil_alto_2`
   (el del destino contaminado) es cualitativamente distinto. Para el informe conviene
@@ -969,7 +971,7 @@ colateral, y es lo que responde más directamente a la pregunta ética de la asi
   estadísticamente (tasa 12,11%, diferencia -2,72 puntos, IC [-4,54; -0,95] que excluye
   el cero, p = 0,002, Holm RECHAZA) pero queda POR DEBAJO del umbral de materialidad de
   5 puntos fijado antes de medir, así que por la conjunción del criterio el veredicto es
-  **no**. Es el ÚNICO de los 16 contrastes realizados donde las dos mitades del criterio
+  **no**. Es el ÚNICO de los 17 contrastes realizados donde las dos mitades del criterio
   discrepan. Para qué sirve prerregistrar un umbral: sin él, 2,72 puntos con p = 0,002 se
   habría presentado como hallazgo.
 
@@ -983,7 +985,7 @@ colateral, y es lo que responde más directamente a la pregunta ética de la asi
 - `gender` 0,630: zona gris, y es secundario.
 
 #### Recuento final de contrastes (`phase4_fairness_contrast_count.csv`)
-- Planificados 20, realizados 16: composición 7 de 9, FNR 4 de 5, distributivo 5 de 5,
+- Planificados 20, realizados 17 (16 en el CSV; el de proxies se calcula aparte): composición 7 de 9, FNR 4 de 5, distributivo 5 de 5,
   proxies 1 de 1 (el de `race`). `m` final de Holm: 4 en FNR y 5 en distributivo.
 - Las familias secundarias (`race`/`gender` en composición, `payer_code`/`gender` en FNR
   y distributivo) se calculan SIN p-valores ni Holm y se marcan

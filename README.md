@@ -43,6 +43,8 @@ Dos pines merecen explicación:
 **Datos:** no hay que descargarlos a mano. `src/data.py` los obtiene con `ucimlrepo` la
 primera vez y cachea el CSV en `data/raw/`, que no está versionado.
 
+`IDS_mapping.csv` (descripción de los IDs administrativos) viene del zip oficial de UCI del dataset 296 y no está versionado. Ningún script lo lee: se usó como referencia para las etiquetas legibles.
+
 ---
 
 ## 2. Orden de ejecución
@@ -84,8 +86,8 @@ sueltos; los importan los demás.
 | 7 | `xai_shap.py` | **Global.** TreeSHAP sobre val, comparado con importancia por permutación y con los coeficientes de la LR. | `xai_global_comparison.csv`, `xai_shap_levels.csv`, `figures/shap_global_bar.png`, `figures/shap_beeswarm_numeric.png`, `figures/shap_levels_categorical.png` | — |
 | 8 | `xai_sanity.py` | **Sanity checks.** Aleatorización de etiquetas, barajado guiado, sondas de ruido y estabilidad entre folds. Además fija los 11 casos locales con `xai_cases.py`. | `xai_sanity_label_randomization.csv`, `xai_sanity_guided_shuffling.csv`, `xai_sanity_noise_probes.csv`, `xai_sanity_sensitivity.csv`, `xai_sanity_topk_composition.csv`, `xai_sanity_local_stability.csv`, `xai_local_cases.csv` | — |
 | 9 | `audit_discharge_leakage.py` | Auditoría del destino al alta: ¿cuántos "reingresos" son cuidados programados? Es el origen del hallazgo central. | `audit_discharge_leakage.csv`, `audit_discharge_global.csv`, `audit_discharge_shares.csv` | `xai_shap_levels.csv` |
-| 10 | `xai_counterfactuals.py` | **Local (contrafactuales).** DiCE + enumeración exhaustiva de hasta 2 cambios, con el espacio de acciones restringido. | `xai_counterfactuals_cases.csv`, `_status.csv`, `_population.csv`, `_levers.csv`, `_lab_range.csv`, `_dice_audit.csv`, `_DEMO_ENGANOSO.csv` y 5 `xai_counterfactuals_diag_*.csv` | `xai_local_cases.csv`, `audit_discharge_leakage.csv` |
-| 11 | `xai_local.py` | **Local (SHAP).** Explicaciones de los 11 casos, en log-odds, con la marca `interpretable` leída de las sondas de ruido. | `xai_local_contributions.csv`, `xai_local_top_features.csv`, `xai_local_attribution_vs_sensitivity.csv`, 11 figuras `figures/shap_local_*.png` y `figures/shap_local_pares_contrastivos.png` | `xai_local_cases.csv`, `xai_sanity_noise_probes.csv`, `xai_counterfactuals_diag_sensibilidad.csv` |
+| 10 | `xai_counterfactuals.py` | **Local (contrafactuales).** DiCE + enumeración exhaustiva de hasta 2 cambios, con el espacio de acciones restringido. | `xai_counterfactuals_cases.csv`, `xai_counterfactuals_status.csv`, `xai_counterfactuals_population.csv`, `xai_counterfactuals_levers.csv`, `xai_counterfactuals_lab_range.csv`, `xai_counterfactuals_dice_audit.csv`, `xai_counterfactuals_DEMO_ENGANOSO.csv` y 5 `xai_counterfactuals_diag_*.csv` | `xai_local_cases.csv`, `audit_discharge_leakage.csv` |
+| 11 | `xai_local.py` | **Local (SHAP).** Explicaciones de los 11 casos, en log-odds, con la marca `interpretable` leída de las sondas de ruido. | `xai_local_contributions.csv`, `xai_local_top_features.csv`, `xai_local_attribution_vs_sensitivity.csv`, `xai_local_perfiles_geometria.csv`, 11 figuras `figures/shap_local_*.png` y `figures/shap_local_pares_contrastivos.png` | `xai_local_cases.csv`, `xai_sanity_noise_probes.csv`, `xai_counterfactuals_diag_sensibilidad.csv` |
 
 ### Fase 4 — Acción: corregir el target, equidad y cierre
 
@@ -93,10 +95,10 @@ sueltos; los importan los demás.
 |---|---|---|---|---|
 | 12 | `phase4_prediction.py` | Cifras **"antes"** de la predicción prerregistrada, medidas sin tocar nada todavía. | `phase4_prediction.csv` | — |
 | 13 | `phase4_correction.py` | Aplica la corrección del target (`target_correction.py`) y mide los tres pasos, la brecha, los contrastes emparejados y la CV antes/después. | `phase4_split_check.csv`, `phase4_target_correction.csv`, `phase4_relabel_by_destination.csv`, `phase4_prediction_steps.csv`, `phase4_prediction_gaps.csv`, `phase4_paired_contrasts.csv`, `phase4_prediction_deltas.csv`, `phase4_val_metrics.csv`, `phase4_shap_discharge.csv`, `phase4_cv_lift.csv` | — |
-| 14 | `phase4_fairness.py` | Equidad en val: composición del top-k, FNR por grupo, detectabilidad de proxies y efecto distributivo del reetiquetado. | `phase4_fairness_composition.csv`, `_fnr.csv`, `_proxies.csv`, `_proxies_by_class.csv`, `_relabel_distribution.csv`, `_contrast_count.csv` | — |
+| 14 | `phase4_fairness.py` | Equidad en val: composición del top-k, FNR por grupo, detectabilidad de proxies y efecto distributivo del reetiquetado. | `phase4_fairness_composition.csv`, `phase4_fairness_fnr.csv`, `phase4_fairness_proxies.csv`, `phase4_fairness_proxies_by_class.csv`, `phase4_fairness_relabel_distribution.csv`, `phase4_fairness_contrast_count.csv` | — |
 | 15 | `phase4_relabel_vs_selection.py` | Solo lectura: correlación de Spearman entre la tasa de reetiquetado de cada grupo y el cambio de su tasa de marcado. | `phase4_relabel_vs_selection.csv`, `phase4_relabel_vs_selection_rho.csv` | `phase4_fairness_composition.csv`, `phase4_fairness_relabel_distribution.csv` |
-| 16 | `phase4_ablation.py` | Ablación de `payer_code` con regla de decisión prerregistrada. Decide qué modelo es el entregable. | `phase4_ablation_val.csv`, `_cv.csv`, `_composition.csv`, `_decision.csv` | — |
-| 17 | `phase4_test_final.py` | **SEGUNDA y última consulta a test**, con el modelo entregable y la etiqueta corregida. | `phase4_test_global.csv`, `_topk.csv`, `_steps.csv`, `_gaps.csv`, `_paired_contrasts.csv`, `_deltas.csv` | — |
+| 16 | `phase4_ablation.py` | Ablación de `payer_code` con regla de decisión prerregistrada. Decide qué modelo es el entregable. | `phase4_ablation_val.csv`, `phase4_ablation_cv.csv`, `phase4_ablation_composition.csv`, `phase4_ablation_decision.csv` | — |
+| 17 | `phase4_test_final.py` | **SEGUNDA y última consulta a test**, con el modelo entregable y la etiqueta corregida. | `phase4_test_global.csv`, `phase4_test_topk.csv`, `phase4_test_steps.csv`, `phase4_test_gaps.csv`, `phase4_test_paired_contrasts.csv`, `phase4_test_deltas.csv` | — |
 | 18 | `phase4_figures.py` | Figuras A (brecha A − B en val y test) y B (cocientes de `payer_code` con y sin la variable). Solo lee CSV: no entrena ni puntúa nada. | `figures/phase4_fig_A_brecha_val_test.png`, `figures/phase4_fig_B_payer_code_val.png` | `phase4_prediction_gaps.csv`, `phase4_test_gaps.csv`, `phase4_paired_contrasts.csv`, `phase4_test_paired_contrasts.csv`, `phase4_ablation_composition.csv` |
 
 Los scripts 13 a 17 tardan varios minutos cada uno: entrenan varios modelos y, en los
