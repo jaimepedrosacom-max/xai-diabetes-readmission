@@ -22,19 +22,26 @@ import preprocessing as P
 C_GRID = [0.001, 0.01, 0.1, 1, 10]  # C = 1/fuerza de regularización L2
 
 
-def make_logreg(C: float) -> Pipeline:
-    return Pipeline([("prep", P.build_lr_preprocessor()),
+def make_logreg(C: float, **prep_kwargs) -> Pipeline:
+    """Pipeline de la LR: preprocesado + clasificador L2, sin reponderar clases.
+
+    `prep_kwargs` se pasa tal cual a `P.build_lr_preprocessor` y existe solo para
+    poder quitar una columna (Fase 5A: `cat_cols` sin `payer_code`). Sin
+    argumentos, el pipeline es exactamente el de la Fase 2a.
+    """
+    return Pipeline([("prep", P.build_lr_preprocessor(**prep_kwargs)),
                      ("clf", LogisticRegression(C=C, max_iter=5000))])
 
 
-def select_logreg(Xtr, ytr, Xva, yva, c_grid=C_GRID):
+def select_logreg(Xtr, ytr, Xva, yva, c_grid=C_GRID, **prep_kwargs):
     """Entrena una LR por cada C en train y elige la de mejor PR-AUC en val.
 
     Devuelve (modelo elegido ya entrenado, tabla de la rejilla).
+    `prep_kwargs` llega sin tocar hasta `P.build_lr_preprocessor` (ver `make_logreg`).
     """
     grid, models = [], {}
     for C in c_grid:
-        models[C] = make_logreg(C).fit(Xtr, ytr)
+        models[C] = make_logreg(C, **prep_kwargs).fit(Xtr, ytr)
         grid.append({"C": C,
                      "train_pr_auc": average_precision_score(ytr, models[C].predict_proba(Xtr)[:, 1]),
                      "val_pr_auc": average_precision_score(yva, models[C].predict_proba(Xva)[:, 1])})

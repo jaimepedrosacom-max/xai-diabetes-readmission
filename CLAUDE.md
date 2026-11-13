@@ -1499,6 +1499,45 @@ declaran en vez de corregirse:
    trata como missing; para la LR caen en `infrequent`. Tratamientos distintos del mismo caso,
    los dos fijados antes de esta fase.
 
+### Fase 5A, etapa val — guardarraíl de la LR y elección de C (`src/phase5_lr_comparison.py --stage val`)
+Prerregistro commiteado ANTES de ejecutar esto (`c579acf`). **Test NO se tocó, y no es solo
+una promesa:** `stage_val` descarta el tercer split en cuanto `load_model_data` lo devuelve, y
+`stage_test` aborta con `SystemExit`, así que en el commit de esta etapa no existe código capaz
+de leer test.
+
+- **El refactor del preprocesado queda auditado por REPRODUCCIÓN, no por revisión del diff.**
+  `build_lr_preprocessor`, `make_logreg` y `select_logreg` pasan a aceptar las listas de
+  columnas como parámetros (defaults idénticos a los de la Fase 2a), y la etapa val exige con
+  `assert` que la llamada SIN argumentos reproduce la LR de la Fase 2a en val: **C = 1 y PR-AUC
+  val 0,2124** (`metrics_final.csv`, fila `LogReg,val`), con todas las features y la etiqueta
+  vieja. Pasa. Ninguna cifra publicada de la LR cambia.
+- **Guardarraíl del entregable, comprobado antes de todo lo demás:** 123 árboles / PR-AUC val
+  0,1868. Pasa.
+- **Guardarraíl NUEVO de la LR de la Fase 5A** (anotado en `src/phase5_lr_comparison.py` como
+  `LR_C`, `LR_VAL_PR_AUC`, `LR_N_COLS`; la etapa test lo exigirá con `assert`):
+
+| modelo | C | PR-AUC val | columnas tras el one-hot |
+|---|---|---|---|
+| LR corregida SIN `payer_code` | 1 | 0,1804 | 128 (de 43 variables de entrada) |
+
+- **Rejilla de C** (`reports/phase5_lr_c_grid.csv`; val = 19.868 filas, prevalencia 9,7795% con
+  la etiqueta corregida): 0,001 -> PR-AUC 0,1782 (lift 1,8225); 0,01 -> 0,1796 (1,8368);
+  0,1 -> 0,1803 (1,8434); **1 -> 0,1804 (1,8446), elegido**; 10 -> 0,1804 (1,8444).
+  **NO hay ganador en el borde**, así que la cláusula de "no se amplía la rejilla" no llega a
+  aplicarse. C = 1 coincide con el de la Fase 2a, pero no se hereda: se re-eligió con la
+  etiqueta corregida y sin `payer_code`. **No se compara con el entregable aquí: el veredicto
+  se decide solo en test.**
+- **Caso MEDIDO de la asimetría nº 4 del prerregistro** (valores no vistos en train), calculado
+  solo con train y val: **4 de las 19.868 filas de val (0,0201%)** tienen un nivel que no
+  aparece en train, en dos fármacos y sin solapamiento entre ellos — `acarbose = Down` (3
+  filas; en train solo hay `No`/`Steady`/`Up`) y `tolazamide = Up` (1 fila; en train solo hay
+  `No`/`Steady`). La LR los manda a `infrequent` (lo avisa `OneHotEncoder` por consola) y
+  LightGBM los convierte en NaN y los trata como missing. Son tratamientos distintos del mismo
+  caso, pero el denominador deja claro que no mueve ninguna cifra.
+- **Coeficientes de la LR** en `reports/phase5_lr_coefficients.csv` (128 columnas + fila del
+  intercepto), con bloque, variable original, coeficiente y `exp(coef)`. Son el insumo de la
+  5B; **en la 5A no se interpretan**.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

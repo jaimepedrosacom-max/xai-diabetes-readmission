@@ -86,11 +86,19 @@ def split_xy(df: pd.DataFrame):
 # ---------------------------------------------------------------------------
 # Transformaciones ajustadas (solo con train)
 # ---------------------------------------------------------------------------
-def build_lr_preprocessor() -> ColumnTransformer:
+def build_lr_preprocessor(num_cols=NUM_COLS, count_cols=COUNT_COLS,
+                          cat_cols=CAT_COLS) -> ColumnTransformer:
     """ColumnTransformer para la regresión logística.
 
     Al ir dentro de un Pipeline con el clasificador, `pipeline.fit(X_train)`
     ajusta scaler y one-hot SOLO con train; val/test solo se transforman.
+
+    Los tres parámetros existen SOLO para poder quitar una columna sin duplicar
+    este preprocesado (Fase 5A: la LR sin `payer_code`). Los valores por defecto
+    son exactamente las listas de la Fase 2a, así que una llamada SIN argumentos
+    construye el mismo objeto que antes y ninguna cifra publicada cambia; la
+    Fase 5A lo comprueba con un `assert` (reproduce C=1 y PR-AUC val 0,2124).
+    Las listas no se modifican aquí dentro, solo se leen.
     """
     counts = Pipeline([
         # feature_names_out="one-to-one" mantiene los nombres de columna (útil para XAI).
@@ -104,9 +112,9 @@ def build_lr_preprocessor() -> ColumnTransformer:
         sparse_output=False,
     )
     return ColumnTransformer(
-        [("num", StandardScaler(), NUM_COLS),
-         ("counts", counts, COUNT_COLS),
-         ("cat", onehot, CAT_COLS)],
+        [("num", StandardScaler(), num_cols),
+         ("counts", counts, count_cols),
+         ("cat", onehot, cat_cols)],
         remainder="drop",              # nada fuera de FEATURES entra al modelo
         verbose_feature_names_out=True,  # nombres tipo "cat__A1Cresult_>8"
     )
