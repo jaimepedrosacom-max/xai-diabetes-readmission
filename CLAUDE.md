@@ -1538,6 +1538,126 @@ de leer test.
   intercepto), con bloque, variable original, coeficiente y `exp(coef)`. Son el insumo de la
   5B; **en la 5A no se interpretan**.
 
+### Fase 5A, etapa test — VEREDICTO (c): indistinguibles (`--stage test`)
+TERCERA consulta a test del proyecto, una sola ejecución, con todo cerrado antes de
+lanzarla. **Nada ha cambiado después de verla.** Test = 19.867 filas, 13.951 pacientes,
+prevalencia 9,8455% con la etiqueta corregida.
+
+#### Los tres guardarraíles, en este orden
+1. **Entregable**, antes de la frontera de test: 123 árboles / PR-AUC val 0,1868.
+2. **LR**, también antes de la frontera: C = 1 / PR-AUC val 0,1804 / 128 columnas. La
+   elección de C se repite COMPLETA en la etapa test en vez de dar por buena la de la
+   etapa val, así que si la rejilla no devolviera lo anotado el script abortaría sin
+   puntuar test.
+3. **Reproducción de la Fase 4 en test**, el único que solo se puede comprobar con test
+   ya puntuado, y colocado antes del bootstrap para que un fallo aborte sin calcular el
+   contraste: el entregable da **PR-AUC 0,1890 y ROC-AUC 0,6655**, que son exactamente
+   sus cifras publicadas en `phase4_test_global.csv`. Es decir, estas predicciones son
+   las mismas de la Fase 4, punto 4.
+
+Los tres pasan.
+
+#### Contraste primario (el único con veredicto)
+`reports/phase5_test_primary_contrast.csv`. Δ = PR-AUC(entregable) − PR-AUC(LR), IC95 por
+bootstrap emparejado de PACIENTES (2.000 réplicas, semilla 42, **0 descartadas**):
+
+| | valor |
+|---|---|
+| PR-AUC entregable | 0,188976 |
+| PR-AUC LR (C = 1) | 0,182739 |
+| **Δ observado** | **+0,0062** |
+| **IC95** | **[−0,0008; +0,0130]** |
+| umbral de materialidad | 0,01 |
+| **VEREDICTO** | **(c) indistinguibles — el IC incluye 0** |
+
+- **El IC incluye el cero, así que el veredicto es (c)** por la regla prerregistrada, que
+  evalúa (c) ANTES que (a) y (b) precisamente para que un IC que incluya 0 no pueda
+  clasificarse como superioridad.
+- **Y, por separado, Δ = 0,0062 tampoco alcanza el umbral de 0,01.** Las dos mitades del
+  criterio apuntan en la misma dirección: ni significación ni materialidad. No hace falta
+  elegir entre ellas.
+- **Pero "indistinguibles" NO es "equivalentes", y conviene decirlo antes de que lo
+  pregunten:** el límite SUPERIOR del IC es **+0,0130**, que está POR ENCIMA del umbral
+  de materialidad de 0,01. Estos datos **NO descartan** una ventaja material de
+  LightGBM: simplemente **no la detectan**. El intervalo va de una desventaja minúscula
+  a una ventaja algo mayor que el umbral, así que es poco informativo en su extremo
+  superior, y se reporta como tal en vez de presentarse como un empate demostrado.
+- **ESTO VA EN CONTRA DE LO QUE EL PRERREGISTRO DABA POR PLAUSIBLE.** Allí quedó escrito
+  que el veredicto (a) era plausible de antemano, y ha salido (c). Se reporta así, con la
+  predicción previa a la vista, que es para lo que se escribió.
+
+#### Secundarias: descriptivas, SIN veredicto
+`reports/phase5_test_secondary.csv`, mismo bootstrap emparejado (2.000 réplicas, 0
+descartadas). La columna `mejor_si` está en el CSV para que no se lea al revés el signo
+del Brier, que es un error y no un acierto:
+
+| métrica | entregable | LR | diferencia | IC95 | IC excluye 0 | mejor si |
+|---|---|---|---|---|---|---|
+| ROC-AUC | 0,6655 | 0,6597 | **+0,0058** | [+0,0002; +0,0112] | sí | dif > 0 |
+| lift (PR-AUC / prev.) | 1,9194 | 1,8561 | +0,0633 | [−0,0080; +0,1342] | no | dif > 0 |
+| precisión top 5% | 26,861% | 26,861% | 0,0000 | [−0,0213; +0,0220] | no | dif > 0 |
+| lift top 5% | 2,7283 | 2,7283 | 0,0000 | [−0,2190; +0,2219] | no | dif > 0 |
+| Brier | 0,0855 | 0,0858 | **−0,0003** | [−0,00061; −0,00003] | sí | dif < 0 |
+
+- **ROC-AUC y Brier tienen IC que excluyen el 0, y eso NO es un hallazgo.** Son
+  secundarias descriptivas, sin veredicto por prerregistro y **sin corrección por
+  comparaciones múltiples**, y las diferencias son de **0,0058 de ROC-AUC y 0,0003 de
+  Brier**: magnitudes irrelevantes para el gestor. No se presentan como evidencia de
+  nada, ni a favor ni en contra del veredicto.
+- **Top 5%: los dos modelos aciertan exactamente 267 de 994 marcados**
+  (`phase5_test_topk.csv`), así que la diferencia de precisión y de lift es 0,0000 clavado.
+  **No es que las predicciones sean iguales**: los vectores difieren, y se ve en el mismo
+  CSV en los otros dos k — top 10% 440 aciertos frente a 429, top 20% 728 frente a 732.
+  Es una coincidencia en el RECUENTO a ese k, no un empate de los modelos ni un bug.
+
+#### Accuracy: los dos modelos pierden contra "nunca reingresa"
+`reports/phase5_test_global.csv`, umbral de decisión 0,5 en los dos modelos:
+
+| clasificador | accuracy |
+|---|---|
+| ENTREGABLE (sin `payer_code`) | 90,1445% |
+| LR (C = 1, sin `payer_code`) | 90,1445% |
+| base: prevalencia constante = **nunca reingresa** | **90,1545%** |
+| base: regla `number_inpatient > 0` | 66,5576% |
+
+Los dos modelos quedan **por debajo** del clasificador trivial, que no marca a nadie. Es
+exactamente para lo que se prerregistró esta fila: con el 9,8455% de prevalencia, la
+accuracy a umbral 0,5 no mide nada útil, y el umbral operativo del proyecto es el top-k.
+Hay una sola fila de línea base trivial porque a umbral 0,5 "prevalencia constante" y
+"nunca reingresa" son el MISMO clasificador.
+
+**Nota sobre el Brier de la regla (0,3344): NO es comparable** con los de los dos
+modelos. La regla `number_inpatient > 0` devuelve 0 o 1, no probabilidades, así que su
+Brier castiga cada fallo con el error máximo. Su ROC-AUC y su PR-AUC sí son
+interpretables; su Brier no entra en ninguna comparación.
+
+#### Conclusiones: SOLO las prerregistradas para (c)
+Lo que se concluye:
+- **No se detecta** que el modelo complejo ordene a los pacientes mejor que un modelo
+  lineal con estas variables y este target. El IC es compatible desde una ventaja nula
+  hasta una algo superior al umbral de materialidad, así que **tampoco se establece
+  equivalencia**: lo que hay es ausencia de detección, no prueba de empate.
+- Eso activa el argumento de **Rudin (2019)** como CONTRAPUNTO: si el rendimiento es
+  equivalente, para una decisión de alto riesgo sobre personas hay razón para preferir el
+  modelo interpretable por diseño, y el coste de la caja negra no está pagado por nada.
+
+Lo que **NO** se concluye, también por prerregistro:
+- **NO** que los datos sean lineales, ni que no haya interacciones: un empate en PR-AUC es
+  compatible con que las haya y no sean recuperables con esta señal, esta prevalencia y
+  este tamaño.
+- **NO** que el trabajo quede invalidado. El objetivo de este proyecto es evaluar la
+  FIABILIDAD de las explicaciones post hoc de un modelo opaco, no demostrar que el modelo
+  opaco gane. El argumento de Rudin se discute como el contrapunto que es, no como una
+  refutación de lo hecho.
+- **NO** se cambia el entregable, ni el modelo, ni las features, ni el umbral: la elección
+  se cerró en val y test ya está visto. La respuesta al profesor es que, con este montaje,
+  la ventaja de LightGBM no es distinguible de cero en datos no vistos.
+
+#### Qué NO se midió en test en esta fase (deliberado, está en el script)
+SHAP, equidad y cualquier variante adicional de la LR o de LightGBM. Los coeficientes de
+la LR se guardaron en la etapa val (`phase5_lr_coefficients.csv`) y son el insumo de la
+5B; en la 5A no se interpretan.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

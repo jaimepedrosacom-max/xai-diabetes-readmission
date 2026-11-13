@@ -98,11 +98,23 @@ sueltos; los importan los demás.
 | 14 | `phase4_fairness.py` | Equidad en val: composición del top-k, FNR por grupo, detectabilidad de proxies y efecto distributivo del reetiquetado. | `phase4_fairness_composition.csv`, `phase4_fairness_fnr.csv`, `phase4_fairness_proxies.csv`, `phase4_fairness_proxies_by_class.csv`, `phase4_fairness_relabel_distribution.csv`, `phase4_fairness_contrast_count.csv` | — |
 | 15 | `phase4_relabel_vs_selection.py` | Solo lectura: correlación de Spearman entre la tasa de reetiquetado de cada grupo y el cambio de su tasa de marcado. | `phase4_relabel_vs_selection.csv`, `phase4_relabel_vs_selection_rho.csv` | `phase4_fairness_composition.csv`, `phase4_fairness_relabel_distribution.csv` |
 | 16 | `phase4_ablation.py` | Ablación de `payer_code` con regla de decisión prerregistrada. Decide qué modelo es el entregable. | `phase4_ablation_val.csv`, `phase4_ablation_cv.csv`, `phase4_ablation_composition.csv`, `phase4_ablation_decision.csv` | — |
-| 17 | `phase4_test_final.py` | **SEGUNDA y última consulta a test**, con el modelo entregable y la etiqueta corregida. | `phase4_test_global.csv`, `phase4_test_topk.csv`, `phase4_test_steps.csv`, `phase4_test_gaps.csv`, `phase4_test_paired_contrasts.csv`, `phase4_test_deltas.csv` | — |
+| 17 | `phase4_test_final.py` | **SEGUNDA consulta a test**, con el modelo entregable y la etiqueta corregida. | `phase4_test_global.csv`, `phase4_test_topk.csv`, `phase4_test_steps.csv`, `phase4_test_gaps.csv`, `phase4_test_paired_contrasts.csv`, `phase4_test_deltas.csv` | — |
 | 18 | `phase4_figures.py` | Figuras A (brecha A − B en val y test) y B (cocientes de `payer_code` con y sin la variable). Solo lee CSV: no entrena ni puntúa nada. | `figures/phase4_fig_A_brecha_val_test.png`, `figures/phase4_fig_B_payer_code_val.png` | `phase4_prediction_gaps.csv`, `phase4_test_gaps.csv`, `phase4_paired_contrasts.csv`, `phase4_test_paired_contrasts.csv`, `phase4_ablation_composition.csv` |
 
-Los scripts 13 a 17 tardan varios minutos cada uno: entrenan varios modelos y, en los
-pasos con intervalos de confianza, hacen 2.000 réplicas bootstrap agrupadas por paciente.
+### Fase 5A — el entregable frente a una regresión logística
+
+| # | script | qué hace | produce | lee |
+|---|---|---|---|---|
+| 19 | `phase5_lr_comparison.py --stage val` | Comprueba el guardarraíl del entregable, audita que la LR de la Fase 2a se reproduce tras parametrizar el preprocesado, y elige `C` con la etiqueta corregida y sin `payer_code`. **No carga test.** | `phase5_lr_c_grid.csv`, `phase5_lr_coefficients.csv` | — |
+| 20 | `phase5_lr_comparison.py --stage test` | **TERCERA consulta a test**: Δ de PR-AUC entre el entregable y la LR, con IC95 por bootstrap emparejado de pacientes. Exige los tres guardarraíles antes de calcular el contraste. | `phase5_test_global.csv`, `phase5_test_topk.csv`, `phase5_test_primary_contrast.csv`, `phase5_test_secondary.csv` | — |
+
+**Las dos etapas son un único script y se ejecutan por separado, a propósito:** si la
+elección de `C` tuviera un error, con una sola ejecución se descubriría con test ya
+mirado. En el commit de la etapa val, `--stage test` aún no existía como código.
+
+Los scripts 13 a 17 y el 20 tardan varios minutos cada uno: entrenan varios modelos y, en
+los pasos con intervalos de confianza, hacen 2.000 réplicas bootstrap agrupadas por
+paciente.
 
 ---
 
@@ -130,13 +142,25 @@ y deja un aviso visible al final. Los scripts de `src/` sí usan `assert` y fall
 
 Antes de medir nada importante, los scripts **reentrenan el modelo y comprueban que es
 exactamente el que se cerró en val**: mismo número de árboles y mismo PR-AUC en val, con
-`assert`. Hay tres modelos y tres guardarraíles:
+`assert`. Hay cuatro modelos con guardarraíl:
 
 | modelo | árboles | PR-AUC val | constante | dónde se comprueba |
 |---|---|---|---|---|
 | Original (Fase 2, target sin corregir) | 122 | 0,2308 | `EXPECTED_TREES`, `EXPECTED_VAL_PR_AUC` en `evaluate_test.py` | `evaluate_test.py`, `xai_shap.py`, `phase4_prediction.py`, `phase4_correction.py`, `phase4_fairness.py`, `phase4_test_final.py` |
 | Corregido CON `payer_code` | 183 | 0,1893 | `NEW_TREES`, `NEW_VAL_PR_AUC` en `phase4_fairness.py` | `phase4_fairness.py`, `phase4_ablation.py`, `phase4_test_final.py` |
-| **Entregable: corregido SIN `payer_code`** | **123** | **0,1868** | `ABL_TREES`, `ABL_VAL_PR_AUC` en `phase4_test_final.py` | `phase4_test_final.py` |
+| **Entregable: corregido SIN `payer_code`** | **123** | **0,1868** | `ABL_TREES`, `ABL_VAL_PR_AUC` en `phase4_test_final.py` | `phase4_test_final.py`, `phase5_lr_comparison.py` |
+| LR de la Fase 5A, corregida SIN `payer_code` | — (`C` = 1, 128 columnas tras el one-hot) | 0,1804 | `LR_C`, `LR_VAL_PR_AUC`, `LR_N_COLS` en `phase5_lr_comparison.py` | `phase5_lr_comparison.py` (etapas val y test) |
+
+La Fase 5A añade dos guardarraíles más que no son de modelo sino de **reproducción**:
+
+- **La LR de la Fase 2a se reproduce** tras parametrizar `build_lr_preprocessor`: la
+  llamada sin argumentos devuelve `C` = 1 y PR-AUC val 0,2124 (`LR_2A_C`,
+  `LR_2A_VAL_PR_AUC`). Es lo que garantiza que el refactor no cambió ninguna cifra
+  publicada, y se comprueba por reproducción y no por revisión del diff.
+- **El entregable reproduce sus cifras de test de la Fase 4**: PR-AUC 0,1890 y ROC-AUC
+  0,6655 (`TEST_PR_AUC_F4`, `TEST_ROC_AUC_F4`, fuente `phase4_test_global.csv`). Es el
+  único guardarraíl que solo puede comprobarse con test ya puntuado, y va **antes** del
+  bootstrap para que un fallo aborte sin haber calculado el contraste.
 
 **Qué significa que un guardarraíl falle:** el modelo reentrenado no es el que se
 documentó, así que ninguna cifra posterior sería la que dice el informe. Causas típicas:
@@ -150,23 +174,32 @@ aleatorias no sea un artefacto de parar antes.
 
 ---
 
-## 4. Aviso importante: test se consultó DOS veces, y las dos cifras no son comparables
+## 4. Aviso importante: test se consultó TRES veces, y no todas las cifras son comparables
 
 | | cuándo | script | con qué modelo y qué etiqueta | PR-AUC en test |
 |---|---|---|---|---|
 | 1.ª | Fase 2c | `evaluate_test.py` | modelo original, **target original** | 0,227 |
 | 2.ª | Fase 4, punto 4 | `phase4_test_final.py` | **entregable** (sin `payer_code`), **target corregido** | 0,1890 |
+| 3.ª | Fase 5A | `phase5_lr_comparison.py --stage test` | **entregable** frente a **regresión logística**, target corregido | 0,1890 frente a 0,1827 |
 
-**Estos dos números NO son comparables.** El target cambió entre una y otra: la segunda
+**La 1.ª y la 2.ª NO son comparables.** El target cambió entre una y otra: la segunda
 responde a otra pregunta (cómo predice el *target corregido* en datos no vistos) y su
 línea base es otra, porque el reetiquetado bajó la prevalencia del 11,39% al 9,85%. Por
 eso la cifra que se compara entre modelos en todo el proyecto es el
 **lift = PR-AUC / prevalencia**, no el PR-AUC crudo.
 
-Entre las dos consultas, de test **solo** se aplicó la regla de reetiquetado y se reportó
-el conteo de filas cambiadas, que es descripción del dataset. Ninguna decisión de modelo,
-de features ni de umbral salió de test. Nada cambió después de ver la segunda cifra. El
-detalle de ambas decisiones y sus condiciones está en `CLAUDE.md`.
+**La 3.ª sí es interna y comparable**, porque sus dos modelos comparten split, etiqueta
+corregida y variables: el PR-AUC 0,1890 del entregable es el MISMO de la 2.ª consulta, y
+de hecho el script lo exige con `assert` antes de calcular nada. La comparación con la LR
+se hace emparejada, sobre las mismas filas. Su veredicto prerregistrado es **(c)
+indistinguibles**: Δ = +0,0062 con IC95 [−0,0008; +0,0130], que incluye el cero y tampoco
+llega al umbral de materialidad de 0,01.
+
+Entre las consultas, de test **solo** se aplicó la regla de reetiquetado y se reportó el
+conteo de filas cambiadas, que es descripción del dataset. Ninguna decisión de modelo, de
+features ni de umbral ha salido de test en ningún momento, tampoco en la 5A: el
+entregable no se ha cambiado al ver el resultado. Nada cambió después de ver ninguna de
+las tres cifras. El detalle de las tres decisiones y sus condiciones está en `CLAUDE.md`.
 
 ---
 

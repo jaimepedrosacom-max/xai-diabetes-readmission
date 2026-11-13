@@ -575,6 +575,123 @@ Los dos primeros son idénticos con (3a) y (3b): solo usan el modelo viejo.
   del punto 5** (val, 19.868 filas): denominadores distintos.
 - **68,2% del código 22** (sobre 283 visibles) **frente a 43,67%** (sobre los 442
   positivos totales): son el mismo recuento de 193 casos con dos denominadores.
+- **Δ de PR-AUC de la Fase 5A** (+0,0062; target corregido, sin `payer_code`, los dos
+  modelos emparejados en test) **frente a la diferencia LightGBM − LR de la Fase 2 en
+  test**: targets distintos, modelos distintos y conjuntos de features distintos. La de
+  la Fase 2 no es una medida previa de la misma cantidad.
 - **6.503 visibles / 19,85%** (`audit_discharge_global.csv`) **frente a 6.497 / 19,8%**
   (suma de `audit_discharge_leakage.csv`): la segunda aplica `MIN_N = 30` y es un
   subconjunto.
+
+---
+
+## 13. Fase 5A — el entregable frente a la regresión logística (TERCERA consulta a test)
+
+Todo con la **etiqueta corregida**. Denominadores: *val* = 19.868 filas (prevalencia
+9,7795%), *test* = 19.867 filas y **13.951 pacientes** (prevalencia 9,8455%),
+*train* = 59.605 filas. Los dos modelos usan las MISMAS 43 variables (`P.FEATURES` menos
+`payer_code`) y el mismo split congelado.
+
+### Guardarraíles (los tres pasaron)
+
+| qué | cifra exigida | constante | fuente |
+|---|---|---|---|
+| Entregable, antes de test | 123 árboles / PR-AUC val 0,1868 | `ABL_TREES`, `ABL_VAL_PR_AUC` | `phase4_ablation_val.csv` |
+| LR, antes de test | `C` = 1 / PR-AUC val 0,1804 / 128 columnas | `LR_C`, `LR_VAL_PR_AUC`, `LR_N_COLS` | `phase5_lr_c_grid.csv` |
+| LR de la Fase 2a reproducida (refactor) | `C` = 1 / PR-AUC val 0,2124 | `LR_2A_C`, `LR_2A_VAL_PR_AUC` | `metrics_final.csv`, fila `LogReg,val` |
+| Entregable reproduce la Fase 4 en test | PR-AUC 0,1890 / ROC-AUC 0,6655 | `TEST_PR_AUC_F4`, `TEST_ROC_AUC_F4` | `phase4_test_global.csv`, fila `ENTREGABLE (sin payer_code)` |
+
+### Elección de C (val, NO test)
+`phase5_lr_c_grid.csv`, columnas `C`, `val_pr_auc`, `val_lift`; denominador val = 19.868
+filas (`n_val`), prevalencia 9,7795% (`val_prevalencia_pct`):
+
+| C | PR-AUC val | lift val |
+|---|---|---|
+| 0,001 | 0,1782 | 1,8225 |
+| 0,01 | 0,1796 | 1,8368 |
+| 0,1 | 0,1803 | 1,8434 |
+| **1 (elegido)** | **0,1804** | **1,8446** |
+| 10 | 0,1804 | 1,8444 |
+
+`ganador_en_el_borde` = False en las 5 filas: C = 1 no cae en ningún extremo de la
+rejilla, así que la cláusula de "no se amplía" no llegó a aplicarse.
+`n_columnas_tras_onehot` = 128 (constante en las 5 filas; el one-hot no depende de C).
+
+### Contraste primario en test (el único con veredicto)
+`phase5_test_primary_contrast.csv`, una fila. Δ = `observado` = PR-AUC(entregable) −
+PR-AUC(LR); IC95 por bootstrap emparejado de PACIENTES, 2.000 réplicas
+(`replicas_usadas` = 2000, `replicas_descartadas` = 0), semilla 42; denominador
+`n_test` = 19.867 filas, `n_pacientes_test` = 13.951:
+
+| columna | valor |
+|---|---|
+| `pr_auc_entregable` | 0,188976 |
+| `pr_auc_lr` | 0,182739 |
+| `observado` (Δ) | **+0,006237** |
+| `IC95_bajo` / `IC95_alto` | **−0,000770 / +0,013005** |
+| `IC_excluye_0` | False |
+| `umbral_materialidad` / `supera_umbral` | 0,01 / False |
+| `VEREDICTO` | **c** — indistinguibles (el IC incluye 0) |
+
+**"Indistinguibles" NO es "equivalentes":** `IC95_alto` = +0,0130 está POR ENCIMA del
+umbral de materialidad (0,01), así que estas cifras no descartan una ventaja material de
+LightGBM; solo no la detectan. Al citarlo, el extremo superior del IC va siempre con el
+veredicto.
+
+### Secundarias en test (descriptivas, SIN veredicto)
+`phase5_test_secondary.csv`, mismo bootstrap; `diferencia` = entregable − LR; denominador
+test = 19.867 filas (columna `denominador`). La columna `mejor_si` da la dirección:
+
+| `metrica` | `valor_entregable` | `valor_lr` | `diferencia` | IC95 | `IC_excluye_0` | `mejor_si` |
+|---|---|---|---|---|---|---|
+| `roc_auc` | 0,665465 | 0,659692 | +0,005773 | [+0,000222; +0,011245] | True | dif > 0 |
+| `lift` | 1,919422 | 1,856076 | +0,063346 | [−0,007992; +0,134212] | False | dif > 0 |
+| `precision_top5%` | 0,268612 | 0,268612 | 0,000000 | [−0,021255; +0,022024] | False | dif > 0 |
+| `lift_top5%` | 2,728276 | 2,728276 | 0,000000 | [−0,219044; +0,221888] | False | dif > 0 |
+| `brier` | 0,085465 | 0,085788 | −0,000323 | [−0,000608; −0,000034] | True | dif < 0 |
+
+Sin corrección por comparaciones múltiples (no llevan veredicto). Los dos IC que excluyen
+el 0 corresponden a diferencias de 0,0058 y 0,0003, y no se citan como hallazgo.
+
+### Globales y líneas base en test
+`phase5_test_global.csv`, `n` = 19.867, `prevalencia_%` = 9,8455, umbral de decisión 0,5
+en la columna `accuracy_%`:
+
+| `modelo` | ROC-AUC | PR-AUC | `lift_pr_auc` | Brier | `accuracy_%` |
+|---|---|---|---|---|---|
+| ENTREGABLE (sin `payer_code`) | 0,6655 | 0,1890 | 1,9194 | 0,0855 | 90,1445 |
+| LR (C=1, sin `payer_code`) | 0,6597 | 0,1827 | 1,8561 | 0,0858 | 90,1445 |
+| base: prevalencia constante = nunca reingresa | 0,5000 | 0,0985 | 1,0000 | 0,0888 | **90,1545** |
+| base: regla `number_inpatient > 0` | 0,5971 | 0,1246 | 1,2660 | 0,3344 | 66,5576 |
+
+Los dos modelos quedan por DEBAJO del clasificador trivial en accuracy (90,1445% frente a
+90,1545%). **El Brier de la regla (0,3344) no es comparable** con los de los dos modelos:
+la regla devuelve 0/1, no probabilidades.
+
+### Top-k en test
+`phase5_test_topk.csv`; denominador de `precision_%` = `n_marcados`, de `recall_%` = los
+1.956 positivos reales de test tras la corrección:
+
+| `modelo` | `top_k` | `n_marcados` | `aciertos` | `precision_%` | `lift` |
+|---|---|---|---|---|---|
+| ENTREGABLE | 5% | 994 | 267 | 26,8612 | 2,7283 |
+| ENTREGABLE | 10% | 1.987 | 440 | 22,1439 | 2,2491 |
+| ENTREGABLE | 20% | 3.974 | 728 | 18,3191 | 1,8607 |
+| LR (C=1) | 5% | 994 | **267** | 26,8612 | 2,7283 |
+| LR (C=1) | 10% | 1.987 | 429 | 21,5903 | 2,1929 |
+| LR (C=1) | 20% | 3.974 | 732 | 18,4197 | 1,8709 |
+
+Los 267 aciertos coinciden en el 5%, pero los vectores de predicción son distintos: se ve
+en el 10% (440 frente a 429) y en el 20% (728 frente a 732), y en que PR-AUC, ROC-AUC y
+Brier difieren.
+
+### Coeficientes de la LR (para la Fase 5B, sin interpretar en la 5A)
+`phase5_lr_coefficients.csv`: 128 filas de columna del `ColumnTransformer` más una fila
+`(intercepto)`, con `bloque`, `variable_original`, `coef`, `odds_ratio` y `rank_abs`.
+Escalas no comparables entre sí (numéricas por desviación típica, dummies por categoría).
+
+### Nota de procedimiento
+Los valores de `acarbose` y `tolazamide` que aparecen en val y no en train afectan a 4 de
+las 19.868 filas de val (0,0201%): `acarbose = Down` 3 filas y `tolazamide = Up` 1 fila,
+sin solapamiento. Medido solo con train y val.
+

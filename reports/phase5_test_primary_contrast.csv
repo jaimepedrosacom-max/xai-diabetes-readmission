@@ -1,0 +1,2 @@
+contraste,pr_auc_entregable,pr_auc_lr,prevalencia_%,observado,IC95_bajo,IC95_alto,nulo,IC_excluye_0,umbral_materialidad,supera_umbral,VEREDICTO,VEREDICTO_texto,n_test,n_pacientes_test,replicas_usadas,replicas_descartadas
+PR-AUC(entregable) - PR-AUC(LR),0.18897616914934168,0.1827394213199614,9.84547239140283,0.006236747829380274,-0.0007702693214898192,0.013004870697516838,0.0,False,0.01,False,c,indistinguibles (el IC incluye 0),19867,13951,2000,0
