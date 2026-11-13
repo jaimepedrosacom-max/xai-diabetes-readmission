@@ -53,6 +53,10 @@ counterfactuals, matplotlib/seaborn para gráficas.
 - Fase 4 COMPLETA. Código cerrado: corrección del target, predicción prerregistrada, equidad, ablación de
   `payer_code`, consulta ÚNICA a test (la segunda y última vez que se toca test), README, notebook
   (`notebooks/analisis.ipynb`) y figuras (`src/phase4_figures.py`).
+- Fase 5A EN CURSO: prerregistrada (comparar el entregable con una regresión
+  logística, a petición del profesor), pendiente de etapa val y etapa test. Su etapa
+  test es la TERCERA consulta a test, así que el "y última" del punto anterior deja
+  de valer.
 - PENDIENTE, fuera del código:
   - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
     solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
@@ -1289,6 +1293,211 @@ Contraste EMPAREJADO, mismas 2.000 réplicas por `patient_nbr`, semilla 42, 0 de
 - Por qué DOS pasos (3): (3a) es el modelo que se usó en val, así que es la replicación
   estricta; (3b) es el entregable. De ninguno sale ninguna decisión, y el titular tampoco
   depende de esa elección, porque la inversión de (1) a (2) solo usa el modelo viejo.
+
+### Prerregistro de la Fase 5A — el entregable frente a una regresión logística
+Escrito y commiteado ANTES de ejecutar nada. Lo pide el profesor: si LightGBM es claramente
+superior, eso apunta a no linealidad en los datos. Lo único que se consultó para escribir esto
+son artefactos ya publicados del repo; no se ha entrenado ninguna LR nueva.
+
+#### Principio de diseño: ninguno de los dos modelos tiene ventaja de procedimiento
+La LR sigue EXACTAMENTE el procedimiento del entregable: se entrena SOLO con train, su único
+hiperparámetro se elige por PR-AUC en val (el mismo criterio y los mismos datos con los que se
+eligieron los de LightGBM), NO se reentrena con train+val, y se evalúa en TEST, el conjunto
+donde se reportan las cifras finales del entregable.
+
+#### Condiciones fijas (ninguna se toca después de ver resultados)
+- **Partición CONGELADA**: la de `D.grouped_split` con el target original, SEED=42, agrupada
+  por `patient_nbr`. El reetiquetado se aplica después, sobre filas ya asignadas
+  (`TC.relabel`), igual que en toda la Fase 4.
+- **Etiqueta CORREGIDA** en los tres splits.
+- **Mismas variables que el entregable**: `P.FEATURES` menos `payer_code`. Nada añadido, nada
+  quitado.
+- `A1Cresult` y `max_glu_serum` mantienen `NotMeasured` como categoría propia: no haber hecho
+  la prueba es información (decisión de la Fase 1, no de esta fase).
+- **Preprocesado de la LR: el que ya existe desde la Fase 2a** (`P.build_lr_preprocessor`),
+  dentro de un `Pipeline` que se ajusta SOLO con train: `StandardScaler` en las numéricas,
+  `log1p` + `StandardScaler` en `number_outpatient/emergency/inpatient`, y
+  `OneHotEncoder(min_frequency=0.01, handle_unknown="infrequent_if_exist", drop="if_binary")`
+  en las categóricas (diagnósticos ya agrupados por `features.py`). Penalización L2, la de
+  `LogisticRegression` por defecto. **No se añade ninguna transformación nueva**: el `log1p` de
+  los contadores se fijó en la Fase 2a, antes de cualquier resultado de esta comparación, y no
+  se eligió para favorecer a la LR.
+- **Sin reponderado de clases en ninguno de los dos**: LightGBM va sin `class_weight`,
+  `is_unbalance` ni `scale_pos_weight`, y la LR con `class_weight=None`.
+- **Rejilla de C fijada de antemano**: `C_GRID = [0.001, 0.01, 0.1, 1, 10]`, la misma de la
+  Fase 2a. Se elige el C de mayor PR-AUC en val, entrenando en train. Se reporta la rejilla
+  COMPLETA, no solo el ganador.
+- **Si el ganador cae en un extremo de la rejilla (0,001 o 10), la rejilla NO se amplía.** Se
+  reporta como GANADOR EN EL BORDE y se declara. Ampliarla tras ver el resultado sería elegir
+  el espacio de búsqueda con la salida delante, y además daría a la LR más búsqueda en val que
+  la que tuvo LightGBM.
+- **Por qué C se re-elige con la etiqueta corregida y no se congela en el C=1 de la Fase 2a:**
+  la LR tiene que entrenarse contra la etiqueta corregida (es su `y`), así que elegir C contra
+  el PR-AUC de la etiqueta vieja sería incoherente. Es además el análogo exacto de lo que hizo
+  el entregable: su nº de árboles (123) se re-eligió por early stopping sobre val con la
+  etiqueta corregida. Si el C elegido no sale 1, se dice y se compara con la Fase 2a, pero SOLO
+  el C elegido se puntúa en test: no se mandan dos LR a test.
+- **El entregable NO se reentrena**: se reproduce y se exige su guardarraíl con `assert` (123
+  árboles Y PR-AUC val 0,1868) ANTES de tocar test. Motivo: las predicciones del entregable en
+  test no se guardaron en ningún CSV en la Fase 4, así que hay que recalcularlas; el
+  guardarraíl es lo que garantiza que son las mismas.
+- **Guardarraíl NUEVO de la LR**, que se anota en la etapa val la primera vez que corra: C
+  elegido, PR-AUC en val y nº de columnas tras el one-hot. De ahí en adelante se exige con
+  `assert`.
+- **PR-AUC es `sklearn.metrics.average_precision_score`**, exactamente la misma métrica que usa
+  el early stopping de LightGBM (`metric="average_precision"` en `train_lgbm.py`) y la que se
+  reporta en toda la Fase 4. No se usa ninguna variante interpolada ni el área bajo la curva PR
+  trapezoidal.
+- **NO hay bloque de CV y NO hay figura.** Un solo contraste, en test. Los resultados van a la
+  memoria como tabla.
+
+#### Ejecución en DOS ETAPAS, no en una (`src/phase5_lr_comparison.py --stage {val,test}`)
+Motivo: si la elección de C tuviera un error, con una sola ejecución lo descubriríamos con test
+ya mirado. Las dos etapas se ejecutan en commits distintos y la primera se revisa antes de
+lanzar la segunda.
+1. **Etapa `val`** — verifica el guardarraíl del entregable, comprueba que la LR de la Fase 2a
+   se reproduce, elige C con la etiqueta corregida y sin `payer_code`, y escribe
+   `reports/phase5_lr_c_grid.csv` junto con el guardarraíl de la LR (C, PR-AUC en val y nº de
+   columnas tras el one-hot). **NO carga test.**
+2. **Etapa `test`** — exige con `assert` los DOS guardarraíles (el del entregable y el de la LR
+   ya anotado en la etapa val) y solo entonces puntúa test, UNA vez.
+
+#### Comprobación de que el refactor no cambia nada (etapa val, no toca test)
+`P.build_lr_preprocessor` y `train_baseline.make_logreg`/`select_logreg` pasan a aceptar las
+listas de columnas como parámetros, con valores por defecto idénticos a los actuales, para
+poder construir la LR sin `payer_code` sin duplicar el preprocesador (dos definiciones del
+mismo preprocesado pueden divergir, que es justo lo que `target_correction.py` evita con la
+regla de reetiquetado). Para que "idénticos" no sea una afirmación de confianza, la etapa val
+lo exige con `assert`, igual que un guardarraíl de modelo: **la llamada SIN argumentos
+reproduce la LR de la Fase 2a en val** — C elegido = 1 y PR-AUC val = 0,2124
+(`metrics_final.csv`, fila `LogReg,val`). Si falla, el refactor cambió algo y la Fase 5A no
+sigue. Esta comprobación usa train y val; test no interviene.
+
+#### Contraste primario: UNO, con veredicto
+**Δ = PR-AUC(LightGBM entregable) − PR-AUC(LR)** en test, con la etiqueta corregida.
+- IC95 por **bootstrap emparejado remuestreando PACIENTES** (no filas: los encuentros de un
+  mismo paciente no son independientes y el split ya agrupa por `patient_nbr`), **2.000
+  réplicas, semilla `D.SEED` = 42**, el mismo esquema de toda la Fase 4. Los dos modelos se
+  puntúan DENTRO de cada réplica sobre las mismas filas, así que la variación entre pacientes
+  se cancela. Se reportan `replicas_usadas` y `replicas_descartadas`.
+- **Umbral de materialidad: Δ ≥ 0,01** (1 punto de PR-AUC), fijado ahora.
+- Equivalencia en la escala titular del proyecto: con la prevalencia de test (9,8455%),
+  Δ = 0,01 de PR-AUC son **0,102 de lift**. Dentro de una réplica los dos modelos comparten
+  prevalencia, así que Δlift tiene siempre el mismo signo que ΔPR-AUC.
+- **Honestidad sobre el umbral:** la brecha en test con el target VIEJO y con `payer_code` ya
+  era visible en `reports/metrics_final.csv` (0,2274 frente a 0,2102 = 0,0172) cuando se fijó
+  el 0,01. El umbral NO se eligió a ciegas, y se declara. No es la cifra de esta fase (otro
+  target, otro modelo, otra feature), pero sitúa el umbral en el mismo orden de magnitud que la
+  brecha esperada, así que el veredicto puede salir ajustado y eso no es una sorpresa a
+  posteriori. **Más aún: esa brecha de 0,0172 sugiere DE ANTEMANO que el veredicto (a) es
+  PLAUSIBLE.** Queda escrito aquí para que nadie pueda leer un (a) como un resultado
+  inesperado.
+
+#### Veredictos, fijados ANTES de medir, con lo que se concluye y lo que NO
+Se aplican en este orden sobre el Δ observado en todo test y su IC95:
+
+**(c) "indistinguibles" — el IC incluye 0.**
+Se concluye: en este problema, con estas variables y este target, el modelo complejo no ordena
+mejor a los pacientes que un modelo lineal. Eso activa el argumento de **Rudin (2019)**: si el
+rendimiento es equivalente, para una decisión de alto riesgo sobre personas hay razón para
+preferir el modelo interpretable por diseño, y el coste de la caja negra no está pagado por
+nada. **NO se concluye** que los datos sean lineales ni que no haya interacciones: un empate en
+PR-AUC es compatible con que las haya pero no sean recuperables con esta señal, esta prevalencia
+y este tamaño. **Y un empate NO invalida el proyecto:** el objetivo de este trabajo es evaluar
+la FIABILIDAD de las explicaciones post hoc de un modelo opaco, no demostrar que el modelo
+opaco gane. El argumento de Rudin entra como el CONTRAPUNTO que es —si el lineal empata, ¿para
+qué explicar a posteriori una caja negra?— y se discute como tal, no como una refutación de lo
+que se ha hecho.
+
+**(a) "LightGBM claramente superior" — el IC queda ENTERO POR ENCIMA de 0 y Δ ≥ 0,01.**
+Se concluye: hay estructura que el modelo lineal no captura. **NO se concluye que sea no
+linealidad**, y esto es lo importante: la brecha tiene al menos tres fuentes que este diseño NO
+separa — (i) no linealidad en las numéricas, (ii) **interacciones**, que la LR no tiene porque
+no se le han puesto términos de interacción, y (iii) el **manejo de las categóricas de alta
+cardinalidad**, donde LightGBM parte directamente por la categórica nativa mientras la LR ve un
+one-hot que colapsa en `infrequent` todo nivel con <1% en train. La redacción obligatoria es
+"LightGBM captura estructura que la LR con este preprocesado no captura", no "los datos son no
+lineales". Separar las tres fuentes exigiría otro experimento (splines, interacciones
+explícitas, target encoding), que NO se hace aquí y se nombra como trabajo futuro.
+
+**(b) "superior pero no material" — el IC queda ENTERO POR ENCIMA de 0 y Δ < 0,01.**
+Se concluye: la ventaja es detectable pero por debajo del umbral de materialidad fijado antes de
+medir. Es el mismo patrón que `AfricanAmerican` en el análisis distributivo de la Fase 4:
+**detectable y no material a la vez**, y por la conjunción del criterio el veredicto es que no
+hay superioridad relevante. **NO se presenta como hallazgo** que LightGBM gane. La lectura
+práctica se acerca a la de (c), y el argumento de Rudin se menciona como atenuado, no como
+establecido.
+
+**(d) "LR superior" — el IC queda ENTERO POR DEBAJO de 0.**
+Se concluye: el modelo complejo no aporta y además pierde. **NO se atribuye causa**: no se ha
+medido ninguna, así que no se dice por qué pierde. Se reporta tal cual, aunque contradiga la
+elección de modelo de la Fase 2. **NO se cambia el entregable**: la Fase 5A es descriptiva, la
+elección de modelo se cerró en val y test ya está visto; cambiar de modelo mirando test
+invalidaría la cifra. Si saliera (d), la consecuencia va al informe como limitación y como
+recomendación para una iteración futura, no como un cambio de entregable.
+
+En los cuatro casos se reportan Δ, su IC95 y los dos PR-AUC con su prevalencia y su lift al
+lado, nunca el veredicto solo.
+
+#### Secundarias: descriptivas, SIN veredicto
+Con IC95 por el mismo bootstrap de pacientes, reportadas salgan como salgan y sin corrección por
+comparaciones múltiples, porque no llevan veredicto:
+- **ROC-AUC**, **lift** (= PR-AUC / prevalencia) y **Brier**.
+- **Precisión y lift en el top 5%**, que es lo que el gestor aplica si solo puede seguir a 994
+  pacientes de 19.867. El corte se recalcula dentro de cada réplica. El 10% y el 20% se añaden
+  como contexto.
+- **Accuracy**, y SOLO para enseñar por qué no sirve. **Umbral de decisión 0,5 en los dos
+  modelos**, dicho explícitamente: no se ajusta ningún umbral, porque el umbral operativo de
+  este proyecto es el top-k y no una probabilidad fija. Se reporta junto a la del clasificador
+  trivial "nunca reingresa", que acierta el **90,1545%** por construcción (100 − 9,84547 de
+  prevalencia en test). Si las tres accuracies son parecidas, eso es el argumento, no un
+  resultado del modelo.
+
+#### Coeficientes de la LR
+Se guardan en `reports/phase5_lr_coefficients.csv` con el nombre de columna del
+`ColumnTransformer`, su bloque, su variable original, el coeficiente y `exp(coef)`. **En la 5A
+no se interpretan**: son el insumo de la 5B. Aviso ya anotado para entonces: los coeficientes
+están en escalas distintas (por desviación típica en las numéricas, por dummy en las
+categóricas), el one-hot solo elimina una columna en las binarias (`drop="if_binary"`), así que
+hay colinealidad que la L2 reparte entre dummies, y el nivel `infrequent` actúa como categoría
+de referencia implícita en varias variables.
+
+#### Consulta a test: es la TERCERA del proyecto
+- 1.ª Fase 2c (`evaluate_test.py`), modelo original con target original.
+- 2.ª Fase 4 punto 4 (`phase4_test_final.py`), entregable con target corregido.
+- 3.ª Fase 5A (`phase5_lr_comparison.py --stage test`), entregable CONGELADO frente a la LR, con
+  target corregido.
+- **Matiz que se declara y no se esconde:** la LR **ya fue puntuada en test en la primera
+  consulta** (`metrics_final.csv`, filas `LogReg,test`: ROC-AUC 0,6586 / PR-AUC 0,2102), con el
+  target VIEJO y CON `payer_code`. Esta es la segunda vez que la LR toca test. Esas cifras NO
+  son comparables con las de la 5A (otro target, otro conjunto de features), y ninguna decisión
+  de la 5A sale de ellas; lo único que hacen es hacer no-ciego el umbral de materialidad, que ya
+  queda declarado arriba.
+- Una sola ejecución de la etapa `test`, con split, corrección, features, hiperparámetros y
+  rejilla de C cerrados. **Nada cambia después de verla.** Si el número sale mal, se reporta
+  igual.
+- Qué NO se mide en test en esta fase: SHAP, equidad, y cualquier variante adicional de la LR o
+  de LightGBM. Nada se vuelve a elegir con test visto.
+
+#### Asimetrías de procedimiento que quedan, declaradas antes de medir
+Las dos primeras no se pueden eliminar sin romper la congelación del entregable, así que se
+declaran en vez de corregirse:
+1. **LightGBM exploró más val que la LR.** Su `num_leaves`/`min_child_samples` salieron de una
+   rejilla de 6 combinaciones sobre val (Fase 2b) más el nº de árboles por early stopping; la LR
+   explora 5 valores de C. Más búsqueda en val infla la métrica DE VAL, no la de test, así que
+   no favorece a LightGBM en el contraste; lo que hace es que las cifras de val de los dos
+   modelos no sean igual de optimistas, y por eso el contraste se hace en test.
+2. **Dirección contraria:** `num_leaves`/`min_child_samples` se eligieron con la etiqueta VIEJA
+   y están congelados, mientras el C de la LR se elige con la etiqueta corregida. En ese punto
+   concreto la LR va algo mejor servida. No se corrige: reoptimizar LightGBM rompería el
+   guardarraíl del entregable y todas las cifras publicadas de la Fase 4.
+3. **Categóricas de alta cardinalidad:** la LR ve un one-hot con los niveles <1% de train
+   colapsados en `infrequent`; LightGBM parte por la categórica nativa con todos los niveles. Es
+   intrínseco a cada clase de modelo y se fijó en la Fase 2a, pero es una de las tres fuentes
+   posibles de la brecha y por eso entra en la redacción obligatoria del veredicto (a).
+4. **Valores no vistos en train:** para LightGBM pasan a NaN (`D.to_categorical`) y el árbol los
+   trata como missing; para la LR caen en `infrequent`. Tratamientos distintos del mismo caso,
+   los dos fijados antes de esta fase.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
