@@ -1,0 +1,11 @@
+,rank_shap_entregable,media_abs_shap,gana_a_sonda,tipo
+number_inpatient,1,0.2937667962966276,10,numerica
+discharge_disposition_id,2,0.18274507931820733,10,categorica
+admission_type_id,3,0.07525276456340918,10,categorica
+medical_specialty,4,0.0722018823087331,10,categorica
+diag_1_group,5,0.04980873268377484,10,categorica
+number_diagnoses,6,0.041056315102526435,10,numerica
+age,7,0.03996207841999663,10,numerica
+num_lab_procedures,8,0.037812763360735316,10,numerica
+number_emergency,9,0.03424065418065582,10,numerica
+time_in_hospital,10,0.03293617827540609,10,numerica

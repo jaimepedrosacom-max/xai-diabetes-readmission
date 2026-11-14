@@ -1,0 +1,2 @@
+n_variables_entregable,n_interpretables,n_numericas,n_categoricas,n_interpretables_viejas,entran,salen,criterio_top10_fase3b,suelo_sonda_medio,min_set_size,PARADA_POR_TAMANO,n_val,prevalencia_val_%
+43,10,6,4,13,admission_type_id,"diabetesMed, diag_2_group, diag_3_group, payer_code",True,0.017660121219139336,8,False,19868,9.77954499698007

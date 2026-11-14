@@ -1867,6 +1867,125 @@ denominador:
   sustituye, por decisión del profesor.
 - **No se recalcula la lista interpretable después de ver la PI**: queda commiteada antes.
 
+### Fase 5B, paso 1 — Sondas sobre el entregable: el conjunto interpretable son 10 variables (`src/phase5b_probes.py`)
+Prerregistro commiteado ANTES (`19e7ea5`). Val = 19.868 filas, prevalencia 9,7795% con la
+etiqueta corregida. **Test no se toca**, y el script descarta el tercer split al cargarlo.
+**En este script NO hay ni una línea de código de PI**, a propósito: la lista queda fijada y
+commiteada antes de que exista el código que la usa.
+
+Guardarraíles, los cuatro pasados: entregable 123 árboles / PR-AUC val 0,1868 (`assert`);
+booster truncado a 123 sin cambiar ninguna predicción (`atol` 1e-12); y las dos verificaciones
+internas de `compute_shap` (aditividad < 1e-6 y coincidencia con `pred_contrib` < 1e-8). Valor
+base del explicador: -2,3530. **El entregable no usa 10 de sus 43 variables** (mean |SHAP|
+exactamente 0).
+
+#### El conjunto interpretable (`reports/phase5b_interpretable_set.csv`)
+Mismo código (`xai_sanity.noise_probes`, sin tocar `xai_sanity.py`), mismas 10 semillas y misma
+regla `gana_a_sonda == 10`. Suelo de la sonda: media 0,0177, máximo 0,0276
+(`phase5b_probe_seeds.csv`, una fila por semilla).
+
+| # SHAP | variable | mean \|SHAP\| | `gana_a_sonda` | tipo |
+|---|---|---|---|---|
+| 1 | `number_inpatient` | 0,29377 | 10 | numérica |
+| 2 | `discharge_disposition_id` | 0,18275 | 10 | categórica |
+| 3 | **`admission_type_id`** | 0,07525 | 10 | categórica |
+| 4 | `medical_specialty` | 0,07220 | 10 | categórica |
+| 5 | `diag_1_group` | 0,04981 | 10 | categórica |
+| 6 | `number_diagnoses` | 0,04106 | 10 | numérica |
+| 7 | `age` | 0,03996 | 10 | numérica |
+| 8 | `num_lab_procedures` | 0,03781 | 10 | numérica |
+| 9 | `number_emergency` | 0,03424 | 10 | numérica |
+| 10 | `time_in_hospital` | 0,03294 | 10 | numérica |
+
+**6 numéricas y 4 categóricas.** El criterio de paso de la Fase 3b (las top-10 ganan en las 10
+semillas) se cumple. **La parada por tamaño NO se activa** (10 >= 8), así que el umbral de la
+regla (a) sigue siendo 4 puestos, como quedó fijado.
+
+**La circularidad declarada en el prerregistro se confirma en los datos, no es solo teórica:**
+las interpretables son EXACTAMENTE las 10 primeras del ranking de mean |SHAP|, sin huecos, igual
+que en la Fase 3b. El conjunto lo define la misma magnitud que luego se compara con la PI.
+
+#### Entradas y salidas respecto a las 13 del modelo viejo (descriptivo)
+`reports/phase5b_probes_vs_old.csv`. Es descripción del cambio de modelo —features y etiqueta—,
+no un resultado de fidelidad.
+
+| estado | variable | mean \|SHAP\| viejo -> entregable | `gana_a_sonda` viejo -> nuevo |
+|---|---|---|---|
+| **ENTRA** | `admission_type_id` | 0,00860 -> **0,07525** | 0 -> 10 |
+| **SALE** | `diabetesMed` | 0,03565 -> 0,02158 | 10 -> 7 |
+| **SALE** | `diag_3_group` | 0,03027 -> 0,03022 | 10 -> 9 |
+| **SALE** | `diag_2_group` | 0,02632 -> 0,02607 | 10 -> 9 |
+| **SALE, y no la deciden las sondas** | `payer_code` | 0,04772 -> no existe | la quitó la ablación |
+| se mantienen (9) | `number_inpatient`, `discharge_disposition_id`, `medical_specialty`, `diag_1_group`, `number_diagnoses`, `age`, `num_lab_procedures`, `number_emergency`, `time_in_hospital` | — | 10 -> 10 |
+
+- **`diag_2_group` y `diag_3_group` se quedan en 9 de 10 semillas, y la regla se aplica TAL
+  CUAL:** quedan fuera. Sus rangos de SHAP son el 11 y el 12, justo detrás del corte, y su mean
+  |SHAP| apenas se mueve respecto al modelo viejo (0,03027 -> 0,03022 y 0,02632 -> 0,02607). O
+  sea que **no han perdido peso: han perdido una semilla.** Se dice así y no se las reincorpora:
+  mover el criterio después de ver quién queda al borde es exactamente lo que el prerregistro
+  impide. Pero tampoco se lee como «el entregable ya no usa los diagnósticos secundarios».
+- `payer_code` sale por la ablación, no por las sondas: en el modelo viejo pasaba 10/10 con mean
+  |SHAP| 0,0477.
+
+#### Ningún fármaco supera las sondas en el entregable (dato para la Fase 5C)
+En la Fase 3b ningún fármaco llegaba a 10/10 y el mejor era `insulin` con **8/10**. En el
+entregable el patrón se mantiene y se acentúa (`phase5b_noise_probes.csv`):
+- **`insulin` baja a 6/10** (mean |SHAP| 0,01917, rango 15) y es el mejor de los fármacos.
+- `metformin` 0/10 (0,01079) y el resto de los fármacos con nivel 0/10.
+- **10 fármacos tienen mean |SHAP| exactamente 0**, es decir el entregable no los usa en ningún
+  árbol: `metformin-rosiglitazone`, `glimepiride-pioglitazone`, `glipizide-metformin`,
+  `acetohexamide`, `tolazamide`, `troglitazone`, `miglitol`, `tolbutamide`, `chlorpropamide` y
+  `metformin-pioglitazone`.
+- Las dos derivadas de medicación tampoco pasan: `diabetesMed` 7/10 y `change` 0/10.
+- Consecuencia, que es la misma de la Fase 3b pero ahora medida sobre el entregable: **la única
+  variable accionable que el modelo usa de forma distinguible del ruido sigue siendo el destino
+  al alta**, y ninguna recomendación de medicación se puede apoyar en estas explicaciones.
+  **Y "accionable" NO quiere decir que haya que actuar sobre ella:** el destino al alta refleja
+  en buena parte la GRAVEDAD del paciente, no una decisión libre del hospital, así que es
+  CONFUSIÓN y no una palanca (Fase 3c: un contrafactual del tipo "mandarlo a casa" baja la
+  puntuación sin ninguna evidencia de que baje el riesgo). Dicho de otro modo: de aquí no sale
+  ninguna recomendación de actuar sobre el destino, sale que el modelo sirve para PRIORIZAR a
+  quién seguir y no para decidir QUÉ hacer.
+
+#### OBSERVACIÓN no prevista: `admission_type_id` entra, y entra en el puesto 3
+Su mean |SHAP| se multiplica por 8,7 (0,00860 -> 0,07525) y pasa de 0/10 a 10/10. **No es la
+masa que dejó `payer_code`**: 0,0752 es más que el 0,0477 que tenía `payer_code` en el modelo
+viejo, así que no se explica como una redistribución.
+
+Mecanismo CANDIDATO, que viene del propio proyecto y hay que nombrar: **la regla de reetiquetado
+define la etiqueta corregida usando `admission_type_id == 3` (ingreso programado) del encuentro
+SIGUIENTE** (`src/target_correction.py`). La feature es el `admission_type_id` del encuentro
+ACTUAL, así que **no es fuga en sentido estricto** —son encuentros distintos—, pero dentro de un
+mismo paciente los tipos de ingreso están correlacionados, y eso daría al modelo corregido una
+vía nueva para predecir la etiqueta nueva.
+
+**NO está medido** y no estaba en el prerregistro de la 5B. Es una observación, no un hallazgo.
+Se mide de forma descriptiva en la adenda de aquí abajo, prerregistrada antes de medirla.
+
+#### Adenda al prerregistro de la 5B — medición DESCRIPTIVA de `admission_type_id`
+**Honestidad de proceso, que es lo que hace útil esta adenda:** está escrita **DESPUÉS** de ver
+la salida de las sondas —que `admission_type_id` entrara en el puesto 3 es justo lo que la
+motiva— y **ANTES** de medir el mecanismo. La medición va en el commit de la PI, en un script o
+una sección APARTE de la PI, y sus criterios son estos y no se tocan después.
+
+- **Hipótesis:** la importancia de `admission_type_id` en el entregable refleja EN PARTE la regla
+  de reetiquetado, que usa `admission_type_id == 3` del encuentro SIGUIENTE, a través de la
+  correlación DENTRO DEL PACIENTE entre el tipo de ingreso actual y el siguiente.
+- **Medidas, solo en train y val, NUNCA en test. Son tres y no hay más:**
+  1. **Tasa de positivos eliminados por el reetiquetado según el nivel de `admission_type_id`
+     ACTUAL**, con su denominador explícito (positivos del nivel en train+val).
+  2. **Tabla cruzada del `admission_type_id` actual frente al del encuentro SIGUIENTE** del mismo
+     paciente, restringida a los encuentros con siguiente VISIBLE, con `n` por celda.
+  3. **SHAP medio por nivel de `admission_type_id`** en el entregable, que ya sale del bloque de
+     dirección de la 5B y no requiere nada nuevo.
+- **LECTURA FIJADA AHORA:** es una **descripción del mecanismo, no un contraste**. No hay
+  veredicto, no hay umbral y no hay p-valor. **Aunque el mecanismo se confirme, NO se concluye
+  que la variable sea un error:** si la etiqueta corregida es correcta, una **pauta clínica real**
+  (el tipo de ingreso predice el riesgo) y un **eco de la regla de reetiquetado** son
+  compatibles, y este diseño **no los separa**. Se dirá así, con esas dos lecturas a la vez.
+- **Alcance:** ninguna medida más, y **nada del entregable cambia** — ni el modelo, ni las
+  features, ni la etiqueta, ni la lista de 10 variables, que queda fijada en este commit.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

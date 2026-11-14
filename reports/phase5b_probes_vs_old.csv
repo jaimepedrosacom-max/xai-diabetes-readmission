@@ -1,0 +1,15 @@
+variable,estado,en_las_13_viejas,en_el_conjunto_nuevo,gana_a_sonda_viejo,media_abs_shap_viejo,media_abs_shap_entregable
+admission_type_id,ENTRA,False,True,0,0.0085952107597302,0.07525276456340918
+age,se mantiene,True,True,10,0.0372876164440687,0.03996207841999663
+diabetesMed,SALE,True,False,10,0.0356505512314579,0.021576748580204634
+diag_1_group,se mantiene,True,True,10,0.0632905639412444,0.04980873268377484
+diag_2_group,SALE,True,False,10,0.0263226434379166,0.026068085295429796
+diag_3_group,SALE,True,False,10,0.0302733769457018,0.030216350962745216
+discharge_disposition_id,se mantiene,True,True,10,0.2043295311635575,0.18274507931820733
+medical_specialty,se mantiene,True,True,10,0.0373940809701942,0.0722018823087331
+num_lab_procedures,se mantiene,True,True,10,0.0263504183850766,0.037812763360735316
+number_diagnoses,se mantiene,True,True,10,0.0362885946820609,0.041056315102526435
+number_emergency,se mantiene,True,True,10,0.0350187529194938,0.03424065418065582
+number_inpatient,se mantiene,True,True,10,0.288813166645202,0.2937667962966276
+payer_code,SALE (no está en el entregable),True,False,10,0.0477161289045103,
+time_in_hospital,se mantiene,True,True,10,0.0317876200043821,0.03293617827540609
