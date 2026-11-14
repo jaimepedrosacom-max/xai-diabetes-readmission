@@ -53,10 +53,12 @@ counterfactuals, matplotlib/seaborn para gráficas.
 - Fase 4 COMPLETA. Código cerrado: corrección del target, predicción prerregistrada, equidad, ablación de
   `payer_code`, consulta ÚNICA a test (la segunda y última vez que se toca test), README, notebook
   (`notebooks/analisis.ipynb`) y figuras (`src/phase4_figures.py`).
-- Fase 5A EN CURSO: prerregistrada (comparar el entregable con una regresión
-  logística, a petición del profesor), pendiente de etapa val y etapa test. Su etapa
-  test es la TERCERA consulta a test, así que el "y última" del punto anterior deja
-  de valer.
+- Fase 5A COMPLETA: comparación del entregable con una regresión logística, a petición del
+  profesor. Prerregistro `c579acf`, etapa val `9f4bcc1`, etapa test `c2f0c68`. Veredicto (c),
+  indistinguibles. Su etapa test fue la TERCERA consulta a test, así que el "y última" del
+  punto de la Fase 4 deja de valer.
+- Fase 5B EN CURSO: prerregistrada (fidelidad de SHAP frente a la permutation importance),
+  pendiente de las sondas sobre el entregable y de la PI.
 - PENDIENTE, fuera del código:
   - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
     solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
@@ -1657,6 +1659,213 @@ Lo que **NO** se concluye, también por prerregistro:
 SHAP, equidad y cualquier variante adicional de la LR o de LightGBM. Los coeficientes de
 la LR se guardaron en la etapa val (`phase5_lr_coefficients.csv`) y son el insumo de la
 5B; en la 5A no se interpretan.
+
+### Prerregistro de la Fase 5B — fidelidad de SHAP frente a la permutation importance
+Escrito y commiteado ANTES de ejecutar nada. Lo pide el profesor y el alcance es ACOTADO, en
+sus términos: que la PI y SHAP den algo parecido, que las explicaciones tengan sentido y, si no
+coinciden, explicar por qué. **Sustituye a la auditoría de procedencia sobre las variables que
+no superan las sondas, que NO se hace.** Lo único consultado para escribir esto son artefactos
+ya publicados del repo y el código; no se ha calculado ninguna PI ni ningún SHAP nuevo.
+
+#### Montaje
+- **Modelo:** el entregable CONGELADO (LightGBM corregido SIN `payer_code`, 123 árboles). NO se
+  reentrena: se reproduce y se exige su guardarraíl con `assert` (123 árboles Y PR-AUC val
+  0,1868) antes de medir nada.
+- **Datos: val** (19.868 filas, prevalencia 9,7795% con la etiqueta corregida). **TEST NO SE
+  TOCA en esta fase**, y los scripts descartan el tercer split al cargarlo. De estas
+  explicaciones salen lecturas para la memoria, y test no debe influir en ninguna: el mismo
+  criterio de la Fase 3a.
+- **SHAP:** `compute_shap` sin cambios — `shap.TreeExplainer` con
+  `feature_perturbation="tree_path_dependent"`, sobre val COMPLETO y sobre el booster TRUNCADO
+  a los 123 árboles, con sus dos verificaciones internas (aditividad < 1e-6 y coincidencia con
+  `pred_contrib` de LightGBM < 1e-8). Métrica de importancia global: **mean |SHAP|**, la misma
+  de la Fase 3a. Los valores de `tree_path_dependent` son deterministas; la aleatoriedad sin
+  semilla detectada en `shap` estaba en el DIBUJO del beeswarm, y aquí no hay figura. Se fija
+  `np.random.seed(D.SEED)` igualmente.
+- **PI:** `sklearn.inspection.permutation_importance` sobre val, **R = 30 repeticiones**,
+  `random_state = D.SEED`, `n_jobs=1`. Es la MISMA función y el mismo `scoring` que la PI ya
+  publicada de la Fase 3a (`xai_shap.py`, `xai_global_comparison.csv`), para no mantener dos
+  implementaciones. **Dos métricas en una sola llamada**
+  (`scoring=["average_precision", "neg_log_loss"]`) para que las dos se midan sobre la MISMA
+  permutación: con dos llamadas separadas, comparar las dos métricas variable a variable no
+  tendría sentido. Se comprueba con `assert` que una llamada solo con `average_precision`
+  devuelve lo mismo.
+- **R = 30 y no 10:** el precedente del proyecto es 10, pero allí la PI era descriptiva; aquí de
+  ella sale un veredicto por variable que depende de la dispersión entre repeticiones. El coste
+  no es el límite, porque la PI solo predice y no reentrena.
+- **Alcance:** la PI se calcula para las **43 variables** del entregable como CONTEXTO, pero
+  todas las comparaciones y veredictos se hacen DENTRO del conjunto interpretable del
+  entregable, definido abajo.
+
+#### Las sondas de ruido se REPITEN sobre el entregable, y su lista manda
+Decisión de Jaime: la lista de 13 variables interpretables de la Fase 3b salió del modelo de la
+Fase 2 (122 árboles, las 44 features con `payer_code`, target ORIGINAL) y una de las 13 es
+`payer_code`, que el entregable no tiene. En vez de transferir esa lista, se **vuelven a correr
+las sondas sobre el entregable**.
+
+- **Mismo código, misma regla, mismas semillas:** se llama a `xai_sanity.noise_probes` TAL CUAL,
+  sin tocar `xai_sanity.py`, con `N_PROBE_SEEDS = 10` semillas y la regla ya publicada
+  **`gana_a_sonda == 10`** (el mean |SHAP| de la variable supera el de la mejor de las dos
+  sondas —una normal y una categórica de 10 niveles— en las 10 semillas). Lo único que cambia
+  son los argumentos: las frames SIN `payer_code`, la etiqueta CORREGIDA y el ranking de mean
+  |SHAP| del entregable.
+- **Por qué no hace falta duplicar ni modificar nada:** `noise_probes(Ltr, ytr, Lva, ranking)`
+  recibe los datos y la etiqueta por argumento, y `ranking` solo ordena la tabla de salida y
+  define el criterio de paso de las top-10. La configuración del modelo auxiliar vive en
+  `xai_sanity.fit_fixed`.
+- **DESVIACIÓN DECLARADA, y es deliberada:** `fit_fixed` fija **122 árboles** (la constante de
+  la Fase 2), no 123. NO se cambia, por dos razones. Primera: los modelos de las sondas son
+  auxiliares por construcción —llevan dos columnas de sonda añadidas—, así que **nunca son
+  literalmente el entregable** y su nº de árboles es una convención para que las 10 semillas
+  sean comparables entre sí. Segunda, la que decide: dejándolo en 122, **lo único que cambia
+  respecto a las sondas de la Fase 3b son las features y la etiqueta**, que es justo la
+  comparación que interesa; tocar además el nº de árboles mezclaría dos cambios. La diferencia
+  es de 1 árbol sobre 123.
+- **La lista resultante ES el conjunto interpretable de la 5B**, tenga las variables que tenga,
+  y queda **fijada y commiteada ANTES de calcular ninguna PI** (ver la división en commits).
+  No se edita después de ver la PI, ni se añade ni se quita ninguna variable.
+- **Dato DESCRIPTIVO obligatorio:** qué variables ENTRAN y qué variables SALEN respecto a las 13
+  del modelo viejo, con su mean |SHAP| en cada modelo. Es descripción del cambio de modelo, no
+  un resultado de fidelidad.
+- **PARADA FIJADA AHORA:** si el conjunto nuevo tiene **menos de 8 variables**, el script lo
+  avisa y la fase SE PARA antes de calcular la PI, para reconsiderar el umbral de 4 puestos de
+  la regla (a) con Jaime. Con menos de 8 variables, «4 puestos o más» es más de la mitad del
+  rango y el umbral deja de significar lo mismo. Queda decidido ahora y no después de ver
+  resultados: el umbral **sigue siendo 4 puestos** en cualquier conjunto de 8 o más variables.
+- **CIRCULARIDAD que se declara y no se corrige:** las sondas seleccionan **por SHAP** (comparan
+  el mean |SHAP| de cada variable contra el suelo de la sonda), así que el conjunto interpretable
+  está definido por la propia magnitud que luego se compara con la PI, y dentro de él la PI casi
+  solo puede discrepar «hacia abajo». Repetir las sondas sobre el entregable arregla el problema
+  de transferencia entre modelos, **no el de circularidad**. Por eso la PI de las 43 se reporta
+  como contexto y la concordancia global no lleva veredicto. El alcance acotado que pidió el
+  profesor es lo que hace aceptable esta limitación, no que no exista.
+
+#### Regla de discrepancia por variable, fijada ANTES de medir
+Métrica **PRINCIPAL: PR-AUC** (`average_precision_score`, la misma del early stopping y de toda
+la Fase 4). Una variable del conjunto interpretable **DISCREPA** si se cumple (a) o (b):
+- **(a) Rango:** |rango en el ranking de PI − rango en el ranking de SHAP| **≥ 4**, con los dos
+  rangos calculados DENTRO del conjunto interpretable (1 = más importante; empates por rango
+  medio).
+- **(b) Atribuye sin rendir:** está en el **top 5 de SHAP** (dentro del conjunto) y su **PI no
+  es distinta de cero**.
+
+**«PI no distinta de cero» es el criterio YA PUBLICADO de la Fase 3a, no uno nuevo:** la
+variable NO pasa `perm_clara`, es decir **media de las R caídas ≤ 2 × su desviación típica**
+entre las R repeticiones. Es literalmente la columna `perm_clara` de
+`reports/xai_global_comparison.csv` (`cmp["perm_clara"] = cmp["perm_pr_auc"] > 2 * cmp["perm_std"]`,
+`xai_shap.py`), reutilizada con R = 30 en vez de 10. Se elige este y no un percentil para no
+estrenar un criterio en la fase que lo usa para un veredicto.
+**Su limitación, declarada ahora:** la desviación típica es la de las **R permutaciones con val
+FIJO**, así que recoge **solo el ruido de la permutación**. No hay bootstrap de pacientes aquí,
+así que **no dice nada** sobre si esa PI se replicaría en otra muestra. No se presenta como
+significación estadística y no lleva corrección por comparaciones múltiples, porque es un
+criterio por UMBRAL, igual que la regla de los cuatro quintos de la Fase 4.
+El **percentil 2,5 de las R repeticiones** se reporta como columna DESCRIPTIVA al lado.
+**No decide nada**: si los dos indicadores discrepan, se dice. Y se declara su propia debilidad:
+con R = 30, `np.percentile(..., 2.5)` interpola entre la caída más pequeña y la segunda, así que
+es casi «el mínimo» y no es un intervalo de confianza.
+
+#### Log-loss: robustez, descriptiva y sin veredicto
+La misma regla se recalcula con el **aumento de log-loss** y se reporta aparte. Su único cometido
+es **señalar las variables en las que las dos métricas dan resultados distintos**, y esas se
+nombran una por una. El veredicto de la fase es el de PR-AUC; si log-loss apunta en otro sentido,
+se dice y no se elige el que convenga.
+
+#### Concordancia global: descriptiva, sin veredicto
+Spearman entre el ranking de PI y el de SHAP **dentro del conjunto interpretable** (y, como
+contexto, dentro de las 43). **Con un puñado de variables esta correlación dice poco por sí
+sola:** un solo cambio de rango la mueve mucho, su intervalo sería amplísimo y el conjunto está
+preseleccionado por SHAP. Se reporta como cifra de acompañamiento, nunca como la respuesta a
+«¿coinciden?». La respuesta a eso es la tabla variable a variable.
+
+#### Dirección de los efectos (para la revisión clínica, que hacemos nosotros)
+- **Numéricas:** signo de la correlación de **Spearman entre el valor de la variable y su valor
+  SHAP**, sobre las 19.868 filas de val. Se reporta el `rho` y su signo; lo que se interpreta es
+  **el signo**, no la magnitud.
+- **Categóricas:** **SHAP medio por nivel con su `n`** y su % de val, con `xai_shap.level_table`,
+  que es la función de la Fase 3a. Los niveles con `n` pequeño se reportan con su `n` y no se
+  comentan.
+- La revisión de si eso tiene sentido clínico la hacemos nosotros al redactar; el script no emite
+  ningún juicio clínico.
+
+#### Coeficientes de la LR: solo el SIGNO, solo las numéricas
+Para las numéricas del conjunto interpretable se compara el signo del coeficiente de la LR de la
+Fase 5A (`reports/phase5_lr_coefficients.csv`, bloques `num__` y `counts__`) con el signo de la
+dirección SHAP. **Solo el signo:** las escalas no son comparables (las numéricas van por
+desviación típica y las dummies por categoría). Es válido comparar signos porque las dos
+transformaciones de la LR son monótonas crecientes (`StandardScaler`, y `log1p` + escalado en los
+contadores), así que no pueden invertirlo. Es DESCRIPTIVO, para una frase de la memoria; no hay
+veredicto ni se cuenta como contraste. Las categóricas quedan fuera: una variable se reparte
+entre varias dummies y el nivel `infrequent` actúa como referencia implícita, así que «el signo
+de la variable» no está definido.
+
+#### Explicaciones previsibles de las discrepancias, escritas ANTES de medir
+Si aparecen discrepancias, estas son las explicaciones candidatas, fijadas ahora para que no se
+elija a posteriori la que mejor quede:
+1. **`diabetesMed` es una variable DERIVADA** de las columnas de medicación (Fase 3c). Permutarla
+   genera filas imposibles —un paciente sin ningún fármaco con `diabetesMed = Yes`—, así que su
+   PI evalúa el modelo fuera de la distribución y es poco fiable por construcción. **Si
+   `diabetesMed` está en el conjunto y discrepa, esta es la PRIMERA explicación a considerar**,
+   antes que la correlación.
+2. **Variables correlacionadas.** La PI rompe la correlación y puede **infravalorar** a las
+   redundantes (el modelo recupera la señal por la otra vía, así que el rendimiento casi no cae),
+   mientras que `tree_path_dependent` **reparte el crédito según las correlaciones** con las que
+   se entrenó el modelo. Candidatas concretas en estos datos: `number_inpatient` frente a
+   `number_emergency`; los tres `diag_*_group` entre sí; `time_in_hospital` frente a
+   `num_lab_procedures`.
+3. **Miden cosas distintas.** La PI mide el efecto sobre el **RENDIMIENTO**; SHAP mide el efecto
+   sobre la **PREDICCIÓN**. Una variable que el modelo usa mucho pero que no mejora el orden de
+   los pacientes tiene SHAP alto y PI baja, y eso no es un error de ninguno de los dos.
+4. **Ruido de permutación** en las variables con PI pequeña: con caídas del orden de 0,001-0,01
+   de PR-AUC, el orden entre variables vecinas NO es fiable. Ya está medido en la Fase 3a, que
+   documentó que a partir del tercer puesto «el orden entre métodos NO es fiable: el ruido de
+   permutación es del mismo orden que la señal».
+
+#### Comprobaciones mecánicas, antes de aplicar la regla
+- **Guardarraíl del entregable:** 123 árboles y PR-AUC val 0,1868, con `assert`, en los DOS
+  scripts de la fase.
+- **Línea base:** el PR-AUC base de la PI tiene que ser el del guardarraíl (0,1868 a 4
+  decimales). Si no, la PI se está midiendo sobre otro modelo.
+- **Nulo interno:** toda variable con `mean |SHAP| == 0` (el entregable no la usa) debe dar PI
+  exactamente 0 en las 30 repeticiones. Si alguna no lo cumple, el montaje está mal y la fase se
+  para.
+- **Una sola permutación para las dos métricas:** la llamada multimétrica tiene que devolver las
+  mismas importancias de PR-AUC que una llamada solo con `average_precision`.
+- **El truncado del booster** a 123 árboles no cambia ninguna predicción (`atol=1e-12`), igual
+  que en la Fase 3a.
+
+#### Seguro y costes: NO hay código nuevo, solo citas con su fuente
+Las cifras del seguro ya están medidas y en esta fase solo se CITAN, con su CSV, su columna y su
+denominador:
+- Tasas de marcado y cocientes frente a MC en el top 10% de val, antes y después de la corrección
+  de la etiqueta: `phase4_fairness_composition.csv` (`atributo = payer_code`, `top_k = 10%`),
+  columnas `cociente_modelo_viejo` y `cociente`. **SP 0,8317 -> 0,3854** (n = 1.075).
+- Efecto de quitar la variable: `phase4_ablation_composition.csv`, `cociente_con` ->
+  `cociente_sin`. **SP 0,385 -> 0,444** (sigue siendo fallo robusto).
+- Tasa de reetiquetado por seguro: `phase4_fairness_relabel_distribution.csv`, columna `tasa_%`,
+  **denominador = positivos del grupo en train+val** (SP 28,2927% de 410 positivos; HM 4,8598%
+  de 535).
+- **`Missing` son DOS movimientos distintos y no se cuentan como uno:**
+  **1,4521 -> 2,0734** lo produce la CORRECCIÓN DE LA ETIQUETA (modelo viejo frente a corregido,
+  `phase4_fairness_composition.csv`), y **2,073 -> 0,962** lo produce la ABLACIÓN de `payer_code`
+  (`phase4_ablation_composition.csv`). Son dos causas distintas en dos CSV distintos: la primera
+  empeoró la disparidad y la segunda la eliminó. Presentarlas juntas como un solo movimiento
+  sería falso.
+- **AVISO que hay que respetar al redactar:** **NO existe AUC de proxy para `payer_code`.**
+  `phase4_fairness_proxies.csv` solo tiene `race` (0,7367, «recuperable») y `gender` (0,6299,
+  «zona gris»). La afirmación «la información del seguro es recuperable del resto del
+  formulario» **se cita con la ABLACIÓN** —`SP`, `CP` y `UN` siguen infraseleccionados sin la
+  columna— **y nunca con un AUC**, que para el seguro no se midió.
+
+#### Qué NO se hace en esta fase
+- **No se toca test**, ni se mide nada en test.
+- **No se cambia el entregable**, ni el modelo, ni las features: la 5B es una auditoría de las
+  explicaciones, no una fase de modelado.
+- **No se modifica `xai_sanity.py`**: las sondas se reutilizan tal cual.
+- **No se interpretan los coeficientes de la LR más allá del signo** de las numéricas.
+- **No se hace la auditoría de procedencia** de las variables que no superan las sondas: la 5B la
+  sustituye, por decisión del profesor.
+- **No se recalcula la lista interpretable después de ver la PI**: queda commiteada antes.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
