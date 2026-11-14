@@ -62,10 +62,13 @@ counterfactuals, matplotlib/seaborn para gráficas.
   PI y adenda de `admission_type_id` `40ebd31`. Discrepa 1 de 10 (`number_emergency`), y
   `age`/`num_lab_procedures` tienen PI indistinguible de cero que la regla no marca. Todo en
   val; test no se tocó.
-- Fase 5C EN CURSO: distancia a la frontera de los contrafactuales, tras la objeción del
-  profesor a la Fase 3c. Prerregistro `44db202`, paso 1 (espacio de acciones, escalones E0-E5
-  y marcados sin acciones) `28c387b`, paso 2 (vecino más cercano por Gower y frontera exacta
-  de la LR) en este commit. Todo en val; test no se tocó.
+- Fase 5C COMPLETA: distancia a la frontera de los contrafactuales, tras la objeción del
+  profesor a la Fase 3c. Prerregistro `44db202`, paso 1 (espacio de acciones, escalones
+  E0-E5, marcados sin acciones) `28c387b`, paso 2 (vecino más cercano por Gower y frontera
+  exacta de la LR) `c7ef81c`. Las dos piezas van juntas: la enumeración demuestra que dentro
+  del espacio de acciones no se puede cruzar la frontera, y el vecino más cercano dice que
+  para cruzarla hay que mover 6 a 9 variables de 43, ninguna de ellas accionable en los 3
+  casos marcados. Todo en val; test no se tocó.
 - PENDIENTE, fuera del código:
   - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
     solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
