@@ -2446,6 +2446,160 @@ revisión del diff**:
 - **No se emite ninguna recomendación clínica.** Todo lo que sale es una hipótesis para revisión
   clínica, como ya decía la Fase 3c.
 
+### Fase 5C, paso 1 — Resultados: la frontera, medida (`src/phase5c_frontier.py`)
+Prerregistro commiteado ANTES (`44db202`). Val = 19.868 filas, etiqueta corregida. **Test no se
+toca**, y el script descarta el tercer split al cargarlo.
+
+#### Guardarraíles y umbral
+- Entregable: **123 árboles / PR-AUC val 0,1868** (`assert`), y booster truncado sin cambiar
+  ninguna predicción (`atol` 1e-12).
+- Corte del top 5% por `probs.quantile(0.95)`: **0,191289**, que marca **994 filas** =
+  `ceil(0,05 · 19.868)`. `xai_counterfactuals.thresholds()` da 0,191303, una diferencia de
+  **1,4e-05**, y marca el MISMO número de filas. Top 10%: 0,164303 (1.987 filas). Top 20%:
+  0,133744 (3.974).
+
+#### La inferencia del prerregistro queda CONFIRMADA, y el refactor auditado
+`reports/phase5c_refactor_audit.csv`: los 6 casos de la Fase 3c reproducen `n_candidatos`
+(**18, 18, 8, 2, 2, 2**) y sus `palancas` con las llamadas SIN los argumentos nuevos. Y se
+verifica lo que el prerregistro dejó como INFERENCIA aritmética: **cada variable accionable
+tiene 2 alternativas** y el nº de variables movibles es **m = 3, 3, 2, 1, 1, 1**.
+- Además se relanzó `xai_counterfactuals.py` COMPLETO (DiCE incluido) tras el refactor: sus
+  **12 CSV salen idénticos byte a byte** (`md5sum -c` y `git status` vacío para esos ficheros).
+
+#### El MARCO confirmado sobre el entregable: k NO era la restricción
+`reports/phase5c_action_space.csv`. En **7 de los 11 casos** el nº de combinaciones con ≤ 2
+cambios COINCIDE con el producto cartesiano completo de su espacio E0, así que para ellos subir
+k no puede crear nada: `perfil_alto_3`, `riesgo_mediano`, los dos `modelo_alto_sin_ingresos_*`,
+`modelo_bajo_con_ingresos_reingresa`, `falsa_alarma_mayor_riesgo` y `reingreso_menor_riesgo`. En
+los otros 4 el completo son 26 u 80 frente a 18 o 32.
+- Tamaños de E4 (idénticos para los 11 casos, y no es un error: con los fármacos libres las
+  alternativas de cada columna dependen de los NIVELES DE TRAIN de esa columna, no del valor del
+  paciente): **20 variables accionables** —no 22, porque dos fármacos no tienen ninguna
+  alternativa—, **1.747** combinaciones con ≤ 2, **29.167** con ≤ 3 (lo enumerado) y
+  **4,832·10¹⁰** el producto completo.
+
+#### EL HALLAZGO, y se cuenta en este orden
+Los tres casos que el entregable marca en el top 5% (`phase5c_frontier_distance.csv`,
+`phase5c_ladder.csv`), con el déficit en PROBABILIDAD (positivo = NO se cruza):
+
+| caso | destino | prob | reducción necesaria | E0 | E1 | E2 | E3 | E4 (29.167 cand.) |
+|---|---|---|---|---|---|---|---|---|
+| `perfil_alto_1` | 6 | 0,26265 | 0,07136 | +0,06941 | +0,06941 | +0,06941 | +0,02776 | **+0,01592** |
+| `perfil_alto_3` | 6 | 0,20861 | 0,01732 | +0,01156 | +0,01156 | +0,01156 | **−0,02229** | −0,04112 |
+| `falsa_alarma_mayor_riesgo` | 1 | 0,42681 | 0,23552 | +0,25352 | +0,25352 | +0,25352 | +0,16098 | **+0,14168** |
+
+1. **En E0, E1 y E2 NINGUNO de los 3 cruza.** E1 = E0 = E2 en los tres, así que ni quitar el
+   límite de k ni descongelar los destinos 22/5 cambia nada (ninguno de los 3 está en 22/5).
+2. **`perfil_alto_1` y `falsa_alarma_mayor_riesgo` NO cruzan ni en E4**, con los **29.167
+   candidatos enumerados AL COMPLETO dentro de k ≤ 3**: con los 21 fármacos libres (empezar y
+   suspender), cualquier destino visto en train y hasta 3 cambios simultáneos, siguen por encima
+   del corte. **Eso es una DEMOSTRACIÓN, no una búsqueda fallida**, y es la frase que la columna
+   `afirmacion` autoriza para esos escalones.
+3. **El primer contrafactual aparece en E3**, es decir cuando se permite mover el destino a
+   CUALQUIER nivel, y solo en `perfil_alto_3`. La combinación mínima de E3 y E4 es, en los tres
+   casos, **destino → 23 (hospital de larga estancia)**, el nivel con el SHAP más negativo
+   (−0,3234 en `phase5b_direction_categorical.csv`), y en E4 se le suman cosas como
+   `repaglinide: No → Steady`. **Eso NO es una acción recomendada: es exactamente el
+   contrafactual engañoso** del que avisa `xai_counterfactuals_DEMO_ENGANOSO.csv`. «Ingresar al
+   paciente en un hospital de larga estancia para que el modelo no lo marque» baja la puntuación
+   sin ninguna evidencia de que baje el riesgo. Los escalones E2 a E4 son SENSIBILIDAD DEL
+   ESPACIO y en ningún caso recomendación.
+
+#### `todo_cambio_empeora`: columna AÑADIDA DESPUÉS de ver la salida
+No está prerregistrada y se declara como tal. Motivo: `falsa_alarma_mayor_riesgo` tiene en E0–E2
+una **reducción máxima alcanzable NEGATIVA (−0,01800)**, porque su único cambio disponible
+(destino 1 → 6) **SUBE** la puntuación. Una «reducción máxima» negativa no se puede interpretar
+sin una columna que lo diga, así que se añadió. No cambia ningún criterio ni ningún veredicto:
+es una lectura de una cifra que ya estaba en la tabla. Es el caso límite que la Fase 3c ya había
+anotado para este mismo encuentro.
+
+#### Medida PROPIA de la 5C: marcados sin acciones posibles (`phase5c_no_actions.csv`)
+Dos criterios en E0, cada uno con su denominador (columna `criterio`):
+
+| top k | grupo | n marcados | sin NINGUNA variable | sin NINGÚN fármaco |
+|---|---|---|---|---|
+| 5% | TODOS | 994 | 6 (**0,6036%**) | 172 (**17,3038%**) |
+| 5% | 22/5 (destino congelado) | 62 | 6 (9,6774%) | 6 (9,6774%) |
+| 5% | otros destinos | 932 | 0 (0%) | 166 (17,8112%) |
+| 10% | TODOS | 1.987 | 20 (1,0065%) | 386 (19,4263%) |
+| 10% | 22/5 | 176 | 20 (11,3636%) | 20 (11,3636%) |
+| 20% | TODOS | 3.974 | 49 (1,2330%) | 722 (18,1681%) |
+| 20% | 22/5 | 333 | 49 (14,7147%) | 49 (14,7147%) |
+
+- **Esta medida REFUTA la frase que se quería sostener con ella**, y se registra así: NO es cierto
+  que «a la mayoría de los marcados no se les pueda ofrecer ninguna acción que no sea mover el
+  destino». Es una **MINORÍA: el 17,30%** de los 994 marcados del top 5% no tiene ninguna palanca
+  de medicación, y el **82,70% sí tiene alguna**. La frase correcta es la de dos partes:
+  **(i) a un 17,30% no se le puede ofrecer nada que no sea mover el destino, que no es una
+  acción**, y **(ii) al resto se le puede ofrecer un fármaco, pero esa palanca no mueve al
+  paciente al otro lado de la frontera.** El (ii) se apoya EN ESTE ORDEN: **primero en la
+  enumeración de E4 de esta misma fase** —dos de los tres casos marcados NO cruzan ni con los 21
+  fármacos libres y k ≤ 3, con sus **29.167 candidatos enumerados al completo**, que es una
+  DEMOSTRACIÓN para esos pacientes— y **después en las sondas de ruido de la Fase 5B** (ningún
+  fármaco las supera en el entregable: `insulin` 6/10 como mejor, `metformin` 0/10, diez con mean
+  |SHAP| exactamente 0), que son evidencia GLOBAL y más débil que la enumeración. El (i) es un
+  argumento sobre la EXISTENCIA de la palanca y el (ii) sobre su EFECTO. Van juntos y no se
+  confunden.
+- Comprobación interna que cuadra: en el grupo 22/5 **los dos criterios dan la misma cifra**
+  (6 de 62, 9,6774%), y tiene que ser así, porque con el destino congelado «sin fármaco» y «sin
+  nada» son el mismo conjunto.
+- **El 0,6036% del total no se compara con el 12,09% del modelo viejo** de
+  `xai_counterfactuals_population.csv`: el entregable marca a muchos menos pacientes de 22/5
+  (62 de 994) que el modelo viejo, así que son dos conjuntos de filas distintos elegidos por dos
+  modelos distintos sobre dos etiquetas distintas.
+
+#### (f) Solo 3 de los 11 casos siguen marcados: la base caso por caso es ESTRECHA
+`reports/phase5c_eligibility.csv`. Con el entregable y el corte del top 5%, de los 11 casos de
+`xai_cases.py` solo siguen marcados **`perfil_alto_1` (0,2627), `perfil_alto_3` (0,2086) y
+`falsa_alarma_mayor_riesgo` (0,4268)**; los mismos 3 en el top 10%.
+- **Se declara sin rodeos: el análisis caso por caso de esta fase descansa en 3 pacientes, y esa
+  es una base estrecha.** La generalización NO se apoya en ellos, sino en la **medida de
+  población sobre las 994 filas marcadas** del top 5% (el bloque anterior) y en los tamaños del
+  espacio de acciones, que se calculan para los 11.
+- **Los dos casos «alto sin ingresos» caen fuera** (0,2617 → 0,1214 y 0,2303 → 0,1454), y eso es
+  COHERENTE con lo que la Fase 4 ya midió: el entregable **deja de marcar** a esa población, cuyo
+  subgrupo A bajó de 440 a 212 marcados. No es un efecto nuevo ni una casualidad de la muestra.
+- Los 11 casos **NO se reeligen**: volver a correr `xai_cases` con el entregable sería una
+  selección nueva y rompería la cadena con las Fases 3b, 3c y 3d. Las filas de los 8 casos no
+  marcados llevan `marcado_top5 = False` y la frase explícita de que para ellos **la pregunta del
+  contrafactual NO SE PLANTEA**; sus `deficit` negativos NO se leen como «sí cruza».
+
+#### DESVIACIÓN del prerregistro en el tamaño de E4 completo
+El prerregistro dice «~4^21 · 18 ~ 8e13 combinaciones». El valor **medido** con
+`count_combinations` es **4,832·10¹⁰**, tres órdenes de magnitud menos, porque la estimación
+suponía 4 niveles en train para los 21 fármacos y no los tienen todos. Era una **cota alta**, el
+veredicto NO cambia (sigue sin ser enumerable) y **el prerregistro commiteado no se toca**: lo
+que se corrigió es el CSV, que en una ejecución intermedia llevaba la estimación como texto, y
+que ahora escribe el valor calculado.
+
+#### NOTA DE PROCESO: el script se ejecutó OCHO veces, y qué fue cada una
+Se registra porque el proyecto anota cada ejecución que toca datos. **El número exacto es 8**, y
+los CSV del commit son los de la **(8)**, así que el código commiteado es exactamente el que
+corrió.
+
+| # | qué fue |
+|---|---|
+| 1 | primera ejecución; la salida se capturó con `tail` y se perdió la cabecera |
+| 2 | con el log completo; ahí se vio que el CSV llevaba como texto la estimación falsa de E4 |
+| 3 | con el tamaño de E4 calculado por `count_combinations` en vez de estimado |
+| 4 | repetición ACCIDENTAL con el código SIN ningún cambio, al abortar una edición |
+| 5 | con un cambio que solo afectaba a los `print`: las dos ediciones de la medida nueva se habían perdido al abortar el lote |
+| 6 | con la medida nueva de «sin ningún fármaco accionable», pedida por Jaime |
+| 7 | tras corregir el docstring que afirmaba «la mayoría», que la propia medida refuta |
+| 8 | tras reordenar el docstring del argumento (ii): primero la enumeración de E4, después las sondas |
+
+- **Después de ver cifras NO se cambió nada que afecte a los resultados.** Lo único que se tocó
+  tras la primera salida fue: la **columna de texto** del tamaño de E4 (ejecución 3), poner
+  `n_candidatos`/`n_enumeradas` a NaN en vez de 0 en las filas de los escalones NO enumerables,
+  que es presentación y no cálculo (0 se leía como «cero candidatos» cuando significa «no
+  enumerado»), la columna `todo_cambio_empeora` (declarada arriba, y es una lectura de una cifra
+  que ya estaba), la **medida nueva que pidió Jaime** (ejecución 6) y **docstrings** (7 y 8).
+  Ningún umbral, ningún escalón, ninguna regla y ninguna cifra de las ya calculadas.
+- **Determinismo verificado, no supuesto**, y por tres vías: la ejecución (4), con código
+  idéntico, dio los **7 CSV idénticos byte a byte**; la (7) dio un **log idéntico** a la (6); y la
+  (8), un **log idéntico** a la (7). No hay aleatoriedad en esta fase: TreeSHAP no interviene, el
+  booster es determinista y no hay muestreo.
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

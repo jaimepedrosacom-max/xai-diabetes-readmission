@@ -1,0 +1,19 @@
+top_k,umbral,grupo,criterio,n_marcados,n_sin_acciones,pct_sin_acciones,espacio
+5%,0.1912889286582539,TODOS los marcados,sin NINGUNA variable accionable,994,6,0.6036217303822937,E0
+5%,0.1912889286582539,TODOS los marcados,"sin NINGÚN fármaco accionable (solo el destino, o nada)",994,172,17.303822937625753,E0
+5%,0.1912889286582539,22/5 (destino congelado),sin NINGUNA variable accionable,62,6,9.67741935483871,E0
+5%,0.1912889286582539,22/5 (destino congelado),"sin NINGÚN fármaco accionable (solo el destino, o nada)",62,6,9.67741935483871,E0
+5%,0.1912889286582539,otros destinos,sin NINGUNA variable accionable,932,0,0.0,E0
+5%,0.1912889286582539,otros destinos,"sin NINGÚN fármaco accionable (solo el destino, o nada)",932,166,17.811158798283262,E0
+10%,0.1643031430572405,TODOS los marcados,sin NINGUNA variable accionable,1987,20,1.0065425264217414,E0
+10%,0.1643031430572405,TODOS los marcados,"sin NINGÚN fármaco accionable (solo el destino, o nada)",1987,386,19.42627075993961,E0
+10%,0.1643031430572405,22/5 (destino congelado),sin NINGUNA variable accionable,176,20,11.363636363636363,E0
+10%,0.1643031430572405,22/5 (destino congelado),"sin NINGÚN fármaco accionable (solo el destino, o nada)",176,20,11.363636363636363,E0
+10%,0.1643031430572405,otros destinos,sin NINGUNA variable accionable,1811,0,0.0,E0
+10%,0.1643031430572405,otros destinos,"sin NINGÚN fármaco accionable (solo el destino, o nada)",1811,366,20.209828823854224,E0
+20%,0.13374372493852635,TODOS los marcados,sin NINGUNA variable accionable,3974,49,1.2330145948666331,E0
+20%,0.13374372493852635,TODOS los marcados,"sin NINGÚN fármaco accionable (solo el destino, o nada)",3974,722,18.16809260191243,E0
+20%,0.13374372493852635,22/5 (destino congelado),sin NINGUNA variable accionable,333,49,14.714714714714715,E0
+20%,0.13374372493852635,22/5 (destino congelado),"sin NINGÚN fármaco accionable (solo el destino, o nada)",333,49,14.714714714714715,E0
+20%,0.13374372493852635,otros destinos,sin NINGUNA variable accionable,3641,0,0.0,E0
+20%,0.13374372493852635,otros destinos,"sin NINGÚN fármaco accionable (solo el destino, o nada)",3641,673,18.48393298544356,E0

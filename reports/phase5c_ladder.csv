@@ -1,0 +1,78 @@
+caso,encounter_id,escalon,destino,prob_orig,umbral_top5,marcado_top5,n_vars_accionables,n_candidatos,primer_cf,n_cf,min_n_cambios_del_cf,exhaustiva,afirmacion
+perfil_alto_1,265508166,E0,6,0.2626508072578668,0.1912889286582539,True,3.0,18.0,False,0.0,,True,no existe ninguno en E0 (enumeración completa del escalón)
+perfil_alto_1,265508166,E1,6,0.2626508072578668,0.1912889286582539,True,3.0,26.0,False,0.0,,True,no existe ninguno en E1 (enumeración completa del escalón)
+perfil_alto_1,265508166,E2,6,0.2626508072578668,0.1912889286582539,True,3.0,26.0,False,0.0,,True,no existe ninguno en E2 (enumeración completa del escalón)
+perfil_alto_1,265508166,E3,6,0.2626508072578668,0.1912889286582539,True,3.0,179.0,False,0.0,,True,no existe ninguno en E3 (enumeración completa del escalón)
+perfil_alto_1,265508166,E4,6,0.2626508072578668,0.1912889286582539,True,20.0,29167.0,False,0.0,,True,no existe ninguno en E4 (enumeración completa del escalón)
+perfil_alto_1,265508166,E4-completo,6,,0.1912889286582539,True,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+perfil_alto_1,265508166,E5,6,,0.1912889286582539,True,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+perfil_alto_2,34910250,E0,5,0.1395245294138682,0.1912889286582539,False,3.0,18.0,True,18.0,1.0,True,existen 18 contrafactuales en E0
+perfil_alto_2,34910250,E1,5,0.1395245294138682,0.1912889286582539,False,3.0,26.0,True,26.0,1.0,True,existen 26 contrafactuales en E1
+perfil_alto_2,34910250,E2,5,0.1395245294138682,0.1912889286582539,False,4.0,107.0,True,107.0,1.0,True,existen 107 contrafactuales en E2
+perfil_alto_2,34910250,E3,5,0.1395245294138682,0.1912889286582539,False,4.0,539.0,True,476.0,1.0,True,existen 476 contrafactuales en E3
+perfil_alto_2,34910250,E4,5,0.1395245294138682,0.1912889286582539,False,20.0,29167.0,True,27306.0,1.0,True,existen 27306 contrafactuales en E4
+perfil_alto_2,34910250,E4-completo,5,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+perfil_alto_2,34910250,E5,5,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+perfil_alto_3,260452620,E0,6,0.20860857351426754,0.1912889286582539,True,2.0,8.0,False,0.0,,True,no existe ninguno en E0 (enumeración completa del escalón)
+perfil_alto_3,260452620,E1,6,0.20860857351426754,0.1912889286582539,True,2.0,8.0,False,0.0,,True,no existe ninguno en E1 (enumeración completa del escalón)
+perfil_alto_3,260452620,E2,6,0.20860857351426754,0.1912889286582539,True,2.0,8.0,False,0.0,,True,no existe ninguno en E2 (enumeración completa del escalón)
+perfil_alto_3,260452620,E3,6,0.20860857351426754,0.1912889286582539,True,2.0,59.0,True,12.0,1.0,True,existen 12 contrafactuales en E3
+perfil_alto_3,260452620,E4,6,0.20860857351426754,0.1912889286582539,True,20.0,29167.0,True,4545.0,1.0,True,existen 4545 contrafactuales en E4
+perfil_alto_3,260452620,E4-completo,6,,0.1912889286582539,True,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+perfil_alto_3,260452620,E5,6,,0.1912889286582539,True,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+riesgo_mediano,355466984,E0,3,0.09208245937202304,0.1912889286582539,False,2.0,8.0,True,8.0,1.0,True,existen 8 contrafactuales en E0
+riesgo_mediano,355466984,E1,3,0.09208245937202304,0.1912889286582539,False,2.0,8.0,True,8.0,1.0,True,existen 8 contrafactuales en E1
+riesgo_mediano,355466984,E2,3,0.09208245937202304,0.1912889286582539,False,2.0,8.0,True,8.0,1.0,True,existen 8 contrafactuales en E2
+riesgo_mediano,355466984,E3,3,0.09208245937202304,0.1912889286582539,False,2.0,59.0,True,53.0,1.0,True,existen 53 contrafactuales en E3
+riesgo_mediano,355466984,E4,3,0.09208245937202304,0.1912889286582539,False,20.0,29167.0,True,27340.0,1.0,True,existen 27340 contrafactuales en E4
+riesgo_mediano,355466984,E4-completo,3,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+riesgo_mediano,355466984,E5,3,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+riesgo_bajo,439628024,E0,1,0.05763540739053857,0.1912889286582539,False,4.0,32.0,True,32.0,1.0,True,existen 32 contrafactuales en E0
+riesgo_bajo,439628024,E1,1,0.05763540739053857,0.1912889286582539,False,4.0,80.0,True,80.0,1.0,True,existen 80 contrafactuales en E1
+riesgo_bajo,439628024,E2,1,0.05763540739053857,0.1912889286582539,False,4.0,80.0,True,80.0,1.0,True,existen 80 contrafactuales en E2
+riesgo_bajo,439628024,E3,1,0.05763540739053857,0.1912889286582539,False,4.0,539.0,True,485.0,1.0,True,existen 485 contrafactuales en E3
+riesgo_bajo,439628024,E4,1,0.05763540739053857,0.1912889286582539,False,20.0,29167.0,True,27340.0,1.0,True,existen 27340 contrafactuales en E4
+riesgo_bajo,439628024,E4-completo,1,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+riesgo_bajo,439628024,E5,1,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+modelo_alto_sin_ingresos_reingresa,34148802,E0,5,0.12140179417226972,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E0
+modelo_alto_sin_ingresos_reingresa,34148802,E1,5,0.12140179417226972,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E1
+modelo_alto_sin_ingresos_reingresa,34148802,E2,5,0.12140179417226972,0.1912889286582539,False,2.0,11.0,True,11.0,1.0,True,existen 11 contrafactuales en E2
+modelo_alto_sin_ingresos_reingresa,34148802,E3,5,0.12140179417226972,0.1912889286582539,False,2.0,59.0,True,56.0,1.0,True,existen 56 contrafactuales en E3
+modelo_alto_sin_ingresos_reingresa,34148802,E4,5,0.12140179417226972,0.1912889286582539,False,20.0,29167.0,True,28205.0,1.0,True,existen 28205 contrafactuales en E4
+modelo_alto_sin_ingresos_reingresa,34148802,E4-completo,5,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+modelo_alto_sin_ingresos_reingresa,34148802,E5,5,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+modelo_alto_sin_ingresos_no_reingresa,206978460,E0,22,0.14540636135468782,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E0
+modelo_alto_sin_ingresos_no_reingresa,206978460,E1,22,0.14540636135468782,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E1
+modelo_alto_sin_ingresos_no_reingresa,206978460,E2,22,0.14540636135468782,0.1912889286582539,False,2.0,11.0,True,11.0,1.0,True,existen 11 contrafactuales en E2
+modelo_alto_sin_ingresos_no_reingresa,206978460,E3,22,0.14540636135468782,0.1912889286582539,False,2.0,59.0,True,53.0,1.0,True,existen 53 contrafactuales en E3
+modelo_alto_sin_ingresos_no_reingresa,206978460,E4,22,0.14540636135468782,0.1912889286582539,False,20.0,29167.0,True,27339.0,1.0,True,existen 27339 contrafactuales en E4
+modelo_alto_sin_ingresos_no_reingresa,206978460,E4-completo,22,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+modelo_alto_sin_ingresos_no_reingresa,206978460,E5,22,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+modelo_bajo_con_ingresos_reingresa,166275936,E0,1,0.06961669065203668,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E0
+modelo_bajo_con_ingresos_reingresa,166275936,E1,1,0.06961669065203668,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E1
+modelo_bajo_con_ingresos_reingresa,166275936,E2,1,0.06961669065203668,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E2
+modelo_bajo_con_ingresos_reingresa,166275936,E3,1,0.06961669065203668,0.1912889286582539,False,1.0,19.0,True,18.0,1.0,True,existen 18 contrafactuales en E3
+modelo_bajo_con_ingresos_reingresa,166275936,E4,1,0.06961669065203668,0.1912889286582539,False,20.0,29167.0,True,28413.0,1.0,True,existen 28413 contrafactuales en E4
+modelo_bajo_con_ingresos_reingresa,166275936,E4-completo,1,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+modelo_bajo_con_ingresos_reingresa,166275936,E5,1,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+modelo_bajo_con_ingresos_no_reingresa,136452990,E0,1,0.08423115787223653,0.1912889286582539,False,4.0,32.0,True,32.0,1.0,True,existen 32 contrafactuales en E0
+modelo_bajo_con_ingresos_no_reingresa,136452990,E1,1,0.08423115787223653,0.1912889286582539,False,4.0,80.0,True,80.0,1.0,True,existen 80 contrafactuales en E1
+modelo_bajo_con_ingresos_no_reingresa,136452990,E2,1,0.08423115787223653,0.1912889286582539,False,4.0,80.0,True,80.0,1.0,True,existen 80 contrafactuales en E2
+modelo_bajo_con_ingresos_no_reingresa,136452990,E3,1,0.08423115787223653,0.1912889286582539,False,4.0,539.0,True,485.0,1.0,True,existen 485 contrafactuales en E3
+modelo_bajo_con_ingresos_no_reingresa,136452990,E4,1,0.08423115787223653,0.1912889286582539,False,20.0,29167.0,True,27336.0,1.0,True,existen 27336 contrafactuales en E4
+modelo_bajo_con_ingresos_no_reingresa,136452990,E4-completo,1,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+modelo_bajo_con_ingresos_no_reingresa,136452990,E5,1,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+falsa_alarma_mayor_riesgo,140533200,E0,1,0.4268064970158844,0.1912889286582539,True,1.0,2.0,False,0.0,,True,no existe ninguno en E0 (enumeración completa del escalón)
+falsa_alarma_mayor_riesgo,140533200,E1,1,0.4268064970158844,0.1912889286582539,True,1.0,2.0,False,0.0,,True,no existe ninguno en E1 (enumeración completa del escalón)
+falsa_alarma_mayor_riesgo,140533200,E2,1,0.4268064970158844,0.1912889286582539,True,1.0,2.0,False,0.0,,True,no existe ninguno en E2 (enumeración completa del escalón)
+falsa_alarma_mayor_riesgo,140533200,E3,1,0.4268064970158844,0.1912889286582539,True,1.0,19.0,False,0.0,,True,no existe ninguno en E3 (enumeración completa del escalón)
+falsa_alarma_mayor_riesgo,140533200,E4,1,0.4268064970158844,0.1912889286582539,True,20.0,29167.0,False,0.0,,True,no existe ninguno en E4 (enumeración completa del escalón)
+falsa_alarma_mayor_riesgo,140533200,E4-completo,1,,0.1912889286582539,True,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+falsa_alarma_mayor_riesgo,140533200,E5,1,,0.1912889286582539,True,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"
+reingreso_menor_riesgo,88338264,E0,1,0.03383481390378084,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E0
+reingreso_menor_riesgo,88338264,E1,1,0.03383481390378084,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E1
+reingreso_menor_riesgo,88338264,E2,1,0.03383481390378084,0.1912889286582539,False,1.0,2.0,True,2.0,1.0,True,existen 2 contrafactuales en E2
+reingreso_menor_riesgo,88338264,E3,1,0.03383481390378084,0.1912889286582539,False,1.0,19.0,True,19.0,1.0,True,existen 19 contrafactuales en E3
+reingreso_menor_riesgo,88338264,E4,1,0.03383481390378084,0.1912889286582539,False,20.0,29167.0,True,27960.0,1.0,True,existen 27960 contrafactuales en E4
+reingreso_menor_riesgo,88338264,E4-completo,1,,0.1912889286582539,False,,,,,,False,NO ENUMERABLE (4.832e+10 combinaciones: no enumerable): esta fase no puede afirmar nada sobre inexistencia aquí
+reingreso_menor_riesgo,88338264,E5,1,,0.1912889286582539,False,,,,,,False,"NO ENUMERABLE (contiene variables numéricas continuas, así que el espacio no es finito): esta fase no puede afirmar nada sobre inexistencia aquí"

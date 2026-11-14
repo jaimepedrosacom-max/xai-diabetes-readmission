@@ -1,0 +1,474 @@
+caso,encounter_id,variable,tipo,valor_actual,accionable_E0,valores_permitidos_E0,n_alternativas_E0,motivo
+perfil_alto_1,265508166,time_in_hospital,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,num_lab_procedures,numérica,53,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,num_medications,numérica,17,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,age,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,number_emergency,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,number_inpatient,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,race,categórica,AfricanAmerican,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,discharge_disposition_id,categórica,6,True,"1, 3",2,"accionable solo hacia 1, 6 o 3"
+perfil_alto_1,265508166,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_1,265508166,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_1,265508166,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_1,265508166,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_1,265508166,diag_1_group,categórica,Other,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,diag_2_group,categórica,Endocrine,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,diag_3_group,categórica,Respiratory,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_1,265508166,metformin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+perfil_alto_1,265508166,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,insulin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+perfil_alto_1,265508166,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_1,265508166,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,time_in_hospital,numérica,3,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,num_lab_procedures,numérica,52,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,num_medications,numérica,14,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,age,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,race,categórica,Caucasian,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,gender,categórica,Female,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,discharge_disposition_id,categórica,5,False,,0,"CONGELADA: destino 22 o 5, señalado por audit_discharge_leakage como contaminado por la definición de la etiqueta"
+perfil_alto_2,34910250,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_2,34910250,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_2,34910250,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_2,34910250,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_2,34910250,diag_1_group,categórica,Other,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,diag_2_group,categórica,Other,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_2,34910250,metformin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+perfil_alto_2,34910250,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,pioglitazone,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+perfil_alto_2,34910250,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,insulin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+perfil_alto_2,34910250,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_2,34910250,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,time_in_hospital,numérica,8,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,num_lab_procedures,numérica,45,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,num_medications,numérica,24,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,age,numérica,6,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,number_emergency,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,number_inpatient,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,race,categórica,Caucasian,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,gender,categórica,Female,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,discharge_disposition_id,categórica,6,True,"1, 3",2,"accionable solo hacia 1, 6 o 3"
+perfil_alto_3,260452620,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_3,260452620,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+perfil_alto_3,260452620,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_3,260452620,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+perfil_alto_3,260452620,diag_1_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,diag_2_group,categórica,Genitourinary,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+perfil_alto_3,260452620,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,insulin,categórica,Down,True,"Steady, Up",2,accionable entre Steady/Up/Down
+perfil_alto_3,260452620,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+perfil_alto_3,260452620,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,time_in_hospital,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,num_lab_procedures,numérica,55,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,num_medications,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,number_diagnoses,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,age,numérica,8,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,number_outpatient,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,race,categórica,Caucasian,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,discharge_disposition_id,categórica,3,True,"1, 6",2,"accionable solo hacia 1, 6 o 3"
+riesgo_mediano,355466984,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+riesgo_mediano,355466984,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+riesgo_mediano,355466984,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+riesgo_mediano,355466984,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+riesgo_mediano,355466984,diag_1_group,categórica,Other,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,diag_2_group,categórica,Respiratory,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,diag_3_group,categórica,Endocrine,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_mediano,355466984,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,insulin,categórica,Down,True,"Steady, Up",2,accionable entre Steady/Up/Down
+riesgo_mediano,355466984,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_mediano,355466984,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,time_in_hospital,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,num_lab_procedures,numérica,34,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,num_medications,numérica,15,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,age,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,race,categórica,Asian,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,discharge_disposition_id,categórica,1,True,"6, 3",2,"accionable solo hacia 1, 6 o 3"
+riesgo_bajo,439628024,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,A1Cresult,categórica,>8,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+riesgo_bajo,439628024,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+riesgo_bajo,439628024,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+riesgo_bajo,439628024,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+riesgo_bajo,439628024,diag_1_group,categórica,Injury,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,diag_2_group,categórica,Musculoskeletal,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,diag_3_group,categórica,Musculoskeletal,False,,0,CONGELADA: inmutable o ya ocurrida
+riesgo_bajo,439628024,metformin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+riesgo_bajo,439628024,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,glipizide,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+riesgo_bajo,439628024,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,insulin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+riesgo_bajo,439628024,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+riesgo_bajo,439628024,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,time_in_hospital,numérica,3,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,num_lab_procedures,numérica,35,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,num_procedures,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,num_medications,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,number_diagnoses,numérica,6,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,age,numérica,6,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,race,categórica,Caucasian,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,discharge_disposition_id,categórica,5,False,,0,"CONGELADA: destino 22 o 5, señalado por audit_discharge_leakage como contaminado por la definición de la etiqueta"
+modelo_alto_sin_ingresos_reingresa,34148802,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_alto_sin_ingresos_reingresa,34148802,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_alto_sin_ingresos_reingresa,34148802,change,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_alto_sin_ingresos_reingresa,34148802,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_alto_sin_ingresos_reingresa,34148802,diag_1_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,diag_2_group,categórica,Endocrine,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_reingresa,34148802,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glyburide,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+modelo_alto_sin_ingresos_reingresa,34148802,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,insulin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_reingresa,34148802,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,time_in_hospital,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,num_lab_procedures,numérica,72,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,num_medications,numérica,6,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,age,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,race,categórica,Hispanic,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,discharge_disposition_id,categórica,22,False,,0,"CONGELADA: destino 22 o 5, señalado por audit_discharge_leakage como contaminado por la definición de la etiqueta"
+modelo_alto_sin_ingresos_no_reingresa,206978460,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_alto_sin_ingresos_no_reingresa,206978460,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_alto_sin_ingresos_no_reingresa,206978460,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_alto_sin_ingresos_no_reingresa,206978460,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_alto_sin_ingresos_no_reingresa,206978460,diag_1_group,categórica,Neoplasms,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,diag_2_group,categórica,Neoplasms,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,diag_3_group,categórica,Neoplasms,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_alto_sin_ingresos_no_reingresa,206978460,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,insulin,categórica,Down,True,"Steady, Up",2,accionable entre Steady/Up/Down
+modelo_alto_sin_ingresos_no_reingresa,206978460,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_alto_sin_ingresos_no_reingresa,206978460,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,time_in_hospital,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,num_lab_procedures,numérica,41,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,num_procedures,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,num_medications,numérica,15,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,age,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,number_inpatient,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,race,categórica,AfricanAmerican,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,medical_specialty,categórica,Cardiology,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,admission_type_id,categórica,3,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,discharge_disposition_id,categórica,1,True,"6, 3",2,"accionable solo hacia 1, 6 o 3"
+modelo_bajo_con_ingresos_reingresa,166275936,admission_source_id,categórica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_bajo_con_ingresos_reingresa,166275936,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_bajo_con_ingresos_reingresa,166275936,change,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_bajo_con_ingresos_reingresa,166275936,diabetesMed,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_bajo_con_ingresos_reingresa,166275936,diag_1_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,diag_2_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_reingresa,166275936,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,insulin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_reingresa,166275936,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,time_in_hospital,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,num_lab_procedures,numérica,11,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,num_procedures,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,num_medications,numérica,26,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,number_diagnoses,numérica,9,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,age,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,number_outpatient,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,number_inpatient,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,race,categórica,Caucasian,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,gender,categórica,Female,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,admission_type_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,discharge_disposition_id,categórica,1,True,"6, 3",2,"accionable solo hacia 1, 6 o 3"
+modelo_bajo_con_ingresos_no_reingresa,136452990,admission_source_id,categórica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_bajo_con_ingresos_no_reingresa,136452990,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+modelo_bajo_con_ingresos_no_reingresa,136452990,change,categórica,Ch,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_bajo_con_ingresos_no_reingresa,136452990,diabetesMed,categórica,Yes,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+modelo_bajo_con_ingresos_no_reingresa,136452990,diag_1_group,categórica,Injury,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,diag_2_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+modelo_bajo_con_ingresos_no_reingresa,136452990,metformin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+modelo_bajo_con_ingresos_no_reingresa,136452990,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,glyburide,categórica,Down,True,"Steady, Up",2,accionable entre Steady/Up/Down
+modelo_bajo_con_ingresos_no_reingresa,136452990,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,insulin,categórica,Steady,True,"Up, Down",2,accionable entre Steady/Up/Down
+modelo_bajo_con_ingresos_no_reingresa,136452990,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+modelo_bajo_con_ingresos_no_reingresa,136452990,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,time_in_hospital,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,num_lab_procedures,numérica,37,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,num_procedures,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,num_medications,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,number_diagnoses,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,age,numérica,7,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,number_emergency,numérica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,number_inpatient,numérica,12,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,race,categórica,AfricanAmerican,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,medical_specialty,categórica,Other,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,admission_type_id,categórica,Unknown,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,discharge_disposition_id,categórica,1,True,"6, 3",2,"accionable solo hacia 1, 6 o 3"
+falsa_alarma_mayor_riesgo,140533200,admission_source_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+falsa_alarma_mayor_riesgo,140533200,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+falsa_alarma_mayor_riesgo,140533200,change,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+falsa_alarma_mayor_riesgo,140533200,diabetesMed,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+falsa_alarma_mayor_riesgo,140533200,diag_1_group,categórica,Diabetes,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,diag_2_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,diag_3_group,categórica,Circulatory,False,,0,CONGELADA: inmutable o ya ocurrida
+falsa_alarma_mayor_riesgo,140533200,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,insulin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+falsa_alarma_mayor_riesgo,140533200,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,time_in_hospital,numérica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,num_lab_procedures,numérica,56,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,num_procedures,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,num_medications,numérica,8,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,number_diagnoses,numérica,4,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,age,numérica,5,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,number_outpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,number_emergency,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,number_inpatient,numérica,0,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,race,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,gender,categórica,Male,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,medical_specialty,categórica,Missing,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,admission_type_id,categórica,2,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,discharge_disposition_id,categórica,1,True,"6, 3",2,"accionable solo hacia 1, 6 o 3"
+reingreso_menor_riesgo,88338264,admission_source_id,categórica,1,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,A1Cresult,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+reingreso_menor_riesgo,88338264,max_glu_serum,categórica,NotMeasured,False,,0,"CONGELADA: se puede pedir la prueba, no elegir su resultado"
+reingreso_menor_riesgo,88338264,change,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+reingreso_menor_riesgo,88338264,diabetesMed,categórica,No,False,,0,"CONGELADA: derivada de las columnas de medicación, nunca se elige"
+reingreso_menor_riesgo,88338264,diag_1_group,categórica,Respiratory,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,diag_2_group,categórica,Endocrine,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,diag_3_group,categórica,Diabetes,False,,0,CONGELADA: inmutable o ya ocurrida
+reingreso_menor_riesgo,88338264,metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,repaglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,nateglinide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,chlorpropamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glimepiride,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,acetohexamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glipizide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glyburide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,tolbutamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,acarbose,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,miglitol,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,troglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,tolazamide,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,insulin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glyburide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glipizide-metformin,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,glimepiride-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,metformin-rosiglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"
+reingreso_menor_riesgo,88338264,metformin-pioglitazone,categórica,No,False,,0,"CONGELADA en E0: el paciente no lo toma, y empezar un fármaco queda fuera porque no vemos contraindicaciones"

@@ -584,6 +584,17 @@ Los dos primeros son idénticos con (3a) y (3b): solo usan el modelo viejo.
   `<30` SIN encuentro posterior visible, `audit_discharge_global.csv`, `pct_sin_visible`):
   denominadores distintos (todos los encuentros frente a solo los positivos) y signos
   contrarios (con frente a sin). No se restan ni se comparan.
+- **0,6036% de la Fase 5C** (6 de los 994 marcados del top 5% del ENTREGABLE sin ninguna
+  variable accionable, `phase5c_no_actions.csv`) **frente al 12,09% de la Fase 3c**
+  (`xai_counterfactuals_population.csv`, `pct_sin_acciones`, grupo 22/5 del top 5% del
+  modelo VIEJO): dos conjuntos de filas marcadas distintos, elegidos por dos modelos
+  distintos sobre dos etiquetas distintas. El entregable marca a muchos menos pacientes de
+  22/5 (62 de 994), así que la comparación no mide nada.
+- **Cualquier cifra de contrafactuales de la Fase 3c frente a la Fase 5C**: la 3c usó el
+  modelo de la Fase 2 (122 árboles, las 44 features CON `payer_code`, target ORIGINAL) y la
+  5C el entregable (123 árboles, 43 features, target corregido). Las de la 3c quedan como
+  registro de ese modelo. Lo mismo vale para las cifras de DiCE, que en la 5C no se
+  recalculan.
 - **6.503 visibles / 19,85%** (`audit_discharge_global.csv`) **frente a 6.497 / 19,8%**
   (suma de `audit_discharge_leakage.csv`): la segunda aplica `MIN_N = 30` y es un
   subconjunto.
@@ -830,4 +841,118 @@ no los separa.
 El **% de ceros de `number_emergency`** no está medido en ningún CSV del repo. La lectura de que
 su mean |SHAP| se hunde por tener muchos ceros mientras la PI premia su efecto en los pocos
 valores altos es **RAZONAMIENTO, no medición**, y así se cita.
+
+## 15. Fase 5C — distancia a la frontera de los contrafactuales (todo en val)
+
+Prerregistro `44db202`. Modelo: el **entregable** congelado (sin `payer_code`, 123 árboles),
+reproducido con su guardarraíl. **Test no se toca en ninguna parte de la fase.** Denominadores:
+*val* = 19.868 filas; *marcados del top 5%* = **994** filas (corte `probs.quantile(0.95)` =
+0,191289, `phase5c_frontier_distance.csv`, columna `umbral_top5`); top 10% = 1.987; top 20% =
+3.974. Los contrafactuales de la Fase 3c son de OTRO modelo (122 árboles, 44 features con
+`payer_code`, target original) y sus cifras **no se comparan** con las de aquí (ver la sección 12).
+
+### Umbral y su comprobación
+`probs.quantile(0.95)` = **0,191289**, 994 filas marcadas = `ceil(0,05 · 19.868)`.
+`xai_counterfactuals.thresholds()` daría 0,191303 (diferencia **1,4e-05**) y marca el mismo nº de
+filas. Se usa el cuantil, como fija el prerregistro.
+
+### Auditoría del refactor (`phase5c_refactor_audit.csv`)
+Columnas `n_candidatos_publicado`, `n_candidatos_ahora`, `n_vars_accionables`,
+`alternativas_por_var`, `ok`. Los 6 casos de la 3c reproducen **18, 18, 8, 2, 2, 2** y sus
+`palancas`. Confirma la inferencia del prerregistro: **2 alternativas por variable accionable** y
+**m = 3, 3, 2, 1, 1, 1**. Además, `xai_counterfactuals.py` relanzado completo deja sus **12 CSV
+idénticos byte a byte**.
+
+### Tamaño del espacio de acciones (`phase5c_action_space.csv`)
+Columnas `n_vars_accionables`, `n_comb_hasta_2`, `n_comb_hasta_3`, `n_comb_completo`,
+`n_enumeradas`, `exhaustiva`, `motivo_exhaustividad`.
+- **En 7 de los 11 casos `n_comb_hasta_2` == `n_comb_completo`** en E0, así que ahí subir k no
+  puede crear ningún contrafactual. En los otros 4, el completo son 26 u 80 frente a 18 o 32.
+- **E4, idéntico para los 11 casos** (las alternativas de cada fármaco dependen de sus niveles en
+  TRAIN, no del valor del paciente): **20** variables accionables, **1.747** combinaciones con
+  ≤ 2, **29.167** con ≤ 3 (las enumeradas) y **4,832·10¹⁰** el producto completo.
+- **E4-completo y E5: `exhaustiva = False`.** El prerregistro estimaba ~8e13 para E4-completo; el
+  valor medido es 4,832·10¹⁰. Era una cota alta y no cambia el veredicto de no enumerable.
+
+### La tabla del hallazgo (`phase5c_frontier_distance.csv` y `phase5c_ladder.csv`)
+Columnas `prob_orig`, `reduccion_necesaria`, `reduccion_maxima_alcanzable`, `deficit`, `cruza`,
+`todo_cambio_empeora`, `combinacion_minima`; y `primer_cf`, `n_cf`, `exhaustiva`, `afirmacion`.
+Todo en PROBABILIDAD. `deficit > 0` = NO se cruza. Solo los **3 casos marcados** en el top 5%:
+
+| caso | destino | prob | red. necesaria | déficit E0 = E1 = E2 | déficit E3 | déficit E4 |
+|---|---|---|---|---|---|---|
+| `perfil_alto_1` | 6 | 0,26265 | 0,07136 | +0,06941 | +0,02776 | **+0,01592** |
+| `perfil_alto_3` | 6 | 0,20861 | 0,01732 | +0,01156 | **−0,02229** | −0,04112 |
+| `falsa_alarma_mayor_riesgo` | 1 | 0,42681 | 0,23552 | +0,25352 | +0,16098 | **+0,14168** |
+
+- **En E0, E1 y E2 ninguno de los 3 cruza**, y los tres escalones dan el mismo déficit.
+- **`perfil_alto_1` y `falsa_alarma_mayor_riesgo` no cruzan ni en E4**, con **29.167 candidatos
+  enumerados al completo dentro de k ≤ 3**: es una DEMOSTRACIÓN, no una búsqueda fallida.
+- **El primer contrafactual aparece en E3** y solo en `perfil_alto_3` (`n_cf` = 12 de 59).
+- **La combinación mínima de E3 y E4 es, en los tres casos, `destino → 23`** (hospital de larga
+  estancia), el nivel con el SHAP más negativo del destino (−0,3234,
+  `phase5b_direction_categorical.csv`). **Se cita SIEMPRE etiquetado como el contrafactual
+  engañoso**, nunca como acción recomendada.
+- `falsa_alarma_mayor_riesgo` tiene **`reduccion_maxima_alcanzable` NEGATIVA (−0,01800)** en
+  E0–E2: su único cambio disponible (destino 1 → 6) SUBE la puntuación. La columna
+  `todo_cambio_empeora` que lo marca se **añadió después de ver la salida** y no está
+  prerregistrada; no cambia ningún criterio.
+
+### Marcados sin acciones posibles (`phase5c_no_actions.csv`)
+Columnas `criterio`, `n_marcados` (denominador), `n_sin_acciones` (numerador),
+`pct_sin_acciones`. Espacio **E0**:
+
+| top k | grupo | n marcados | sin NINGUNA variable | sin NINGÚN fármaco |
+|---|---|---|---|---|
+| 5% | TODOS | 994 | 6 = **0,6036%** | 172 = **17,3038%** |
+| 5% | 22/5 (destino congelado) | 62 | 6 = 9,6774% | 6 = 9,6774% |
+| 5% | otros destinos | 932 | 0 = 0% | 166 = 17,8112% |
+| 10% | TODOS | 1.987 | 20 = 1,0065% | 386 = 19,4263% |
+| 10% | 22/5 | 176 | 20 = 11,3636% | 20 = 11,3636% |
+| 10% | otros destinos | 1.811 | 0 = 0% | 366 = 20,2098% |
+| 20% | TODOS | 3.974 | 49 = 1,2330% | 722 = 18,1681% |
+| 20% | 22/5 | 333 | 49 = 14,7147% | 49 = 14,7147% |
+| 20% | otros destinos | 3.641 | 0 = 0% | 673 = 18,4839% |
+
+**CÓMO SE CITA, y es importante porque la cifra refuta la frase fácil:** NO se escribe «a la
+mayoría de los marcados no se les puede ofrecer ninguna acción». Es una **minoría (17,30% del top
+5%)** la que se queda sin ninguna palanca de medicación. La frase correcta tiene dos partes:
+**(i)** al **17,30%** no se le puede ofrecer nada que no sea mover el destino, que no es una
+acción; **(ii)** al **82,70%** restante sí, pero esa palanca no lo mueve al otro lado de la
+frontera. El (ii) se apoya **primero en la enumeración de E4** de esta misma fase —dos de los
+tres casos marcados no cruzan ni con los 21 fármacos libres y k ≤ 3, con los 29.167 candidatos
+enumerados al completo (`phase5c_ladder.csv`, `primer_cf = False` con `exhaustiva = True`), que
+es una demostración— y **después en las sondas de la Fase 5B** (`phase5b_noise_probes.csv`,
+columna `gana_a_sonda`: `insulin` 6/10, `metformin` 0/10, diez con mean |SHAP| exactamente 0),
+que son evidencia global y más débil. El (i) es sobre la EXISTENCIA de la palanca, el (ii) sobre
+su EFECTO.
+En el grupo 22/5 **los dos criterios coinciden por construcción** (con el destino congelado, «sin
+fármaco» = «sin nada»).
+
+### Elegibilidad de los 11 casos (`phase5c_eligibility.csv`)
+Columnas `prob_modelo_viejo`, `prob_entregable`, `marcado_5%`, `marcado_10%`, `marcado_20%`,
+`motivo`. **Solo 3 de los 11 siguen marcados** en el top 5% del entregable: `perfil_alto_1`
+(0,2627), `perfil_alto_3` (0,2086) y `falsa_alarma_mayor_riesgo` (0,4268); los mismos 3 en el top
+10%.
+- **Se declara: el análisis caso por caso descansa en 3 pacientes, que es una base estrecha.** La
+  generalización se apoya en la **medida de población (994 filas marcadas)** y en los tamaños del
+  espacio, no en los 3 casos.
+- **Los dos casos «alto sin ingresos» caen fuera** (0,2617 → 0,1214 y 0,2303 → 0,1454), coherente
+  con la Fase 4: el entregable deja de marcar a esa población y su subgrupo A bajó de 440 a 212.
+- Los 11 **no se reeligen**. Los 8 no marcados llevan `marcado_top5 = False` y su `deficit`
+  negativo **NO** se lee como «sí cruza»: para ellos la pregunta no se plantea.
+
+### Por qué solo había 6 casos elegibles en la Fase 3c (punto f del profesor)
+`xai_counterfactuals_diag_elegibilidad.csv`: la elegibilidad era `prob >= 0,19545` (top 10% del
+modelo VIEJO), y **5 de los 11 casos se eligieron POR puntuar bajo** — `riesgo_mediano` 0,0971,
+`riesgo_bajo` 0,0554, `modelo_bajo_con_ingresos_reingresa` 0,0826,
+`modelo_bajo_con_ingresos_no_reingresa` 0,0937, `reingreso_menor_riesgo` 0,0338. El «solo 6» es
+consecuencia del diseño de la selección, no de la búsqueda.
+
+### Cifras que NO existen y que no se deben inventar
+No hay en esta fase ninguna medida de **E5** ni de **E4 sin límite de k**: los dos están
+declarados NO ENUMERABLES, y de ellos **no se reporta ningún resultado de búsqueda**. Lo único
+que se afirma de E5 es que **ahí el contrafactual existe**, y eso se apoyará en el vecino más
+cercano del paso 2, que todavía NO está medido: en este paso no hay ninguna cifra que lo
+sostenga, así que no se cita como medido.
 

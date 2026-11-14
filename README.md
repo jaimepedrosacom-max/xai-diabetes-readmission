@@ -126,7 +126,32 @@ no se puede ajustar al ver qué variables le convienen a la comparación. El 22 
 CSV y comprueba con `assert` que el mean \|SHAP\| reproduce el del 21. **Ninguno de los tres
 toca test.**
 
-Los scripts 13 a 17 y el 20 tardan varios minutos cada uno: entrenan varios modelos y, en
+---
+
+### Fase 5C — ¿a qué distancia está la frontera de los contrafactuales?
+
+| # | script | qué hace | produce | lee |
+|---|---|---|---|---|
+| 24 | `phase5c_frontier.py` | Rehace el análisis de contrafactuales **sobre el entregable**, tras la objeción del profesor a la Fase 3c. Dice las variables accionables una por una, mide la **distancia a la frontera** (reducción necesaria frente a la máxima alcanzable) y recorre los **escalones E0 a E5** de relajación, declarando en cada uno si la enumeración es exhaustiva. Recalcula la elegibilidad de los 11 casos y mide cuántos marcados no tienen ninguna acción posible. | `phase5c_refactor_audit.csv`, `phase5c_eligibility.csv`, `phase5c_action_space_vars.csv`, `phase5c_action_space.csv`, `phase5c_no_actions.csv`, `phase5c_frontier_distance.csv`, `phase5c_ladder.csv` | `xai_local_cases.csv`, `xai_counterfactuals_diag_minimo_alcanzable.csv` |
+
+**La relajación que mide algo es descongelar variables, no subir k**, y el propio script lo
+demuestra: en 7 de los 11 casos el límite de 2 cambios ya coincidía con el producto cartesiano
+completo del espacio. **E4 sin límite de k (4,832·10¹⁰ combinaciones) y E5 (las 43 features, con
+numéricas continuas) se declaran NO enumerables** y no se sustituyen por ninguna búsqueda
+heurística presentada como prueba: la columna `afirmacion` de `phase5c_ladder.csv` dice, escalón
+por escalón, si lo que se puede afirmar es «no existe ninguno» o solo «la búsqueda no encontró
+ninguno».
+
+**El refactor de `xai_counterfactuals.py` que esto necesita se audita por REPRODUCCIÓN:** sus
+parámetros nuevos tienen valores por defecto idénticos a los de la Fase 3c, el script exige con
+`assert` que los 6 casos de entonces reproducen su `n_candidatos` (18, 18, 8, 2, 2, 2) y sus
+palancas, y se relanzó la 3c completa para comprobar que sus **12 CSV salen idénticos byte a
+byte**. **DiCE no se corre en la 5C:** en un espacio de 2 a 26 combinaciones la enumeración
+exhaustiva es estrictamente más fuerte que un muestreador aleatorio. **No toca test.**
+
+---
+
+Los scripts 13 a 17, el 20 y el 24 tardan varios minutos cada uno: entrenan varios modelos y, en
 los pasos con intervalos de confianza, hacen 2.000 réplicas bootstrap agrupadas por
 paciente.
 

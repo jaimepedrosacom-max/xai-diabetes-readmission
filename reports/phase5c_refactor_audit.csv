@@ -1,0 +1,7 @@
+caso,encounter_id,n_candidatos_publicado,n_candidatos_ahora,palancas_publicado,palancas_ahora,n_vars_accionables,alternativas_por_var,ok
+perfil_alto_1,265508166,18,18,"discharge_disposition_id, metformin, insulin","discharge_disposition_id, metformin, insulin",3,"2, 2, 2",True
+perfil_alto_2,34910250,18,18,"metformin, pioglitazone, insulin","metformin, pioglitazone, insulin",3,"2, 2, 2",True
+perfil_alto_3,260452620,8,8,"discharge_disposition_id, insulin","discharge_disposition_id, insulin",2,"2, 2",True
+modelo_alto_sin_ingresos_reingresa,34148802,2,2,glyburide,glyburide,1,2,True
+modelo_alto_sin_ingresos_no_reingresa,206978460,2,2,insulin,insulin,1,2,True
+falsa_alarma_mayor_riesgo,140533200,2,2,discharge_disposition_id,discharge_disposition_id,1,2,True

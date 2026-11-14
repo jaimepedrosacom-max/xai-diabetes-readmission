@@ -104,11 +104,23 @@ class Scorer:
     variable inmutable no puede cambiar aunque DiCE devolviera otro valor.
     """
 
-    def __init__(self, booster, row: pd.DataFrame):
+    def __init__(self, booster, row: pd.DataFrame, derive_cols=None,
+                 derive_diabetes_med: bool = False):
+        """derive_cols / derive_diabetes_med: solo los usa la Fase 5C.
+
+        Por defecto (None y False) el comportamiento es EXACTAMENTE el de la Fase 3c:
+        `change` se deriva mirando los fármacos que el paciente ya toma, y `diabetesMed`
+        no se recalcula nunca (en el espacio de la 3c no puede cambiar, porque ningún
+        fármaco se mueve a `No`). Los escalones de la 5C que permiten empezar o suspender
+        fármacos sí mueven las dos derivadas, y entonces hay que mirar TODAS las columnas
+        de medicación; de ahí los parámetros.
+        """
         self.booster, self.row = booster, row
         self.taken = [m for m in P.MED_COLS if str(row[m].iloc[0]) != "No"]
+        self.derive_cols = self.taken if derive_cols is None else list(derive_cols)
+        self.derive_diabetes_med = derive_diabetes_med
         self.orig_change = str(row["change"].iloc[0])
-        self.orig_updown = row[self.taken].astype(str).isin(["Up", "Down"]).any(axis=1).iloc[0]
+        self.orig_updown = row[self.derive_cols].astype(str).isin(["Up", "Down"]).any(axis=1).iloc[0]
         # Sin cambios, debe salir exactamente la puntuación original del modelo.
         assert np.isclose(self.score({}, 1)[0], booster.predict(row)[0]), "Scorer no reproduce"
 
@@ -128,7 +140,7 @@ class Scorer:
         - El candidato elimina TODOS los Up/Down del original: AMBIGUO, porque no
           sabemos si había algo más detrás de ese Ch. Se puntúan las dos opciones.
         """
-        has_updown = cand[self.taken].astype(str).isin(["Up", "Down"]).any(axis=1).to_numpy()
+        has_updown = cand[self.derive_cols].astype(str).isin(["Up", "Down"]).any(axis=1).to_numpy()
         change = np.where(has_updown | (self.orig_change == "Ch"), "Ch", "No")
         return change, (~has_updown) & bool(self.orig_updown)
 
@@ -137,6 +149,12 @@ class Scorer:
         cand = self.frame(overrides, n)
         change, ambiguous = self.derive_change(cand)
         cand["change"] = pd.Categorical(change, dtype=self.row["change"].dtype)
+        if self.derive_diabetes_med:
+            # Equivalencia EXACTA verificada en train por check_derived_rules:
+            # diabetesMed == Yes  <=>  algún fármaco distinto de No.
+            on_meds = cand[P.MED_COLS].astype(str).ne("No").any(axis=1).to_numpy()
+            cand["diabetesMed"] = pd.Categorical(np.where(on_meds, "Yes", "No"),
+                                                 dtype=self.row["diabetesMed"].dtype)
         probs = self.booster.predict(cand)
         if ambiguous.any():
             cand["change"] = pd.Categorical(np.where(ambiguous, "No", change),
@@ -145,32 +163,50 @@ class Scorer:
         return probs
 
 
-def action_space(row: pd.DataFrame, freeze_suspect: bool = True) -> dict:
+def action_space(row: pd.DataFrame, freeze_suspect: bool = True, destinations=DESTINATIONS,
+                 med_levels=MED_LEVELS, free_meds: bool = False) -> dict:
     """{variable: valores alternativos}. Vacío si no hay nada accionable.
 
-    freeze_suspect=False solo lo usa el ejemplo engañoso de demo_misleading().
+    Con los valores por defecto es EXACTAMENTE el espacio de la Fase 3c (= el escalón E0
+    de la Fase 5C). Los parámetros los usa solo la 5C para sus escalones de relajación:
+      - freeze_suspect=False: descongela los destinos 22 y 5 (también lo usa el ejemplo
+        engañoso de demo_misleading()).
+      - destinations=None: permite TODOS los niveles de destino vistos en train, en vez
+        de solo 1/6/3.
+      - med_levels: niveles de medicación que se ofrecen.
+      - free_meds=True: permite mover también los fármacos que el paciente NO toma, es
+        decir empezar y suspender.
     """
     space = {}
     dest = str(row["discharge_disposition_id"].iloc[0])
     if not (freeze_suspect and dest in SUSPECT_CODES):
-        space["discharge_disposition_id"] = [d for d in DESTINATIONS if d != dest]
+        allowed = (list(row["discharge_disposition_id"].cat.categories)
+                   if destinations is None else destinations)
+        space["discharge_disposition_id"] = [d for d in allowed if d != dest]
     for med in P.MED_COLS:
         current = str(row[med].iloc[0])
         # NaN: nivel de val que no existe en train (el modelo no conoce su estado), no se toca.
-        if current == "No" or pd.isna(row[med].iloc[0]):
+        if pd.isna(row[med].iloc[0]):
+            continue
+        if current == "No" and not free_meds:
             continue
         # Solo niveles que existen en train: un nivel no visto no significa nada para el modelo.
         known = set(row[med].cat.categories)
-        options = [lvl for lvl in MED_LEVELS if lvl != current and lvl in known]
+        options = [lvl for lvl in med_levels if lvl != current and lvl in known]
         if options:
             space[med] = options
     return {var: opts for var, opts in space.items() if opts}
 
 
-def enumerate_changes(space: dict) -> list:
-    """Todas las combinaciones de 1 a MAX_CHANGES variables, cada una con sus valores."""
+def enumerate_changes(space: dict, max_changes=MAX_CHANGES) -> list:
+    """Todas las combinaciones de 1 a max_changes variables, cada una con sus valores.
+
+    max_changes=None: sin límite, es decir el producto cartesiano COMPLETO del espacio
+    (menos la fila original). Lo usa la Fase 5C; el valor por defecto es el de la 3c.
+    """
     changes = []
-    for size in range(1, MAX_CHANGES + 1):
+    limit = len(space) if max_changes is None else min(max_changes, len(space))
+    for size in range(1, limit + 1):
         for variables in itertools.combinations(space, size):
             for values in itertools.product(*(space[v] for v in variables)):
                 changes.append(dict(zip(variables, values)))

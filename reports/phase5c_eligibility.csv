@@ -1,0 +1,12 @@
+caso,encounter_id,prob_modelo_viejo,reingresa,prob_entregable,marcado_5%,marcado_10%,marcado_20%,motivo
+perfil_alto_1,265508166,0.325729375699032,0,0.2626508072578668,True,True,True,prob >= corte del top 5% del entregable (0.1913)
+perfil_alto_2,34910250,0.2532542827610667,0,0.1395245294138682,False,False,True,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+perfil_alto_3,260452620,0.2160386988362622,0,0.20860857351426754,True,True,True,prob >= corte del top 5% del entregable (0.1913)
+riesgo_mediano,355466984,0.0971371984917023,1,0.09208245937202304,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+riesgo_bajo,439628024,0.055366165772984,0,0.05763540739053857,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+modelo_alto_sin_ingresos_reingresa,34148802,0.2616623899063013,1,0.12140179417226972,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+modelo_alto_sin_ingresos_no_reingresa,206978460,0.2303333275705821,0,0.14540636135468782,False,False,True,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+modelo_bajo_con_ingresos_reingresa,166275936,0.0825619910686626,1,0.06961669065203668,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+modelo_bajo_con_ingresos_no_reingresa,136452990,0.0936858821470758,0,0.08423115787223653,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
+falsa_alarma_mayor_riesgo,140533200,0.5170342803170171,0,0.4268064970158844,True,True,True,prob >= corte del top 5% del entregable (0.1913)
+reingreso_menor_riesgo,88338264,0.0337538200074529,1,0.03383481390378084,False,False,False,"prob < corte del top 5% del entregable (0.1913): el modelo NO lo marca, así que la pregunta del contrafactual NO SE PLANTEA"
