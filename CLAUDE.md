@@ -57,8 +57,13 @@ counterfactuals, matplotlib/seaborn para gráficas.
   profesor. Prerregistro `c579acf`, etapa val `9f4bcc1`, etapa test `c2f0c68`. Veredicto (c),
   indistinguibles. Su etapa test fue la TERCERA consulta a test, así que el "y última" del
   punto de la Fase 4 deja de valer.
-- Fase 5B EN CURSO: prerregistrada (fidelidad de SHAP frente a la permutation importance),
-  pendiente de las sondas sobre el entregable y de la PI.
+- Fase 5B COMPLETA: fidelidad de SHAP frente a la permutation importance, a petición del
+  profesor. Prerregistro `19e7ea5`, sondas y lista interpretable de 10 variables `425019f`,
+  PI y adenda de `admission_type_id` `40ebd31`. Discrepa 1 de 10 (`number_emergency`), y
+  `age`/`num_lab_procedures` tienen PI indistinguible de cero que la regla no marca. Todo en
+  val; test no se tocó.
+- Fase 5C EN CURSO: prerregistrada (distancia a la frontera de los contrafactuales, tras la
+  objeción del profesor a la Fase 3c), pendiente de ejecutar.
 - PENDIENTE, fuera del código:
   - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
     solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
@@ -2148,6 +2153,298 @@ del mecanismo, no un contraste. Aunque el mecanismo se confirme, NO se concluye 
 sea un error:** si la etiqueta corregida es correcta, una **pauta clínica real** (el ingreso
 programado implica menos riesgo de reingreso urgente) y un **eco de la regla de reetiquetado**
 son compatibles, y este diseño **no los separa**. **Nada del entregable cambia.**
+
+### Prerregistro de la Fase 5C — ¿a qué distancia está la frontera, y de qué está hecha?
+Escrito y commiteado ANTES de ejecutar nada. Responde a la objeción del profesor sobre la Fase
+3c, que es la parte que más le preocupó. Lo único consultado para escribirlo son artefactos ya
+publicados del repo y el código; no se ha calculado ningún contrafactual nuevo.
+
+#### La objeción, y qué se le concede
+El profesor tiene razón en lo teórico: un contrafactual **siempre** existe si alguna variable
+movible tiene efecto, y la frontera del modelo está dentro de los datos. Solo deja de existir si
+las variables que se pueden mover no tienen efecto, y pide que se digan EXPLÍCITAMENTE las
+variables sobre las que se razona.
+
+Lo que se concede: nuestro «no existe ningún contrafactual» era cierto **solo dentro del espacio
+de acciones restringido** (≤ 2 cambios, solo fármacos que el paciente ya toma, destinos 1/6/3,
+códigos 22 y 5 congelados), y **el texto no lo decía con esas palabras**. La 5C convierte la
+ausencia en una MEDIDA: a qué distancia está la frontera y de qué está hecha esa distancia.
+
+**REDACCIÓN OBLIGATORIA**, en todas las salidas y en la memoria: *«no existe ningún contrafactual
+DENTRO del espacio de acciones E, enumerado al completo»*, con E nombrado. Nunca «no existe
+ningún contrafactual» a secas.
+
+#### El reencuadre del argumento, que es lo que va a la memoria
+Lo que faltaba NO era la demostración, era **nombrar el espacio**. Tres piezas, y las tres ya
+están medidas o se deducen de artefactos publicados:
+1. **Nuestro «no existe» ya era una demostración por enumeración COMPLETA en 4 de los 6 casos.**
+   Con los `n_candidatos` publicados en `xai_counterfactuals_diag_minimo_alcanzable.csv` (18, 18,
+   8, 2, 2, 2), en 4 de los 6 casos el límite de ≤ 2 cambios coincide con el producto cartesiano
+   completo, así que ahí el resultado no dependía del k en absoluto.
+2. **El contenido real es que E0 contiene entre 1 y 3 variables movibles**, y que esas variables
+   son fármacos que **el entregable no distingue del ruido**: en la Fase 5B, sobre el entregable,
+   NINGÚN fármaco supera las sondas (`insulin` 6/10 como mejor, `metformin` 0/10, 10 fármacos con
+   mean |SHAP| exactamente 0, `diabetesMed` 7/10, `change` 0/10;
+   `reports/phase5b_noise_probes.csv`, columna `gana_a_sonda`).
+3. **El caso «edad y altura» del profesor está MEDIDO, pero todavía NO sobre el entregable:** a
+   una parte de los pacientes marcados no se le puede ofrecer NINGUNA acción, ni siquiera mala,
+   porque su espacio de acciones es literalmente vacío. **CIFRA DEL MODELO VIEJO (Fase 3c),
+   PENDIENTE DE RECALCULAR:** en el grupo 22/5 del top 5% de val, `pct_sin_acciones` = **12,09%**
+   (`reports/xai_counterfactuals_population.csv`, fila `top_k = 5%`,
+   `grupo = 22/5 (destino congelado)`, n = 306). **No se cita como cifra de la 5C y no se compara
+   con ninguna cifra del entregable**, porque depende de qué filas caen en el top 5% y eso lo
+   decide el modelo: usarla así sería exactamente la comparación entre modelos que la sección 12
+   de `reports/memoria_cifras.md` veta. La 5C la **recalcula sobre el entregable** (ver el bloque
+   siguiente) y es esa versión la que va a la memoria.
+
+#### La relajación que mide algo es DESCONGELAR variables, no subir k
+Esto se declara como marco de la fase, antes de medir nada, porque es el punto donde nuestra
+propia Fase 3c se explicaba mal. Subir el número de cambios simultáneos **no puede** crear
+contrafactuales en 4 de los 6 casos, porque ≤ 2 ya agota su espacio; en los otros 2 pasaría de 18
+a 26 candidatos. Lo que sí cambia el problema es **qué variables están congeladas**. Por eso los
+escalones de abajo van de k a congelación y no al contrario, y por eso **E1 se mantiene aunque en
+4 casos coincida con E0**: E1 es precisamente lo que DEMUESTRA que k no era la restricción, y un
+escalón que no cambia nada es un resultado, no un escalón de más.
+
+#### Montaje
+- **Modelo: el ENTREGABLE congelado** (LightGBM corregido SIN `payer_code`, 123 árboles). NO se
+  reentrena: se reproduce y se exige su guardarraíl con `assert` (123 árboles Y PR-AUC val 0,1868)
+  antes de medir nada.
+- **Se rehace TODO sobre el entregable.** Los contrafactuales de la Fase 3c se calcularon sobre el
+  modelo de la Fase 2: `xai_counterfactuals.main()` llama a `XS.load_final_model()`, que usa
+  `EXPECTED_TREES = 122` de `evaluate_test.py`, las **44** features de `P.FEATURES` **CON
+  `payer_code`** y el target **ORIGINAL** (`P.load_model_data()` sin `TC.relabel`). Ni árboles, ni
+  features, ni etiqueta coinciden con el entregable, así que las cifras de la 3c quedan como
+  registro de ESE modelo y **no se comparan numéricamente** con las de la 5C.
+- **Todo en val** (19.868 filas, prevalencia 9,7795% con la etiqueta corregida). **TEST NO SE
+  TOCA**, y los scripts descartan el tercer split al cargarlo. De estas medidas salen lecturas para
+  la memoria, y test no debe influir en ninguna: el mismo criterio de las Fases 3a, 5A y 5B.
+- **Etiqueta CORREGIDA** en todo.
+- **Escala: PROBABILIDAD** en todas las comparaciones con el umbral, nunca log-odds. Es la misma
+  precaución que el diagnóstico (a) de la 3c dejó anotada.
+
+#### Umbral
+`probs.quantile(0.95)` sobre las puntuaciones de val del entregable: el MISMO criterio de la Fase 4
+y de `xai_cases.select_cases`, y NO `evaluation.top_k_table`, que marca exactamente `ceil(k·n)`
+filas con desempate aleatorio y podría dar un conjunto ligeramente distinto.
+- Se reportan el corte, el nº de filas con `prob >= corte` (referencia: `ceil(0,05 · 19.868) =
+  994`, el mismo n que el top 5% de test) y, AL LADO y como comprobación, el valor que daría
+  `xai_counterfactuals.thresholds()` (la receta de la 3c: puntuación del último marcado). Si las
+  dos recetas no coinciden, se dice y se usa el cuantil.
+- El k del seguimiento sigue siendo del gestor. El 5% se usa aquí porque es el corte más estricto
+  de los tres y, por tanto, el caso más exigente para un contrafactual.
+
+#### (f) Por qué solo hay 6 casos elegibles
+Dos filtros encadenados, y **ninguno de los dos es un filtro de accionabilidad**:
+1. Los **11 casos** los fija `src/xai_cases.py` con regla y semilla, sin mirar las explicaciones
+   finales.
+2. La elegibilidad de la 3c es `prob >= cuts[ELIGIBLE_K]` con `ELIGIBLE_K = 0.10`, el umbral del
+   top 10% de val del modelo VIEJO: **0,19545**.
+
+**5 de los 11 se eligieron POR puntuar bajo**, así que el «solo 6» es consecuencia del diseño de la
+selección y no de la búsqueda (`xai_counterfactuals_diag_elegibilidad.csv`): `riesgo_mediano`
+0,0971, `riesgo_bajo` 0,0554, `modelo_bajo_con_ingresos_reingresa` 0,0826,
+`modelo_bajo_con_ingresos_no_reingresa` 0,0937 y `reingreso_menor_riesgo` 0,0338.
+- **La elegibilidad se RECALCULA con el entregable y con el corte del top 5%**, que es más estricto
+  que el 10% de la 3c, así que el conjunto elegible PUEDE ser menor que 6. Se reporta el estado de
+  los **11** con su puntuación del entregable y su marcado a 5/10/20%.
+- **(b) y (c) se calculan para los 11**, no solo para los marcados, y el umbral NO se cambia por
+  ello. Pero las filas de los casos que ya están POR DEBAJO del corte se etiquetan explícitamente:
+  para ellos **la pregunta del contrafactual no se plantea** (el modelo no los marca, no hay nada
+  que bajar) y su `deficit` negativo **NO se puede leer como «sí cruza»**. Columna dedicada
+  (`marcado_top5`) y un texto literal en `afirmacion` para que no se confunda al citar.
+- **Los 11 casos NO se reeligen.** Volver a correr `xai_cases` con el entregable sería una
+  selección NUEVA y rompería la cadena con las Fases 3b, 3c y 3d. Los casos son los de
+  `reports/xai_local_cases.csv`.
+- Matiz que se mantiene de la 3c: los casos se eligieron por interés explicativo, no por
+  accionabilidad, así que están sesgados hacia probabilidades altas.
+
+#### (a) Tabla del espacio de acciones: se dicen las variables, una por una
+Por caso y por variable (las **43** del entregable): tipo, valor actual, accionable sí/no, valores
+permitidos, nº de alternativas y **motivo de congelación** cuando aplique. Los motivos son los ya
+fijados en la Fase 3c y NO se reescriben aquí:
+- inmutable o ya ocurrida: todo lo que no se nombra abajo;
+- `discharge_disposition_id`: solo hacia 1, 6 o 3, y **CONGELADO si el destino es 22 o 5**, porque
+  la auditoría de `audit_discharge_leakage.py` indica que parte de su efecto viene de cómo se
+  define la etiqueta;
+- fármacos: solo los que el paciente YA toma, entre Steady/Up/Down, porque no vemos
+  contraindicaciones;
+- `A1Cresult` y `max_glu_serum`: congeladas, porque se puede pedir la prueba y no elegir su
+  resultado;
+- `change` y `diabetesMed`: derivadas, nunca se eligen.
+
+Se reporta el nº de combinaciones con ≤ 2 cambios, con ≤ 3 y con **todas** las accionables a la vez.
+
+**INFERENCIA PENDIENTE DE VERIFICAR EN LA EJECUCIÓN, no dato establecido.** De los `n_candidatos`
+publicados (18, 18, 8, 2, 2, 2) se DEDUCE por aritmética que cada variable accionable tiene 2
+alternativas y que el nº de variables movibles es m = 3, 3, 2, 1, 1, 1 (con `m` variables de 2
+alternativas, ≤ 2 cambios = `2m + 4·C(m,2)`). **Esto no se ha leído de los datos**, se ha deducido
+de una columna publicada, y queda registrado como inferencia. Lo verifica el `assert` de
+reproducción del refactor (ver abajo); **si no cuadra, el script PARA y se avisa**, y las cuentas
+de esta sección se rehacen antes de seguir.
+
+#### Medida propia de la 5C: cuántos marcados no tienen NINGUNA acción posible
+Es el recálculo del punto 3 del reencuadre sobre el ENTREGABLE, y es una de las cifras más fuertes
+de la respuesta al profesor: **a una parte de los pacientes marcados no se le puede ofrecer ninguna
+acción, ni siquiera una mala.** Por eso tiene que ser nuestra y medida sobre el modelo que
+entregamos, no heredada del modelo viejo.
+- **Métrica:** entre las filas de val **marcadas en el top 5% del entregable**, el % que no tiene
+  NINGUNA variable accionable en **E0** (espacio de acciones vacío).
+- **Denominadores, los dos explícitos:** el total de marcados (referencia: `ceil(0,05 · 19.868) =
+  994`) y, desglosado, el subgrupo de **destinos 22/5** frente al resto. Se reportan `n` y el `n`
+  del numerador en las tres filas, nunca el porcentaje solo.
+- **Sale del mismo código del espacio de acciones** (`action_space` con los parámetros de E0), así
+  que no hay un segundo cálculo que pueda divergir. Depende solo de los datos de cada fila: el
+  modelo interviene únicamente en QUÉ filas se marcan.
+- Se reporta también para el top 10% y el 20% como contexto descriptivo, porque el k lo decide el
+  gestor.
+- **No se compara con el 12,09% del modelo viejo.** Son dos conjuntos de filas marcadas distintos,
+  elegidos por dos modelos distintos sobre dos etiquetas distintas. Si alguien quiere el número del
+  modelo viejo, está en su CSV y etiquetado como tal.
+
+#### (b) Distancia a la frontera
+Por caso y escalón, las dos cifras que pidió el profesor y su diferencia, todas en PROBABILIDAD:
+- `reduccion_necesaria = prob_orig − umbral`;
+- `reduccion_maxima_alcanzable = prob_orig − prob_min_alcanzable` dentro del escalón;
+- `deficit = prob_min_alcanzable − umbral`. Positivo = NO se cruza.
+Las tres se reportan siempre juntas, junto con la combinación concreta que consigue el mínimo.
+
+#### (c) Escalones de relajación — SENSIBILIDAD DEL ESPACIO, NO RECOMENDACIÓN
+Fijados ahora. Ningún escalón por encima de E0 produce ninguna recomendación clínica: solo miden
+dónde está la frontera.
+
+| escalón | espacio de acciones | enumeración |
+|---|---|---|
+| **E0** | el de la Fase 3c: ≤ 2 cambios, destinos 1/6/3, 22 y 5 congelados, solo fármacos ya prescritos entre Steady/Up/Down | **exhaustiva** |
+| **E1** | igual que E0 pero **sin límite de k** (producto cartesiano completo de las accionables) | **exhaustiva** |
+| **E2** | E1 + se **DESCONGELAN** los códigos 22 y 5 (pueden ir a 1/6/3) | **exhaustiva** |
+| **E3** | E2 + `discharge_disposition_id` a **TODOS** sus niveles de train | **exhaustiva** |
+| **E4** | E3 + los **21 fármacos libres** sobre todos sus niveles de train, incluido `No` (empezar y suspender), con **k ≤ 3** | **exhaustiva SOLO dentro de k ≤ 3**; el completo NO es enumerable |
+| **E5** | sin restricciones: las 43 features del entregable, numéricas continuas incluidas | **NO enumerable** |
+
+- **E1 se mantiene a propósito** aunque en 4 de los 6 casos coincida con E0: es el escalón que
+  demuestra que **k no era la restricción**. Que no cambie nada es el resultado.
+- **CONDICIÓN DE RIGOR, que es el núcleo de esta fase.** Un «no existe ningún contrafactual» es una
+  DEMOSTRACIÓN solo si el espacio se ha enumerado COMPLETO. Cada fila de `phase5c_ladder.csv` lleva
+  una columna `exhaustiva` (bool) y una columna `afirmacion` con el texto literal que se puede usar:
+  **«no existe ninguno en E»** si `exhaustiva = True`, y **«la búsqueda no encontró ninguno en E»**
+  si es `False`. En la memoria se usan esas palabras y no otras.
+- **E4 completo y E5 se declaran NO ENUMERABLES y NO se sustituyen por una búsqueda heurística
+  presentada como prueba.** Tamaños que lo justifican: E4 completo ≈ 4^21 · 18 ≈ 8·10^13
+  combinaciones; E5 contiene variables continuas, así que no es finito. De E5 **no se reporta
+  ningún resultado de búsqueda**: se reporta que no es enumerable y por qué, y que por tanto esta
+  fase **no puede afirmar nada sobre inexistencia ahí**.
+- **Lo que SÍ se afirma de E5, y es lo que cierra la objeción:** por el punto (d) la frontera está
+  dentro de los datos, así que **en E5 el contrafactual EXISTE**. Lo que la 5C mide es **qué hay
+  que mover para llegar**, y si eso es accionable o no.
+- Se reporta **en qué escalón aparece el primer contrafactual** de cada caso, y si no aparece en
+  ninguno de los enumerables, se dice con esas palabras.
+
+#### (d) Vecino más cercano al otro lado de la frontera, con distancia de Gower
+Confirma que la frontera está dentro de los datos y, sobre todo, **de qué está hecha la distancia**.
+- **Definición EXACTA de la distancia**, fijada ahora. Sobre las 43 variables del entregable,
+  `d(i,j) = Σ_v w_v · d_v(i,j) / Σ_v w_v`, con `w_v = 1` si la variable es COMPARABLE en ese par y
+  0 si no:
+  - **numéricas** (`P.NUM_COLS` + `P.COUNT_COLS`, 9 variables): `d_v = |x_iv − x_jv| /
+    rango_train(v)`, con `rango = max − min` calculado **en train**. Una variable con rango 0 en
+    train se declara y se excluye. **`age` va aquí**, porque la Fase 1 la convirtió en ordinal 0..9,
+    y se declara que se trata como numérica.
+  - **categóricas** (34 variables): `d_v = 0` si el nivel es el mismo, `1` si no.
+  - **Valores ausentes:** un NaN en cualquiera de las dos filas hace la variable NO comparable en
+    ese par, y queda fuera del numerador Y del denominador (Gower estándar). Se reporta
+    `n_vars_comparables` por par. En este dataset los NaN son casi siempre niveles de val que no
+    existen en train (`D.to_categorical` los pone a NaN); los missing reales ya son niveles propios
+    (`Missing`, `NotMeasured`) por la decisión de limpieza de la Fase 1.
+  - **Rango de train y pesos IGUALES, declarado y sin probar variantes.** Normalizar por desviación
+    típica o ponderar las variables cambiaría qué fila es «la más cercana», así que se elige una
+    receta antes de medir y no se prueban alternativas para quedarse con la que mejor quede.
+- **Qué es «el otro lado». Son DOS cosas distintas y NO se mezclan:**
+  - **PRIMARIO, la frontera del MODELO:** el vecino es la fila de **train** con `prob_entregable <
+    corte del top 5%`, es decir al otro lado de la frontera de decisión. Es lo que responde a la
+    objeción, porque **la frontera es un objeto del modelo**.
+  - **SECUNDARIO y descriptivo:** el vecino con **etiqueta corregida `y = 0`**. Se reporta al lado,
+    sin veredicto. No son lo mismo y no se presentan como una sola cifra.
+- **Por qué el VALOR de la distancia NO es el hallazgo, dicho ANTES de medirlo:** que exista una
+  fila de train por debajo del corte es TRIVIAL (el 95% de val lo está). Lo informativo es **QUÉ
+  variables separan al caso de su vecino**, y en particular **cuántas son accionables y cuántas
+  están congeladas**. La hipótesis es que la separación esté hecha de variables congeladas
+  (`number_inpatient`, los diagnósticos, `age`, `number_emergency`). **Se reporta salga como salga,
+  y si la separación resultara accionable, eso CONTRADICE nuestra lectura de la 3c y se dice.**
+- Sin veredicto, sin umbral y sin p-valor: es descripción.
+
+#### (e) Los fármacos accionables no pesan: se CITA, no se recalcula
+De la Fase 5B, medido ya sobre el entregable (`reports/phase5b_noise_probes.csv`, columna
+`gana_a_sonda`): **ningún fármaco supera las sondas de ruido.** `insulin` 6/10 (mean |SHAP| 0,01917)
+es el mejor, `metformin` 0/10 (0,01079), **10 fármacos con mean |SHAP| exactamente 0** (el entregable
+no los usa en ningún árbol) y las dos derivadas tampoco pasan: `diabetesMed` 7/10, `change` 0/10.
+**No se recalcula nada.**
+- **Esto es exactamente el caso del que habla el profesor.** Si las variables movibles no tienen
+  efecto distinguible del ruido, el contrafactual dentro de ese espacio puede no existir, y eso es un
+  resultado **sobre el espacio de acciones**, no un fallo de búsqueda. Lo que la 5C añade es la
+  MEDIDA de cuánto falta.
+- **Y no se convierte en una recomendación de mover el destino al alta:** el destino refleja en buena
+  parte la GRAVEDAD del paciente y no una decisión libre del hospital, así que es **CONFUSIÓN y no
+  palanca** (3c: un contrafactual del tipo «mandarlo a casa» baja la puntuación sin ninguna evidencia
+  de que baje el riesgo). `reports/xai_counterfactuals_DEMO_ENGANOSO.csv` sigue etiquetado como
+  EJEMPLO de cómo un contrafactual puede engañar, no como análisis ni recomendación, y no entra en
+  ningún resumen. La lectura para el gestor no cambia: el modelo sirve para **PRIORIZAR a quién
+  seguir**, no para decidir **QUÉ hacer**.
+
+#### DiCE NO se corre en la Fase 5C
+Decisión tomada antes de ejecutar nada, con su razón escrita: en un espacio de **2 a 26
+combinaciones** la enumeración exhaustiva es **estrictamente más fuerte** que un muestreador
+aleatorio, porque prueba la inexistencia y DiCE no puede probarla. Así que DiCE no añadiría nada a
+esta fase.
+- **Las cifras de DiCE de la Fase 3c pertenecen al MODELO VIEJO** (122 árboles, 44 features con
+  `payer_code`, target original) y **no se comparan con las de la 5C**. Siguen valiendo como lo que
+  son: el método que pedía el plan de la Fase 3, con su control positivo (3/3 y 29/30) y su
+  reproducibilidad ya arreglada y verificada.
+- El arreglo de aleatoriedad de `dice_ml` 0.12 y la fijación de `dice-ml` en esa versión siguen en
+  pie y no se tocan.
+
+#### SECUNDARIO Y DESCRIPTIVO: la frontera de la regresión logística, por el camino EXACTO
+Con la LR de la Fase 5A (C = 1, sin `payer_code`, coeficientes en
+`reports/phase5_lr_coefficients.csv`) la frontera es **computable exactamente y sin enumerar**,
+porque el logit es aditivo: la reducción máxima alcanzable es
+`Σ_v [ término_v(valor actual) − mín_{valores permitidos} término_v ]`, un mínimo por variable y una
+suma.
+- Mismo espacio de acciones **E0** y los mismos casos. Umbral: el cuantil 0,95 de las puntuaciones de
+  val **de la LR**, expresado en logit.
+- **Dos detalles resueltos ahora y no al ver el resultado:** (i) `change` es derivada y se recalcula
+  con la MISMA regla del `Scorer` de la 3c, puntuando el **PEOR caso** cuando es ambigua
+  (`xai_counterfactuals.derive_change`); (ii) un cambio de nivel categórico mueve **DOS** dummies del
+  one-hot, y `infrequent_sklearn` es una categoría más y no una referencia que se pueda ignorar. Los
+  niveles 1, 3 y 6 de `discharge_disposition_id` tienen dummy propio, así que E0 es representable en
+  la LR.
+- **Sin veredicto y sin contrafactuales completos de la LR.** Se reportan la reducción necesaria, la
+  máxima exacta y su diferencia.
+- Por qué está: responde al profesor **en su propio terreno** —con un modelo interpretable por diseño
+  la frontera se calcula exacta— y enlaza con el veredicto **(c)** de la Fase 5A, donde los dos
+  modelos salieron indistinguibles. **NO se concluye nada nuevo sobre qué modelo es mejor:** eso se
+  cerró en val, test ya está visto y no se reabre.
+
+#### El refactor de `xai_counterfactuals`, auditado por REPRODUCCIÓN
+`action_space` y `enumerate_changes` tienen hoy `MAX_CHANGES`, `DESTINATIONS` y `SUSPECT_CODES` como
+constantes de módulo, así que para los escalones hay que parametrizarlas, con valores por defecto
+idénticos a los actuales. Como en la Fase 5A, el refactor **se audita por reproducción y no por
+revisión del diff**:
+- `assert` de que, llamadas SIN los argumentos nuevos, los 6 casos dan `n_candidatos` = **18, 18, 8,
+  2, 2, 2** y las mismas `palancas` que `xai_counterfactuals_diag_minimo_alcanzable.csv`. Esas cifras
+  dependen solo de los DATOS y no del modelo, así que el assert es válido aunque el modelo haya
+  cambiado. **Si no cuadra, el script PARA y se avisa.**
+- Además se **relanza `xai_counterfactuals.py` tras el refactor** y se verifica que sus **12 CSV
+  salen idénticos byte a byte**, con el resultado anotado. Es el mismo estándar que se usó al
+  persistir los CSV de la Fase 3b.
+
+#### Qué NO se hace en esta fase
+- **No se toca test**, ni se mide nada en test.
+- **No se cambia el entregable**, ni el modelo, ni las features, ni el k del gestor.
+- **No se reeligen los 11 casos.**
+- **No se corre DiCE.**
+- **No se sustituye ningún escalón no enumerable por una búsqueda heurística presentada como prueba.**
+- **No se interpretan los coeficientes de la LR** más allá del cálculo exacto de su frontera.
+- **No se emite ninguna recomendación clínica.** Todo lo que sale es una hipótesis para revisión
+  clínica, como ya decía la Fase 3c.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
