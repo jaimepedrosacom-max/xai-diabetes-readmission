@@ -1986,6 +1986,169 @@ una sección APARTE de la PI, y sus criterios son estos y no se tocan después.
 - **Alcance:** ninguna medida más, y **nada del entregable cambia** — ni el modelo, ni las
   features, ni la etiqueta, ni la lista de 10 variables, que queda fijada en este commit.
 
+### Fase 5B, paso 2 — Resultados: 1 discrepancia de 10, y dos variables con PI indistinguible de cero (`src/phase5b_faithfulness.py`)
+Prerregistro `19e7ea5`; la lista de 10 variables la fijó y commiteó el paso 1 (`425019f`) y
+aquí se **LEE** de `phase5b_interpretable_set.csv`, no se recalcula. Val = 19.868 filas,
+etiqueta corregida. **Test no se toca.**
+
+**NOTA DE PROCESO:** el script se ejecutó DOS veces. La primera salida se capturó con `tail` y
+se perdió la cabecera con las comprobaciones mecánicas, así que se relanzó para tenerla
+completa. **Sin consecuencias:** es determinista (semilla `D.SEED` en la PI, TreeSHAP
+determinista) y solo usa val, así que los CSV son los mismos. Se anota porque el proyecto
+registra cada ejecución que toca datos.
+
+#### Comprobaciones mecánicas: las seis pasan
+Guardarraíl del entregable (123 árboles / PR-AUC val 0,1868); truncado del booster sin cambiar
+predicciones (`atol` 1e-12); aditividad y `pred_contrib` de `compute_shap` (valor base
+-2,3530); **línea base de la PI = 0,1868**, el propio guardarraíl; **multimétrica == una sola
+métrica** (las 30 repeticiones de PR-AUC son idénticas, así que las dos métricas comparten
+permutación); y **nulo interno**: las 10 variables con mean |SHAP| = 0 dan PI exactamente 0 en
+las 30 repeticiones, en las dos métricas.
+Se añadió una sexta no prevista, que es la más útil: el mean |SHAP| de este script **reproduce
+el del paso 1** (`atol` 1e-12), así que la lista leída del CSV corresponde al mismo SHAP.
+
+#### La tabla del veredicto (`reports/phase5b_faithfulness.csv`, 10 filas)
+Métrica PRINCIPAL PR-AUC, R = 30, semilla 42. Regla (a) >= 4 puestos de diferencia; regla (b)
+top 5 de SHAP con PI no distinta de cero (criterio `perm_clara` de la Fase 3a: media <= 2 sd).
+
+| variable | #SHAP | mean \|SHAP\| | PI media | PI sd | PI p2,5 | #PI | dif | PI != 0 | DISCREPA |
+|---|---|---|---|---|---|---|---|---|---|
+| `number_inpatient` | 1 | 0,29377 | 0,06303 | 0,00222 | 0,05821 | 1 | 0 | sí | no |
+| `discharge_disposition_id` | 2 | 0,18275 | 0,01864 | 0,00126 | 0,01613 | 2 | 0 | sí | no |
+| `admission_type_id` | 3 | 0,07525 | 0,00298 | 0,00091 | 0,00124 | 5 | 2 | sí | no |
+| `medical_specialty` | 4 | 0,07220 | 0,00376 | 0,00104 | 0,00153 | 4 | 0 | sí | no |
+| `diag_1_group` | 5 | 0,04981 | 0,00167 | 0,00070 | 0,00026 | 6 | 1 | sí | no |
+| `number_diagnoses` | 6 | 0,04106 | 0,00148 | 0,00050 | 0,00053 | 7 | 1 | sí | no |
+| **`age`** | 7 | 0,03996 | 0,00104 | 0,00086 | **-0,00027** | 9 | 2 | **NO** | no |
+| **`num_lab_procedures`** | 8 | 0,03781 | 0,00021 | 0,00075 | **-0,00140** | 10 | 2 | **NO** | no |
+| **`number_emergency`** | 9 | 0,03424 | 0,00440 | 0,00061 | 0,00318 | **3** | **6** | sí | **SÍ** |
+| `time_in_hospital` | 10 | 0,03294 | 0,00112 | 0,00052 | 0,00001 | 8 | 2 | sí | no |
+
+**Discrepa 1 de 10**, `number_emergency`, por la regla (a).
+
+#### HALLAZGO: dos de las 10 tienen PI que NO se distingue de cero, y la regla no las marca
+`age` y `num_lab_procedures` **no pasan `perm_clara`** en PR-AUC (media <= 2 sd) y su
+**percentil 2,5 es NEGATIVO** (-0,00027 y -0,00140): entre las 30 permutaciones hay réplicas en
+las que romper la variable MEJORA el PR-AUC. Están en el conjunto interpretable —superaron las
+sondas de ruido 10/10, es decir el modelo las USA de forma distinguible del ruido— y aun así
+**romperlas no cuesta rendimiento medible**.
+
+**Y no es una contradicción, aunque lo parezca:** las sondas de ruido comparan la MAGNITUD
+SHAP de cada variable con la de dos variables INVENTADAS, así que son un criterio basado en
+SHAP y **NO en rendimiento**. Un filtro así **no puede, por construcción, detectar una
+variable con SHAP alto y PI nula**: el rendimiento no entra en ningún momento en su criterio.
+Es la misma **circularidad ya declarada en el prerregistro** —el filtro de interpretabilidad y
+la magnitud auditada son la MISMA—, y aquí se ve su consecuencia concreta: **este caso quedaba
+fuera del alcance de las sondas desde el principio**, y hace falta la PI para verlo.
+
+Esto es **doblemente informativo, y va como hallazgo propio y no como nota al pie**:
+1. **Es un fallo de fidelidad.** SHAP les da los puestos 7 y 8 de 10, con mean |SHAP| 0,03996 y
+   0,03781, y la PI no detecta que aporten nada al rendimiento. Si la pregunta del profesor es
+   «¿SHAP y la PI dan algo parecido?», aquí la respuesta es que no en dos de las diez.
+2. **Es un límite de NUESTRA PROPIA REGLA**, y hay que decirlo antes de que lo diga nadie: la
+   regla (b) solo mira el **top 5 de SHAP**, y estas dos están en los puestos 7 y 8, así que la
+   regla **NO las marca como discrepancia**. La regla **NO se cambia ni se amplía** —moverla
+   después de ver quién cae fuera es exactamente lo que el prerregistro impide—, pero el
+   recuento «1 de 10 discrepa» **subestima** lo que ve la tabla, y se reporta siempre con esta
+   frase al lado.
+
+#### Las dos métricas coinciden en el VEREDICTO, no en todo
+- **Veredicto: idéntico en 10 de 10.** `number_emergency` también discrepa con log-loss (dif 4
+  puestos), y ninguna otra. La columna `coinciden_las_dos_metricas` es True en las 10.
+- **Pero difieren en `pi_distinta_de_cero`:** con log-loss **las 10 son distintas de cero**,
+  incluidas `age` (0,00061 ± 0,00016) y `num_lab_procedures` (0,00029 ± 0,00014). Con PR-AUC no
+  lo son. **No se resume como «las dos métricas coinciden»**, porque no es cierto en ese punto.
+- **Lectura, marcada como DESCRIPTIVA y NO medida:** sugiere que esas dos variables contribuyen
+  a la **CALIBRACIÓN** (log-loss las nota) pero no a la **ORDENACIÓN** (PR-AUC no). Y lo que el
+  gestor usa es la ordenación: su decisión es a qué top-k hacer seguimiento. No está medido como
+  tal y no se presenta como conclusión.
+
+#### `number_emergency`: la explicación prerregistrada y la lectura más precisa
+- **Explicación prerregistrada que aplica: la (3)** — PI y SHAP miden cosas distintas (la PI
+  mide RENDIMIENTO, SHAP mide PREDICCIÓN). Aplica en **DIRECCIÓN ESPEJO** de como quedó
+  redactada: el prerregistro puso el ejemplo «SHAP alto y PI baja», y aquí es lo contrario,
+  SHAP 9.º y PI 3.ª.
+- **La explicación (2) queda DESCARTADA:** predice que la PI *infravalore* a las variables
+  redundantes por correlación, y aquí la PI la *sobrevalora* respecto a SHAP. Predice lo
+  contrario de lo observado.
+- La **(1)** no aplica (`diabetesMed` no está en el conjunto). La **(4)**, ruido de permutación,
+  aplica al **VECINDARIO y no a esta variable**: los puestos 6 a 10 de la PI están entre 0,00021
+  y 0,00167 con desviaciones de 0,0005-0,0009, así que su orden relativo no es fiable;
+  `number_emergency`, con 0,00440 y sd 0,00061, queda claramente por encima de ese ruido.
+- **LECTURA MÁS PRECISA, marcada como RAZONAMIENTO y NO como medición:** `number_emergency` es
+  un contador con muchos ceros. Su **mean |SHAP| se hunde porque es casi cero en casi todas las
+  filas**, que es una MEDIA sobre toda val; la **PI, en cambio, premia su efecto en los pocos
+  pacientes con valores altos**, que son justo los que deciden la cabeza del ranking, y el
+  PR-AUC vive de la cabeza del ranking. **El % de ceros de `number_emergency` NO está medido en
+  ninguna parte del repo** (no hay CSV del EDA de la Fase 1 con esa cifra) y **NO se mide aquí**:
+  se deja como razonamiento explícito, no como dato.
+
+#### Concordancia global (descriptiva, sin veredicto)
+`reports/phase5b_concordance.csv`: Spearman entre el ranking de SHAP y el de PI (PR-AUC) =
+**0,673** (p 0,033) dentro de las 10, y **0,882** dentro de las 43 de contexto. Con 10 variables
+un solo cambio de rango mueve mucho ese número, y el conjunto está preseleccionado por SHAP, así
+que **no es la respuesta a «¿coinciden?»**: la respuesta es la tabla variable a variable.
+
+#### Dirección de los efectos
+- **Numéricas (`phase5b_direction_numeric.csv`, n = 19.868):** las 6 tienen Spearman
+  valor-SHAP POSITIVO —`number_diagnoses` 0,876, `number_inpatient` 0,835, `num_lab_procedures`
+  0,809, `time_in_hospital` 0,777, `age` 0,682, `number_emergency` 0,545— y **los 6 coeficientes
+  de la LR de la 5A tienen el mismo signo (6 de 6)**. Solo se compara el SIGNO.
+- **Categóricas (`phase5b_direction_categorical.csv`), niveles de más peso:**
+  `discharge_disposition_id` 22 +0,587 (n 376) y 5 +0,432 (n 256) frente a 1 (casa) -0,152
+  (n 12.027, 60,5% de val); `admission_type_id` 3 -0,209 (n 3.695); `medical_specialty`
+  Nephrology +0,091 (n 332) y Emergency/Trauma -0,205 (n 1.565); `diag_1_group` Circulatory
+  +0,054 (n 5.996) y Musculoskeletal -0,099 (n 901). La revisión clínica la hacemos nosotros al
+  redactar; el script no emite ningún juicio clínico.
+
+### Fase 5B, adenda — `admission_type_id`: las tres medidas (`src/phase5b_admission_type.py`)
+Adenda prerregistrada en `425019f`, ANTES de esta medición. Todo en **train+val** (79.473
+filas); **test no se toca**. Es **DESCRIPCIÓN DEL MECANISMO, no un contraste**: sin veredicto,
+sin umbral y sin p-valor.
+
+**(1) Positivos reetiquetados por nivel del `admission_type_id` ACTUAL**
+(`phase5b_admtype_relabel_rate.csv`, denominador = positivos del nivel en train+val):
+
+| nivel | positivos | reetiquetadas | tasa | % del total reetiquetado |
+|---|---|---|---|---|
+| 1 (urgencias) | 4.963 | 515 | 10,377% | 39,892% |
+| 2 (urgente) | 1.647 | 237 | 14,390% | 18,358% |
+| **3 (programado)** | 1.555 | **520** | **33,441%** | **40,279%** |
+| Unknown | 885 | 19 | 2,147% | 1,472% |
+
+(Niveles 4 y 7: 1 y 0 positivos, no se interpretan.)
+
+**(2) Tabla cruzada actual x siguiente** (`phase5b_admtype_crosstab.csv`, n por celda) y el %
+de siguiente PROGRAMADO por nivel actual (`phase5b_admtype_next_elective.csv`):
+
+| nivel actual | n con siguiente visible | n siguiente programado | % |
+|---|---|---|---|
+| 1 | 13.372 | 1.535 | 11,479% |
+| 2 | 4.292 | 753 | 17,544% |
+| **3** | 4.070 | **1.625** | **39,926%** |
+| Unknown | 2.363 | 58 | 2,455% |
+
+**DENOMINADOR, con su etiqueta exacta: 24.100 de 79.473 (30,32%) son los ENCUENTROS DE TRAIN+VAL
+CON ENCUENTRO SIGUIENTE VISIBLE.**
+**AVISO: ese 30,32% NO es comparable con el 28,15% de la Fase 4**, que es el porcentaje de
+**POSITIVOS** `<30` **SIN** encuentro posterior visible (`audit_discharge_global.csv`,
+`pct_sin_visible`). Son denominadores distintos (todos los encuentros frente a solo los
+positivos) y signos contrarios (con frente a sin). No se restan ni se comparan.
+
+**(3) SHAP medio por nivel en el entregable** (`phase5b_admtype_shap_levels.csv`, leído del CSV
+de la PI y NO recalculado): **nivel 3 = -0,20855** (n 3.695, 18,598% de val), el único
+claramente negativo; `Unknown` +0,04920 (n 2.010), nivel 2 +0,04529 (n 3.708), nivel 1 +0,04373
+(n 10.451). Niveles 4 y 7 con n = 2 cada uno, no se interpretan.
+
+**LECTURA, la fijada en la adenda y no revisada al ver esto:** las tres medidas van en la
+dirección de la hipótesis —el ingreso programado concentra el reetiquetado (33,4% de sus
+positivos), predice fuertemente que el siguiente también sea programado (39,9% frente a 11,5%
+en urgencias) y es el nivel que el modelo empuja hacia abajo (-0,209)—. Pero **es descripción
+del mecanismo, no un contraste. Aunque el mecanismo se confirme, NO se concluye que la variable
+sea un error:** si la etiqueta corregida es correcta, una **pauta clínica real** (el ingreso
+programado implica menos riesgo de reingreso urgente) y un **eco de la regla de reetiquetado**
+son compatibles, y este diseño **no los separa**. **Nada del entregable cambia.**
+
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de
   Spearman por paciente (SHAP real frente a aleatorio) < 0,3. Correlación del

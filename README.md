@@ -112,6 +112,20 @@ sueltos; los importan los demás.
 elección de `C` tuviera un error, con una sola ejecución se descubriría con test ya
 mirado. En el commit de la etapa val, `--stage test` aún no existía como código.
 
+### Fase 5B — fidelidad de las explicaciones (SHAP frente a permutation importance)
+
+| # | script | qué hace | produce | lee |
+|---|---|---|---|---|
+| 21 | `phase5b_probes.py` | Repite las sondas de ruido de la Fase 3b sobre el **entregable** (mismo `xai_sanity.noise_probes`, 10 semillas, regla `gana_a_sonda == 10`) y **fija el conjunto interpretable**: 10 variables. Calcula por primera vez el ranking de mean \|SHAP\| del entregable. **Sin una línea de código de PI.** | `phase5b_noise_probes.csv`, `phase5b_probe_seeds.csv`, `phase5b_interpretable_set.csv`, `phase5b_probes_vs_old.csv`, `phase5b_probes_summary.csv` | `xai_sanity_noise_probes.csv` |
+| 22 | `phase5b_faithfulness.py` | **PI frente a SHAP** en las 10 variables: R = 30 repeticiones, dos métricas en una sola llamada, regla de discrepancia prerregistrada, concordancia de Spearman y dirección de los efectos. | `phase5b_pi_all.csv`, `phase5b_faithfulness.csv`, `phase5b_concordance.csv`, `phase5b_direction_numeric.csv`, `phase5b_direction_categorical.csv` | `phase5b_interpretable_set.csv`, `phase5_lr_coefficients.csv` |
+| 23 | `phase5b_admission_type.py` | Adenda descriptiva de `admission_type_id`: reetiquetado por nivel, tabla cruzada actual × siguiente y SHAP por nivel. Sin veredicto. | `phase5b_admtype_relabel_rate.csv`, `phase5b_admtype_crosstab.csv`, `phase5b_admtype_next_elective.csv`, `phase5b_admtype_shap_levels.csv` | `phase5b_direction_categorical.csv` |
+
+**El 21 va antes del 22 y en un commit anterior, a propósito:** la lista de variables
+interpretables queda fijada y commiteada antes de que exista el código que la usa, así que
+no se puede ajustar al ver qué variables le convienen a la comparación. El 22 la **lee** del
+CSV y comprueba con `assert` que el mean \|SHAP\| reproduce el del 21. **Ninguno de los tres
+toca test.**
+
 Los scripts 13 a 17 y el 20 tardan varios minutos cada uno: entrenan varios modelos y, en
 los pasos con intervalos de confianza, hacen 2.000 réplicas bootstrap agrupadas por
 paciente.

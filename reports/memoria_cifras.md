@@ -579,6 +579,11 @@ Los dos primeros son idénticos con (3a) y (3b): solo usan el modelo viejo.
   modelos emparejados en test) **frente a la diferencia LightGBM − LR de la Fase 2 en
   test**: targets distintos, modelos distintos y conjuntos de features distintos. La de
   la Fase 2 no es una medida previa de la misma cantidad.
+- **30,32% de la Fase 5B** (24.100 de 79.473 ENCUENTROS de train+val CON siguiente
+  visible, `phase5b_admtype_next_elective.csv`) **frente al 28,15% de la Fase 4** (POSITIVOS
+  `<30` SIN encuentro posterior visible, `audit_discharge_global.csv`, `pct_sin_visible`):
+  denominadores distintos (todos los encuentros frente a solo los positivos) y signos
+  contrarios (con frente a sin). No se restan ni se comparan.
 - **6.503 visibles / 19,85%** (`audit_discharge_global.csv`) **frente a 6.497 / 19,8%**
   (suma de `audit_discharge_leakage.csv`): la segunda aplica `MIN_N = 30` y es un
   subconjunto.
@@ -694,4 +699,135 @@ Escalas no comparables entre sí (numéricas por desviación típica, dummies po
 Los valores de `acarbose` y `tolazamide` que aparecen en val y no en train afectan a 4 de
 las 19.868 filas de val (0,0201%): `acarbose = Down` 3 filas y `tolazamide = Up` 1 fila,
 sin solapamiento. Medido solo con train y val.
+
+
+---
+
+## 14. Fase 5B — fidelidad de SHAP frente a la permutation importance (todo en val)
+
+Prerregistro `19e7ea5`; lista de variables fijada en `425019f`. Modelo: el **entregable**
+congelado (sin `payer_code`, 123 árboles), reproducido con su guardarraíl. **Test no se toca en
+ninguna parte de la fase.** Denominadores: *val* = 19.868 filas, prevalencia 9,7795% con la
+etiqueta corregida; *train+val* = 79.473 filas (solo en la adenda de `admission_type_id`).
+R = 30 repeticiones de permutación, semilla 42.
+
+### Conjunto interpretable: 10 variables
+`phase5b_interpretable_set.csv`, columnas `rank_shap_entregable`, `media_abs_shap`,
+`gana_a_sonda`, `tipo`. Regla: `gana_a_sonda == 10` sobre 10 semillas. **6 numéricas y 4
+categóricas.** Suelo de la sonda: media 0,0177, máximo 0,0276 (`phase5b_probe_seeds.csv`).
+La tabla de las 43 variables está en `phase5b_noise_probes.csv`.
+
+| # | variable | mean \|SHAP\| | tipo |
+|---|---|---|---|
+| 1 | `number_inpatient` | 0,29377 | numérica |
+| 2 | `discharge_disposition_id` | 0,18275 | categórica |
+| 3 | `admission_type_id` | 0,07525 | categórica |
+| 4 | `medical_specialty` | 0,07220 | categórica |
+| 5 | `diag_1_group` | 0,04981 | categórica |
+| 6 | `number_diagnoses` | 0,04106 | numérica |
+| 7 | `age` | 0,03996 | numérica |
+| 8 | `num_lab_procedures` | 0,03781 | numérica |
+| 9 | `number_emergency` | 0,03424 | numérica |
+| 10 | `time_in_hospital` | 0,03294 | numérica |
+
+Cambios respecto a las 13 del modelo viejo (`phase5b_probes_vs_old.csv`, columnas `estado`,
+`media_abs_shap_viejo`, `media_abs_shap_entregable`): **ENTRA** `admission_type_id`
+(0,00860 -> 0,07525; `gana_a_sonda` 0 -> 10); **SALEN** `diabetesMed` (10 -> 7/10),
+`diag_3_group` y `diag_2_group` (10 -> 9/10 las dos, con su mean |SHAP| casi igual: 0,03027 ->
+0,03022 y 0,02632 -> 0,02607); y `payer_code`, que la quitó la ablación y no las sondas.
+Resumen en `phase5b_probes_summary.csv` (`PARADA_POR_TAMANO` = False, 10 >= 8).
+
+Fármacos en el entregable (`phase5b_noise_probes.csv`, columna `gana_a_sonda`): **ninguno supera
+las sondas.** `insulin` 6/10 (0,01917), `metformin` 0/10, 10 fármacos con mean |SHAP|
+exactamente 0; `diabetesMed` 7/10 y `change` 0/10.
+
+### Tabla del veredicto (la cifra titular de la fase)
+`phase5b_faithfulness.csv`, 10 filas. Métrica PRINCIPAL PR-AUC; rangos DENTRO de las 10.
+Columnas: `rank_shap`, `pi_prauc_media`, `pi_prauc_sd`, `pi_prauc_p2_5`, `rank_pi_prauc`,
+`dif_rangos_prauc`, `pi_distinta_de_cero_prauc`, `DISCREPA_prauc`.
+
+| variable | #SHAP | PI media | PI sd | PI p2,5 | #PI | dif | PI != 0 | DISCREPA |
+|---|---|---|---|---|---|---|---|---|
+| `number_inpatient` | 1 | 0,06303 | 0,00222 | 0,05821 | 1 | 0 | sí | no |
+| `discharge_disposition_id` | 2 | 0,01864 | 0,00126 | 0,01613 | 2 | 0 | sí | no |
+| `admission_type_id` | 3 | 0,00298 | 0,00091 | 0,00124 | 5 | 2 | sí | no |
+| `medical_specialty` | 4 | 0,00376 | 0,00104 | 0,00153 | 4 | 0 | sí | no |
+| `diag_1_group` | 5 | 0,00167 | 0,00070 | 0,00026 | 6 | 1 | sí | no |
+| `number_diagnoses` | 6 | 0,00148 | 0,00050 | 0,00053 | 7 | 1 | sí | no |
+| `age` | 7 | 0,00104 | 0,00086 | **-0,00027** | 9 | 2 | **NO** | no |
+| `num_lab_procedures` | 8 | 0,00021 | 0,00075 | **-0,00140** | 10 | 2 | **NO** | no |
+| **`number_emergency`** | 9 | 0,00440 | 0,00061 | 0,00318 | **3** | **6** | sí | **SÍ** |
+| `time_in_hospital` | 10 | 0,00112 | 0,00052 | 0,00001 | 8 | 2 | sí | no |
+
+- **Discrepa 1 de 10**: `number_emergency`, por la regla (a) (6 puestos >= 4).
+- **`age` y `num_lab_procedures` tienen PI que NO se distingue de cero** (criterio `perm_clara`
+  de la Fase 3a: media <= 2 sd) y percentil 2,5 negativo. La regla (b) **no las marca** porque
+  solo mira el top 5 de SHAP y están en los puestos 7 y 8. Al citar «1 de 10» hay que decir que
+  **ese recuento subestima lo que ve la tabla**, y que es un límite de la regla además de un
+  fallo de fidelidad.
+  **No es contradicción con que superen las sondas 10/10:** las sondas comparan la magnitud
+  SHAP de cada variable con la de variables inventadas, así que son un criterio basado en SHAP
+  y NO en rendimiento, y por construcción no pueden detectar SHAP alto con PI nula. Es la
+  circularidad ya declarada en el prerregistro: el filtro de interpretabilidad y la magnitud
+  auditada son la misma, así que este caso quedaba fuera de su alcance por construcción.
+- **Log-loss (robustez, misma tabla, columnas `*_logloss`):** el VEREDICTO coincide en 10 de 10
+  (`coinciden_las_dos_metricas` = True en las 10), pero **`pi_distinta_de_cero` NO coincide**:
+  con log-loss las 10 son distintas de cero, incluidas `age` (0,00061 ± 0,00016) y
+  `num_lab_procedures` (0,00029 ± 0,00014). **No se escribe «las dos métricas coinciden» a
+  secas.**
+
+Contexto de las 43 variables: `phase5b_pi_all.csv` (`mean_abs_shap`, `rank_shap_43`,
+`pi_prauc_media`, `rank_pi_prauc_43`, `pi_logloss_media`, `pr_auc_base` = 0,1868, `R` = 30,
+`n_val` = 19.868).
+
+### Concordancia (descriptiva, SIN veredicto)
+`phase5b_concordance.csv`, columnas `spearman_rho`, `p_valor`, `rol`: **0,673** (p 0,033) sobre
+las 10 interpretables y **0,882** sobre las 43 de contexto. Con 10 variables dice poco por sí
+solo y el conjunto está preseleccionado por SHAP.
+
+### Dirección de los efectos
+`phase5b_direction_numeric.csv`, n = 19.868 filas de val. Las 6 numéricas tienen Spearman
+valor-SHAP positivo y los 6 coeficientes de la LR de la 5A el mismo signo: **6 de 6**. Solo se
+compara el SIGNO (escalas no comparables).
+
+| variable | rho valor-SHAP | coef LR | bloque |
+|---|---|---|---|
+| `number_diagnoses` | 0,87630 | 0,06699 | num |
+| `number_inpatient` | 0,83528 | 0,36314 | counts |
+| `num_lab_procedures` | 0,80908 | 0,05052 | num |
+| `time_in_hospital` | 0,77722 | 0,00235 | num |
+| `age` | 0,68189 | 0,01827 | num |
+| `number_emergency` | 0,54527 | 0,08266 | counts |
+
+`phase5b_direction_categorical.csv` (columnas `nivel`, `n`, `shap_medio`, `p25`, `p75`,
+`pct_de_val`), niveles de más peso: `discharge_disposition_id` 22 +0,587 (n 376), 5 +0,432
+(n 256), 1 -0,152 (n 12.027 = 60,53% de val); `admission_type_id` 3 -0,209 (n 3.695);
+`medical_specialty` Nephrology +0,091 (n 332), Emergency/Trauma -0,205 (n 1.565);
+`diag_1_group` Circulatory +0,054 (n 5.996), Musculoskeletal -0,099 (n 901).
+
+### Adenda: `admission_type_id` (train+val, descriptivo y sin veredicto)
+1. **Reetiquetado por nivel actual** (`phase5b_admtype_relabel_rate.csv`, columna `tasa_%`,
+   denominador = `positivos` del nivel en train+val): nivel 3 (programado) **33,441%** (520 de
+   1.555) y el **40,279%** de todo lo reetiquetado; nivel 1 10,377% (515 de 4.963); nivel 2
+   14,390% (237 de 1.647); `Unknown` 2,147% (19 de 885). Niveles 4 y 7: 1 y 0 positivos, sin
+   interpretar.
+2. **Siguiente programado por nivel actual** (`phase5b_admtype_next_elective.csv`, columna
+   `pct_siguiente_programado`, denominador = `n_con_siguiente_visible`): nivel 3 **39,926%**
+   (1.625 de 4.070); nivel 2 17,544% (753 de 4.292); nivel 1 11,479% (1.535 de 13.372);
+   `Unknown` 2,455% (58 de 2.363). Tabla cruzada completa con `n` por celda en
+   `phase5b_admtype_crosstab.csv`.
+   **Denominador, con su etiqueta exacta: 24.100 de 79.473 (30,32%) = ENCUENTROS de train+val
+   CON encuentro siguiente VISIBLE.** No confundir con el 28,15% de la Fase 4 (ver la sección 12).
+3. **SHAP medio por nivel** (`phase5b_admtype_shap_levels.csv`, leído del CSV de la PI): nivel 3
+   **-0,20855** (n 3.695 = 18,598% de val), el único claramente negativo; `Unknown` +0,04920
+   (n 2.010), nivel 2 +0,04529 (n 3.708), nivel 1 +0,04373 (n 10.451). Niveles 4 y 7 con n = 2.
+
+**No es un contraste.** Aunque el mecanismo se confirme, no se concluye que la variable sea un
+error: una pauta clínica real y un eco de la regla de reetiquetado son compatibles y este diseño
+no los separa.
+
+### Cifras que NO existen y que no se deben inventar
+El **% de ceros de `number_emergency`** no está medido en ningún CSV del repo. La lectura de que
+su mean |SHAP| se hunde por tener muchos ceros mientras la PI premia su efecto en los pocos
+valores altos es **RAZONAMIENTO, no medición**, y así se cita.
 

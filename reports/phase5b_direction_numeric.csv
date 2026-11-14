@@ -1,0 +1,7 @@
+variable,n_val,rho_valor_vs_shap,signo_shap,bloque_lr,coef_lr,signo_coef_lr,coinciden_signos
+number_inpatient,19868,0.8352834599204092,1,counts,0.3631396175443449,1,True
+number_diagnoses,19868,0.8762967989669286,1,num,0.0669874096632909,1,True
+age,19868,0.6818864700898571,1,num,0.0182702343379126,1,True
+num_lab_procedures,19868,0.8090846142791516,1,num,0.0505159562037882,1,True
+number_emergency,19868,0.5452662901498385,1,counts,0.0826641675328838,1,True
+time_in_hospital,19868,0.7772220422120516,1,num,0.0023477559843966,1,True
