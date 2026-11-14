@@ -62,8 +62,10 @@ counterfactuals, matplotlib/seaborn para gráficas.
   PI y adenda de `admission_type_id` `40ebd31`. Discrepa 1 de 10 (`number_emergency`), y
   `age`/`num_lab_procedures` tienen PI indistinguible de cero que la regla no marca. Todo en
   val; test no se tocó.
-- Fase 5C EN CURSO: prerregistrada (distancia a la frontera de los contrafactuales, tras la
-  objeción del profesor a la Fase 3c), pendiente de ejecutar.
+- Fase 5C EN CURSO: distancia a la frontera de los contrafactuales, tras la objeción del
+  profesor a la Fase 3c. Prerregistro `44db202`, paso 1 (espacio de acciones, escalones E0-E5
+  y marcados sin acciones) `28c387b`, paso 2 (vecino más cercano por Gower y frontera exacta
+  de la LR) en este commit. Todo en val; test no se tocó.
 - PENDIENTE, fuera del código:
   - La memoria la redacta Jaime en LaTeX desde `report/` (`main.tex`, `references.bib`) en Overleaf. El repo
     solo tiene el esqueleto, sin contenido y sin compilar. Al terminar, copiar el `.tex` final al repo.
@@ -2599,6 +2601,136 @@ corrió.
   idéntico, dio los **7 CSV idénticos byte a byte**; la (7) dio un **log idéntico** a la (6); y la
   (8), un **log idéntico** a la (7). No hay aleatoriedad en esta fase: TreeSHAP no interviene, el
   booster es determinista y no hay muestreo.
+
+### Fase 5C, paso 2 — El vecino más cercano y la frontera de la LR (`src/phase5c_gower.py`, `src/phase5c_lr_frontier.py`)
+Prerregistro commiteado ANTES (`44db202`), bloques «(d) Vecino más cercano al otro lado de la
+frontera, con distancia de Gower» y «SECUNDARIO Y DESCRIPTIVO: la frontera de la regresión
+logística». Los dos análisis son **DESCRIPTIVOS: sin veredicto, sin umbral y sin p-valor.**
+**Test no se toca**, y los dos scripts descartan el tercer split al cargarlo.
+
+#### LAS DOS PIEZAS VAN JUNTAS Y EN ESTE ORDEN (es la respuesta al profesor)
+1. **La ENUMERACIÓN demuestra que dentro del espacio de acciones no se puede cruzar.** Paso 1:
+   con los 21 fármacos libres y hasta 3 cambios simultáneos, **29.167 candidatos enumerados al
+   completo**, dos de los tres casos marcados siguen por encima del corte.
+2. **El VECINO MÁS CERCANO dice qué habría que cambiar para cruzar:** **6 a 9 variables de 43**,
+   y en los **3 casos marcados NINGUNA es accionable**.
+
+Dicho como lo pedía él: **el primer contrafactual aparece cuando se permite mover el destino al
+alta a cualquier nivel (E3), y la razón es que las variables que un médico puede cambiar apenas
+pesan.** La frontera **está dentro de los datos y está CERCA** —Gower 0,0204 a 0,1034— pero la
+distancia hasta ella está hecha de variables que nadie puede mover.
+
+#### (d) El vecino más cercano, por Gower (`reports/phase5c_nearest_neighbor.csv`)
+Guardarraíl del entregable (123 árboles / PR-AUC val 0,1868) y booster truncado sin cambiar
+predicciones (`atol` 1e-12). Corte del top 5%: **0,191289** (994 filas), el mismo del paso 1.
+Vecindario = **train, 59.605 filas**. Los dos lados, que NO se mezclan (columna `lado`):
+frontera del MODELO (`prob < corte`) **56.627 filas**; etiqueta corregida `y = 0` **53.788**.
+Gower: **9 numéricas** por rango de TRAIN (ninguna con rango 0, así que ninguna se excluye) y
+**34 categóricas** 0/1, **pesos IGUALES**, `age` como numérica (la Fase 1 la dejó ordinal 0..9).
+`n_vars_comparables = 43` en los 11 casos —**no hay ningún ausente** en estas filas, así que la
+regla de Gower para los NaN no llega a activarse— y `n_empatados = 1` en los 11, así que el
+desempate por `encounter_id` menor no decide nada.
+
+| caso | marcado 5% | Gower | vars distintas | **accionables** | congeladas |
+|---|---|---|---|---|---|
+| `perfil_alto_1` | **sí** | 0,0596 | 8 | **0** | 8 |
+| `perfil_alto_2` | no | 0,0555 | 6 | 1 (`metformin`) | 5 |
+| `perfil_alto_3` | **sí** | **0,0204** | 7 | **0** | 7 |
+| `riesgo_mediano` | no | 0,0347 | 7 | 0 | 7 |
+| `riesgo_bajo` | no | 0,1034 | 8 | 0 | 8 |
+| `modelo_alto_sin_ingresos_reingresa` | no | 0,0383 | 7 | 0 | 7 |
+| `modelo_alto_sin_ingresos_no_reingresa` | no | 0,0836 | 9 | 0 | 9 |
+| `modelo_bajo_con_ingresos_reingresa` | no | 0,0306 | 6 | 0 | 6 |
+| `modelo_bajo_con_ingresos_no_reingresa` | no | 0,0600 | 7 | 1 (`glyburide`) | 6 |
+| `falsa_alarma_mayor_riesgo` | **sí** | 0,0687 | 7 | **0** | 7 |
+| `reingreso_menor_riesgo` | no | 0,0625 | 8 | 0 | 8 |
+
+- **En 9 de los 11 casos CERO variables accionables separan al caso de su vecino**, y en los
+  otros dos es exactamente UNA. **La hipótesis prerregistrada queda CONFIRMADA**, y estaba
+  escrita antes de medir, igual que la advertencia de que **el VALOR de la distancia no es el
+  hallazgo** (que exista una fila de train por debajo del corte es trivial: lo está el 95%).
+- Las contribuciones mayores (`top3_contribuciones`, detalle en `phase5c_nn_variables.csv`) son
+  `race`, `diag_1_group`, `diag_2_group`, `diag_3_group`, `num_lab_procedures`,
+  `number_inpatient`, `num_procedures`, `number_diagnoses`, `time_in_hospital`,
+  `num_medications`, `admission_type_id` y `age`. En `perfil_alto_2` y
+  `modelo_alto_sin_ingresos_reingresa` aparece `discharge_disposition_id` con contribución 1,000
+  y **cuenta como congelada**: son casos con destino 22 o 5, que E0 congela.
+- **`race` aparece con contribución 1,000 en 4 de los 11 casos, y la lectura es obligatoria:** el
+  vecino más cercano **no es el mismo paciente más sano, es OTRA PERSONA**. Es material para la
+  **reflexión crítica** sobre qué significa un contrafactual basado en vecinos reales, y **NO es
+  un hallazgo de equidad**: la equidad vive en la Fase 4, con su prerregistro y sus veredictos.
+- **Los dos lados dan el MISMO vecino en 10 de los 11 casos** (misma `vecino_encounter_id` y
+  misma distancia); solo difieren en `modelo_alto_sin_ingresos_reingresa` (0,0383 frente a
+  0,0415). No es que los criterios sean el mismo: es que los dos vecindarios son enormes (56.627
+  y 53.788 de 59.605). Se reportan por separado, como fija el prerregistro.
+- **AVISO que se declara:** las puntuaciones del entregable **sobre train son EN MUESTRA**, así
+  que están infladas. Eso hace el lado «prob < corte» **más exigente de poblar, no menos**: la
+  dirección del sesgo **no favorece** a nuestra conclusión.
+
+#### La frontera de la LR, calculada y no buscada (`reports/phase5c_lr_frontier.csv`)
+Guardarraíl de la LR de la Fase 5A por `assert`: **C = 1 / PR-AUC val 0,1804 / 128 columnas**.
+Umbral: cuantil 0,95 de SUS puntuaciones de val, **logit −1,287678** (prob 0,216246), **994
+filas marcadas**. Espacio **E0**, los mismos 11 casos, todo en **LOGIT**. Niveles de `change` en
+train: `Ch` y `No`. Los deltas no se leen de los coeficientes a mano: se obtienen transformando
+la fila con un único cambio y restando el logit —igual de exacto, y así el nivel
+`infrequent_sklearn` se resuelve solo en vez de ser una fuente de error silencioso.
+
+**La LR marca 4 de los 11** (el entregable marca 3; añade `modelo_alto_sin_ingresos_no_reingresa`)
+y **ninguno de los 4 cruza la frontera en E0**:
+
+| caso | logit | red. necesaria | red. máx. **COTA SUPERIOR** | **déficit COTA** | cruza |
+|---|---|---|---|---|---|
+| `perfil_alto_1` | −0,82354 | 0,46414 | 0,34836 | **+0,11579** | no |
+| `perfil_alto_3` | −0,93119 | 0,35649 | 0,24391 | **+0,11258** | no |
+| `modelo_alto_sin_ingresos_no_reingresa` | −1,23822 | 0,04945 | 0,00166 | **+0,04780** | no |
+| `falsa_alarma_mayor_riesgo` | −0,62059 | 0,66709 | 0,05909 | **+0,60800** | no |
+
+- **EL «NO CRUZA» DE LA LR SE AFIRMA SOBRE UNA COTA SUPERIOR, no sobre una estimación.** Hacía
+  falta porque la suma aditiva con `change` fijo **NO es** cota superior: si mover variables
+  fuerza un `change` de término menor, la reducción real puede SUPERARLA, y está MEDIDO en
+  `modelo_alto_sin_ingresos_reingresa`, donde `aporte_de_la_derivada_change` = **−0,05909**. La
+  cota minimiza los dos sumandos POR SEPARADO (`sum_v min(0, delta_v)` y `min_c gamma_c`), así
+  que es un límite válido aunque la combinación que lo tocaría no sea realizable.
+- En **3 de los 4 marcados** `change_orig = Ch`, así que `mejor_delta_change_posible = 0` y la
+  suma aditiva **ya era** la cota. Solo en `falsa_alarma_mayor_riesgo` (`change_orig = No`) la
+  cota añade 0,05909, y su déficit baja de +0,66709 a **+0,60800**: sigue sin cruzar, y por mucho.
+- **La cota es LAXA en ese caso y se marca en el CSV** (`cota_LAXA_change_inalcanzable`): `change`
+  es derivada y solo se mueve moviendo un fármaco, y ese caso **no tiene ningún fármaco
+  accionable** (su única accionable es el destino). Esos 0,05909 **no son alcanzables**; se
+  incluyen porque una cota tiene que ser conservadora.
+- **LOS DOS MODELOS COINCIDEN EN `falsa_alarma_mayor_riesgo`, y eso es más fuerte que el
+  resultado de cualquiera por separado:** en la LR su `reduccion_maxima_exacta` es **0,00000** y
+  `combinacion_optima` = «(ninguna baja el logit)», por **cálculo exacto**; en LightGBM la
+  columna `todo_cambio_empeora` lo marca porque su único cambio disponible (destino 1 → 6)
+  **SUBE** la puntuación. Dos modelos distintos y dos métodos distintos —enumeración y álgebra—
+  con la misma conclusión sobre el mismo paciente.
+- Las `combinacion_optima` son cosas como `discharge_disposition_id: 6 -> 1; metformin: Steady ->
+  Up`, y **NO son recomendaciones**. Tres de los 11 casos tienen «(ninguna baja el logit)».
+- **No se concluye nada nuevo sobre qué modelo es mejor:** eso se cerró en la Fase 5A con el
+  veredicto **(c) indistinguibles**, test ya está visto y no se reabre.
+
+#### La COTA SUPERIOR se añadió DESPUÉS de ver la primera salida de la LR
+Se declara como tal, igual que `todo_cambio_empeora` en el paso 1. No estaba en el prerregistro,
+que solo pedía «la reducción necesaria, la máxima exacta y su diferencia». La pidió Jaime al ver
+que el aporte de `change` podía hacer que la suma aditiva INFRAESTIMARA la reducción. **Solo
+puede debilitar nuestra afirmación, nunca reforzarla**, porque sustituye una estimación por un
+límite superior de lo alcanzable, y el «no cruza» se sostiene igual en los 4 casos. Ninguna cifra
+ya calculada se tocó: la suma aditiva y la fila realizada siguen en el CSV con los mismos valores.
+
+#### NOTA DE PROCESO: cuántas veces se ejecutó cada script y por qué
+- **`phase5c_gower.py`: 2 ejecuciones.** (1) la primera, correcta; (2) una repetición con el
+  código IDÉNTICO para verificar determinismo: los **2 CSV salen idénticos byte a byte** (`md5sum
+  -c`) y el log es el mismo salvo la codificación de consola (cp1252 al capturar frente a UTF-8).
+  No hay aleatoriedad: no interviene TreeSHAP, no hay muestreo y el desempate es por
+  `encounter_id`.
+- **`phase5c_lr_frontier.py`: 5 ejecuciones.** (1) con el frame CATEGÓRICO en vez del crudo, que
+  no es el que ajustó la LR — descartada; (2) corregida, puntuando la LR sobre el frame crudo;
+  (3) al añadir la cota superior, ABORTÓ con `AttributeError` porque en el frame crudo `change` no
+  es categórica y no tiene `.cat`; (4) con los niveles de `change` tomados de TRAIN y pasados como
+  argumento, correcta; (5) tras añadir la columna `cota_LAXA_change_inalcanzable`.
+- **Después de ver cifras, lo único que se añadió fue la COTA SUPERIOR y su columna de laxitud**,
+  las dos declaradas arriba. Ningún umbral, ninguna definición de Gower, ningún lado de la
+  frontera y ninguna cifra ya calculada se cambió.
 
 ### Criterios fijos de los sanity checks (no se tocan tras ver resultados)
 - Aleatorización de etiquetas: ROC-AUC en val ≤ 0,52 y mediana de |ρ| de

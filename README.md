@@ -133,6 +133,8 @@ toca test.**
 | # | script | qué hace | produce | lee |
 |---|---|---|---|---|
 | 24 | `phase5c_frontier.py` | Rehace el análisis de contrafactuales **sobre el entregable**, tras la objeción del profesor a la Fase 3c. Dice las variables accionables una por una, mide la **distancia a la frontera** (reducción necesaria frente a la máxima alcanzable) y recorre los **escalones E0 a E5** de relajación, declarando en cada uno si la enumeración es exhaustiva. Recalcula la elegibilidad de los 11 casos y mide cuántos marcados no tienen ninguna acción posible. | `phase5c_refactor_audit.csv`, `phase5c_eligibility.csv`, `phase5c_action_space_vars.csv`, `phase5c_action_space.csv`, `phase5c_no_actions.csv`, `phase5c_frontier_distance.csv`, `phase5c_ladder.csv` | `xai_local_cases.csv`, `xai_counterfactuals_diag_minimo_alcanzable.csv` |
+| 25 | `phase5c_gower.py` | Mide el **vecino más cercano al otro lado de la frontera** con distancia de **Gower** (rango de train, pesos iguales, `age` como numérica, los ausentes fuera del numerador y del denominador). Dos lados que NO se mezclan: el **primario** es la frontera del MODELO (fila de train con puntuación por debajo del corte del top 5%) y el **secundario** la etiqueta corregida `y = 0`. Lo informativo no es la distancia, sino **de qué variables está hecha**: cuántas son accionables y cuántas están congeladas. | `phase5c_nearest_neighbor.csv`, `phase5c_nn_variables.csv` | `xai_local_cases.csv` |
+| 26 | `phase5c_lr_frontier.py` | La frontera de la **regresión logística** de la Fase 5A (C = 1, sin `payer_code`) **calculada en vez de buscada**: el logit es aditivo, así que la reducción máxima dentro de E0 es un mínimo por variable y una suma, sin enumerar nada. Reporta la reducción necesaria, la máxima y una **COTA SUPERIOR** que resuelve del modo más favorable la ambigüedad de la derivada `change`. Descriptivo, **sin veredicto**. | `phase5c_lr_frontier.csv`, `phase5c_lr_deltas.csv` | `xai_local_cases.csv`, `phase5_lr_coefficients.csv` (contexto) |
 
 **La relajación que mide algo es descongelar variables, no subir k**, y el propio script lo
 demuestra: en 7 de los 11 casos el límite de 2 cambios ya coincidía con el producto cartesiano
@@ -148,6 +150,17 @@ parámetros nuevos tienen valores por defecto idénticos a los de la Fase 3c, el
 palancas, y se relanzó la 3c completa para comprobar que sus **12 CSV salen idénticos byte a
 byte**. **DiCE no se corre en la 5C:** en un espacio de 2 a 26 combinaciones la enumeración
 exhaustiva es estrictamente más fuerte que un muestreador aleatorio. **No toca test.**
+
+**Las dos piezas de la respuesta al profesor van juntas y en este orden.** Primero la
+**enumeración** demuestra que dentro del espacio de acciones no se puede cruzar la frontera: con
+los 21 fármacos libres y hasta 3 cambios simultáneos, **29.167 candidatos enumerados al
+completo**, dos de los tres casos marcados siguen por encima del corte. Después el **vecino más
+cercano** dice qué habría que cambiar para cruzarla: **6 a 9 variables de 43**, y en los 3 casos
+marcados **ninguna de ellas es accionable**. Es decir, el primer contrafactual aparece solo
+cuando se permite mover el destino al alta a cualquier nivel, y la razón es que las variables que
+un médico puede cambiar apenas pesan. La frontera **está dentro de los datos y está cerca**
+(Gower 0,020 a 0,103), pero la distancia hasta ella está hecha de variables que nadie puede
+mover.
 
 ---
 
