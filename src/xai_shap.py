@@ -43,6 +43,17 @@ N_LEVEL_PANELS = 6
 BLUE, SURFACE = E.MODEL_COLORS["LogReg"], "#fcfcfb"
 SECONDARY = "#52514e"
 
+# Rótulos de la figura global por idioma. La memoria va en inglés, pero el notebook
+# (notebooks/analisis.ipynb) muestra la versión en español y se decidió no reejecutarlo,
+# así que la inglesa se guarda aparte con sufijo _en. Solo cambia el TEXTO: ni los
+# valores SHAP, ni el orden de las barras, ni ningún CSV.
+GLOBAL_BAR_TXT = {
+    "es": {"title": "Qué variables usa más LightGBM (val, n={n})",
+           "xlabel": "media de |SHAP| (log-odds)", "suffix": ""},
+    "en": {"title": "Which variables LightGBM relies on most (validation, n={n})",
+           "xlabel": "mean |SHAP| (log-odds)", "suffix": "_en"},
+}
+
 # Descripciones abreviadas de IDS_mapping.csv (zip oficial de UCI).
 LEVEL_LABELS = {
     "discharge_disposition_id": {
@@ -151,8 +162,14 @@ def _style(ax):
         ax.spines[side].set_visible(False)
 
 
-def plot_global_bar(mean_abs: pd.Series, base: float, n: int):
-    """Barras de media |SHAP|: una por variable original, las 44."""
+def plot_global_bar(mean_abs: pd.Series, base: float, n: int, lang: str = "es"):
+    """Barras de media |SHAP|: una por variable original, las 44.
+
+    `lang` solo cambia los rótulos y el separador de miles; con lang="en" el fichero
+    sale con sufijo _en y el de siempre no se toca (ver src/figures_en.py).
+    `base` no se usa en el dibujo; se mantiene en la firma para no cambiar la llamada
+    de main().
+    """
     s = mean_abs.sort_values()
     fig, ax = plt.subplots(figsize=(8, 0.235 * len(s) + 1.3), facecolor=SURFACE)
     ax.barh(s.index, s.values, color=BLUE, height=0.68)
@@ -164,11 +181,12 @@ def plot_global_bar(mean_abs: pd.Series, base: float, n: int):
     ax.grid(axis="x", color=E.GRID, lw=0.6)
     ax.set_axisbelow(True)
     ax.set_ylim(-0.7, len(s) - 0.3)
-    ax.set_xlabel("media de |SHAP| (log-odds)", color=E.MUTED, fontsize=9)
-    n_txt = f"{n:,}".replace(",", ".")
-    ax.set_title(f"Qué variables usa más LightGBM (val, n={n_txt})",
+    ax.set_xlabel(GLOBAL_BAR_TXT[lang]["xlabel"], color=E.MUTED, fontsize=9)
+    # Separador de miles: punto en español, coma en inglés (el de la memoria).
+    n_txt = f"{n:,}" if lang == "en" else f"{n:,}".replace(",", ".")
+    ax.set_title(GLOBAL_BAR_TXT[lang]["title"].format(n=n_txt),
                  loc="left", color=E.INK, fontsize=12)
-    return _save(fig, "shap_global_bar.png")
+    return _save(fig, f"shap_global_bar{GLOBAL_BAR_TXT[lang]['suffix']}.png")
 
 
 def plot_numeric_beeswarm(values: np.ndarray, X: pd.DataFrame):
